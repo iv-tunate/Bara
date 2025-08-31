@@ -4,9 +4,8 @@ using Hangfire.PostgreSql;
 using Infrastructure.DataContext;
 using Infrastructure.Repositories.FileRepositories;
 using Infrastructure.Repositories.ScriptRepositories;
-using Infrastructure.Repositories.UserRepositories;
 using Infrastructure.Repositories.TransactionRepositories;
-using TransactionModule.Interfaces;
+using Infrastructure.Repositories.UserRepositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -26,6 +25,7 @@ using SharedModule.Settings;
 using SharedModule.Utils;
 using System.Text;
 using System.Text.Json.Serialization;
+using TransactionModule.Interfaces;
 using UserModule.Interfaces.UserInterfaces;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -100,6 +100,9 @@ builder.Services.AddTransient<IAuthService, AuthRepository>();
 builder.Services.AddTransient<IUserService, UserRepository>();
 builder.Services.AddScoped<IPaystackService, PaystackService>();
 builder.Services.AddTransient<IWalletService, WalletService>();
+builder.Services.AddTransient<IChatService, ChatService>();
+builder.Services.AddTransient<IChatRepository, ChatRepository>();
+builder.Services.AddTransient<ITransactionService, TransactionRepository>();
 builder.Services.AddScoped(typeof(LogHelper<>));
 
 builder.Services.AddSignalR();

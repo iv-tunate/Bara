@@ -1,4 +1,7 @@
-﻿using Infrastructure.DataContext;
+﻿using Hangfire;
+using Infrastructure.DataContext;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -8,16 +11,13 @@ using ScriptModule.Enums;
 using ScriptModule.Interfaces;
 using ScriptModule.Models;
 using Services.FileStorageServices.Interfaces;
+using Services.MailingService;
+using Services.SignalR;
 using SharedModule.Settings;
 using SharedModule.Utils;
+using TransactionModule.Enums;
 using TransactionModule.Interfaces;
 using TransactionModule.Models;
-using TransactionModule.Enums;
-using Services.MailingService;
-using Microsoft.AspNetCore.SignalR;
-using Services.SignalR;
-using Hangfire;
-using Microsoft.AspNetCore.Http;
 
 namespace Infrastructure.Repositories.ScriptRepositories
 {
@@ -32,9 +32,10 @@ namespace Infrastructure.Repositories.ScriptRepositories
         private readonly IWalletService walletService;
         private readonly IMailService mailService;
         private readonly IHubContext<NotificationHub> notificationHub;
+        private readonly IChatService chatService;
 
         private const string ALL_SCRIPTS_CACHE_KEY = "All_Scripts_Cache";
-        public ScriptRepository(IFileStorageService fileStorageService, ILogger<ScriptRepository> logger, BaraContext baraContext, IOptions<Secrets> secrets, IOptions<AppSettings> appSettings, IMemoryCache memoryCache, IWalletService walletService, IMailService mailService, IHubContext<NotificationHub> notificationHub)
+        public ScriptRepository(IFileStorageService fileStorageService, ILogger<ScriptRepository> logger, BaraContext baraContext, IOptions<Secrets> secrets, IOptions<AppSettings> appSettings, IMemoryCache memoryCache, IWalletService walletService, IMailService mailService, IHubContext<NotificationHub> notificationHub, IChatService chatService)
         {
             cloudinary = fileStorageService;
             this.logger = logger;
@@ -45,6 +46,7 @@ namespace Infrastructure.Repositories.ScriptRepositories
             this.walletService = walletService;
             this.mailService = mailService;
             this.notificationHub = notificationHub;
+            this.chatService = chatService;
         }
         public async Task<ResponseDetail<Script>> AddScript(PostScriptDetailDTO scriptDetails, Guid writerId)
         {
@@ -502,6 +504,28 @@ namespace Infrastructure.Repositories.ScriptRepositories
 
                 await dbContext.ScriptTransactions.AddAsync(scriptTransaction);
 
+                // Create chat for the transaction
+                var chatResult = await chatService.CreateChatAsync(
+                    scriptId: request.ScriptId,
+                    scriptTitle: script.Title,
+                    producerId: producerId,
+                    producerName: $"{producer.FirstName} {producer.LastName}",
+                    writerId: request.WriterId,
+                    writerName: $"{writer.FirstName} {writer.LastName}"
+                );
+
+                if (!chatResult.IsSuccess)
+                {
+                    logger.LogWarning("Failed to create chat - CorrelationId: {CorrelationId}, Error: {Error}", correlationId, chatResult.Message);
+                    // Continue with transaction even if chat creation fails - it's not critical
+                }
+                else
+                {
+                    // Link the chat to the script transaction
+                    scriptTransaction.ScriptComments = await dbContext.Chats.FirstOrDefaultAsync(c => c.Id == chatResult.Data);
+                    logger.LogInformation("Chat created for script transaction - CorrelationId: {CorrelationId}, ChatId: {ChatId}", correlationId, chatResult.Data);
+                }
+
                 // Lock funds using wallet service
                 var fundsLocked = await walletService.LockFundsForScriptTransactionAsync(producerId, request.WriterId, script.Price, fee);
                 if (!fundsLocked)
@@ -618,6 +642,22 @@ namespace Infrastructure.Repositories.ScriptRepositories
                 await dbContext.SaveChangesAsync();
                 await transaction.CommitAsync();
 
+                // Close the chat
+                if (scriptTransaction.ScriptComments != null)
+                {
+                    var chatCloseResult = await chatService.CloseChatAsync(scriptTransaction.ScriptComments.Id);
+                    if (!chatCloseResult.IsSuccess)
+                    {
+                        logger.LogWarning("Failed to close chat - CorrelationId: {CorrelationId}, ChatId: {ChatId}, Error: {Error}",
+                            correlationId, scriptTransaction.ScriptComments.Id, chatCloseResult.Message);
+                    }
+                    else
+                    {
+                        logger.LogInformation("Chat closed for completed transaction - CorrelationId: {CorrelationId}, ChatId: {ChatId}",
+                            correlationId, scriptTransaction.ScriptComments.Id);
+                    }
+                }
+
                 // Send script via email
                 await SendScriptToProducerAsync(producerId, scriptId, correlationId);
 
@@ -709,6 +749,22 @@ namespace Infrastructure.Repositories.ScriptRepositories
 
                 await dbContext.SaveChangesAsync();
                 await transaction.CommitAsync();
+
+                // Close the chat
+                if (scriptTransaction.ScriptComments != null)
+                {
+                    var chatCloseResult = await chatService.CloseChatAsync(scriptTransaction.ScriptComments.Id);
+                    if (!chatCloseResult.IsSuccess)
+                    {
+                        logger.LogWarning("Failed to close chat - CorrelationId: {CorrelationId}, ChatId: {ChatId}, Error: {Error}",
+                            correlationId, scriptTransaction.ScriptComments.Id, chatCloseResult.Message);
+                    }
+                    else
+                    {
+                        logger.LogInformation("Chat closed for cancelled transaction - CorrelationId: {CorrelationId}, ChatId: {ChatId}",
+                            correlationId, scriptTransaction.ScriptComments.Id);
+                    }
+                }
 
                 logger.LogInformation("Script transaction cancelled successfully - CorrelationId: {CorrelationId}, TransactionId: {TransactionId}",
                     correlationId, scriptTransaction.Id);
@@ -861,7 +917,6 @@ namespace Infrastructure.Repositories.ScriptRepositories
                     attachments = new List<IFormFile> { formFile };
                 }
 
-                // Create email using the proper mail notification template
                 var mailRequest = MailNotifications.ScriptDeliveryNotification(
                     receiver: producer.Email,
                     name: producer.FirstName,

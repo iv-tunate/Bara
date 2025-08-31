@@ -1,4 +1,5 @@
 ﻿using ScriptModule.Enums;
+using ScriptModule.Models.ScriptRelatedChats;
 using SharedModule.Models;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -118,6 +119,10 @@ namespace ScriptModule.Models
         /// </summary>
         public Currency Currency { get; set; } = Currency.NAIRA;
 
+        /// <summary>
+        /// Gets or sets any comments or notes between the Writer on producer regarding the script.
+        /// </summary>
+        public Chat? ScriptComments { get; set; }
         /// <summary>
         /// Gets or sets the date and time when the writer was paid,
         /// or <c>null</c> if payment has not yet been made.
