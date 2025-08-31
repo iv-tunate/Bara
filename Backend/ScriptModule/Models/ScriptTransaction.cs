@@ -79,6 +79,46 @@ namespace ScriptModule.Models
         public ScriptDeliveryStatus Status { get; set; } = ScriptDeliveryStatus.InProgress;
 
         /// <summary>
+        /// Gets or sets the transaction status for this script transaction.
+        /// Defaults to <see cref="ScriptTransactionStatus.Initiated"/>.
+        /// </summary>
+        public ScriptTransactionStatus TransactionStatus { get; set; } = ScriptTransactionStatus.Initiated;
+
+        /// <summary>
+        /// Gets or sets the date and time when this transaction expires (14 days from initiation).
+        /// After this time, the transaction will be automatically completed.
+        /// </summary>
+        public DateTimeOffset? ExpiresAt { get; set; }
+
+        /// <summary>
+        /// Gets or sets the idempotency key used to prevent duplicate transactions.
+        /// </summary>
+        public string? IdempotencyKey { get; set; }
+
+        /// <summary>
+        /// Gets or sets the total amount for this script transaction.
+        /// </summary>
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal Amount { get; set; }
+
+        /// <summary>
+        /// Gets or sets the platform fee (10% of the total amount).
+        /// </summary>
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal Fee { get; set; }
+
+        /// <summary>
+        /// Gets or sets the writer's share (90% of the total amount).
+        /// </summary>
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal WriterShare { get; set; }
+
+        /// <summary>
+        /// Gets or sets the currency for this transaction.
+        /// </summary>
+        public Currency Currency { get; set; } = Currency.NAIRA;
+
+        /// <summary>
         /// Gets or sets the date and time when the writer was paid,
         /// or <c>null</c> if payment has not yet been made.
         /// </summary>

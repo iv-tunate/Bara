@@ -306,7 +306,7 @@
                     <li><strong>IP Address:</strong> {data.Ip}</li>
                     <li><strong>Location:</strong> {data.Country}</li>
                 </ul>
-                <p>Please confirm this withdrawal using the token below:</p>    
+                <p>Please confirm this withdrawal using the token below:</p>
                 <h2 style='color:#800000'>{data.Token}</h2>
                 <p style='margin-top:-10px;'>This token will expire in <strong>10 minutes</strong>.</p>
                 <br/>
@@ -317,6 +317,58 @@
                 Receiver = data.Receiver,
                 Subject = subject,
                 Body = BaseEmailTemplate(data.Name, body),
+            };
+        }
+
+        /// <summary>
+        /// Constructs a script delivery notification email with the purchased script as attachment.
+        /// </summary>
+        /// <param name="receiver">The email address of the producer.</param>
+        /// <param name="name">The name of the producer.</param>
+        /// <param name="scriptTitle">The title of the purchased script.</param>
+        /// <param name="amount">The amount paid for the script.</param>
+        /// <param name="currency">The currency symbol.</param>
+        /// <param name="attachments">The script file attachments.</param>
+        /// <returns>A populated <see cref="MailRequestDTO"/> ready to be sent.</returns>
+        public static MailRequestDTO ScriptDeliveryNotification(string receiver, string name, string scriptTitle, decimal amount, string currency, List<Microsoft.AspNetCore.Http.IFormFile>? attachments = null)
+        {
+            var subject = "🎬 Your Script Purchase - Delivery Complete";
+            var body = $@"
+                <br/>
+                <p>Congratulations {name}!</p>
+                <p>Your script purchase has been completed successfully and your script is ready for production.</p>
+
+                <div style='background-color: #1a1d23; padding: 20px; border-radius: 8px; border-left: 4px solid #BF0000; margin: 20px 0;'>
+                    <h3 style='color: #BF0000; margin-top: 0;'>📋 Purchase Details</h3>
+                    <ul style='list-style: none; padding: 0;'>
+                        <li style='margin-bottom: 10px;'><strong>Script Title:</strong> {scriptTitle}</li>
+                        <li style='margin-bottom: 10px;'><strong>Amount Paid:</strong> {currency}{amount:N2}</li>
+                        <li style='margin-bottom: 10px;'><strong>Purchase Date:</strong> {DateTime.UtcNow:dddd, MMMM dd, yyyy 'at' hh:mm tt} (UTC)</li>
+                        <li style='margin-bottom: 10px;'><strong>Status:</strong> <span style='color: #28a745;'>✅ Completed</span></li>
+                    </ul>
+                </div>
+
+                <p>📎 <strong>Your script is attached to this email.</strong> You can now download and use it for your production needs.</p>
+
+                <div style='background-color: #2d3748; padding: 15px; border-radius: 5px; margin: 20px 0;'>
+                    <p style='margin: 0; color: #a0aec0; font-size: 14px;'>
+                        💡 <strong>Tip:</strong> Keep this email safe as it contains your purchased script.
+                        You can always refer back to it if you need to access the script again.
+                    </p>
+                </div>
+
+                <p>Thank you for choosing Bara for your creative projects. We're excited to see what you'll create!</p>
+
+                <br/>
+                <p>Happy creating! 🎭</p>";
+
+            return new MailRequestDTO
+            {
+                Receiver = receiver,
+                ReceiverName = name,
+                Subject = subject,
+                Body = BaseEmailTemplate(name, body),
+                Attachments = attachments
             };
         }
     }

@@ -1,247 +1,244 @@
-﻿namespace Infrastructure.Repositories.TransactionRepositories
+using Infrastructure.DataContext;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Services.Paystack;
+using Services.SignalR;
+using SharedModule.Utils;
+using TransactionModule.Interfaces;
+
+namespace Infrastructure.Repositories.TransactionRepositories
 {
-    //public class WalletService : IWalletService
-    //{
-    //    private readonly IPaystackService _paystackService;
-    //    private readonly IRepository<User> _userRepository;
-    //    private readonly IRepository<Transaction> _transactionRepository;
-    //    private readonly IRepository<ScriptPayment> _scriptPaymentRepository;
-    //    private readonly IRepository<BankAccount> _bankAccountRepository;
+    /// <summary>
+    /// Service for managing wallet operations including funding, withdrawals, and script transaction escrow.
+    /// </summary>
+    public class WalletService : IWalletService
+    {
+        private readonly BaraContext dbContext;
+        private readonly ILogger<WalletService> logger;
+        private readonly IHubContext<NotificationHub> notificationHub;
+        private readonly LogHelper<WalletService> logHelper;
+        private readonly IPaystackService paystackService;
 
-    //    public WalletService(
-    //        IPaystackService paystackService,
-    //        IRepository<User> userRepository,
-    //        IRepository<Transaction> transactionRepository,
-    //        IRepository<ScriptPayment> scriptPaymentRepository,
-    //        IRepository<BankAccount> bankAccountRepository)
-    //    {
-    //        _paystackService = paystackService;
-    //        _userRepository = userRepository;
-    //        _transactionRepository = transactionRepository;
-    //        _scriptPaymentRepository = scriptPaymentRepository;
-    //        _bankAccountRepository = bankAccountRepository;
-    //    }
+        public WalletService(
+            BaraContext dbContext, 
+            ILogger<WalletService> logger, 
+            IHubContext<NotificationHub> notificationHub, 
+            LogHelper<WalletService> logHelper,
+            IPaystackService paystackService)
+        {
+            this.dbContext = dbContext;
+            this.logger = logger;
+            this.notificationHub = notificationHub;
+            this.logHelper = logHelper;
+            this.paystackService = paystackService;
+        }
 
-    //    public async Task<string> FundWalletAsync(Guid userId, decimal amount, string email)
-    //    {
-    //        var user = await _userRepository.GetByIdAsync(userId);
-    //        if (user == null) throw new ArgumentException("User not found");
+        public Task<string> FundWalletAsync(Guid userId, decimal amount, string email)
+        {
+            throw new NotImplementedException("Use TransactionRepository.InitiateTransactionAsync for wallet funding");
+        }
 
-    //        var reference = GenerateInternalReference("FUND");
+        public Task<bool> ProcessPaymentCallbackAsync(string reference)
+        {
+            throw new NotImplementedException("Use TransactionRepository.VerifyTransactionAsync for payment callbacks");
+        }
 
-    //        // Create pending transaction
-    //        var transaction = new Transaction
-    //        {
-    //            Id = Guid.NewGuid(),
-    //            UserId = userId,
-    //            Amount = amount,
-    //            Type = TransactionType.Deposit,
-    //            Status = TransactionStatus.Pending,
-    //            Description = "Wallet funding",
-    //            ExternalReference = reference,
-    //            CreatedAt = DateTime.UtcNow,
-    //            Metadata = new Dictionary<string, object>
-    //            {
-    //                ["purpose"] = "wallet_funding",
-    //                ["user_email"] = email
-    //            }
-    //        };
+        public Task<bool> WithdrawFundsAsync(Guid userId, decimal amount, Guid bankAccountId)
+        {
+            throw new NotImplementedException("Use TransactionRepository.InitiateWithdrawalAsync for withdrawals");
+        }
 
-    //        await _transactionRepository.AddAsync(transaction);
+        public Task<bool> ProcessScriptPaymentAsync(Guid producerId, Guid writerId, Guid scriptId, decimal amount)
+        {
+            throw new NotImplementedException("Use script transaction methods for script payments");
+        }
 
-    //        var initRequest = new PaymentInitRequest
-    //        {
-    //            UserId = userId,
-    //            Amount = amount,
-    //            Email = email,
-    //            CallbackUrl = "https://yourapp.com/payment/callback",
-    //            Reference = reference,
-    //            Metadata = new Dictionary<string, object>
-    //            {
-    //                ["user_id"] = userId.ToString(),
-    //                ["transaction_id"] = transaction.Id.ToString(),
-    //                ["purpose"] = "wallet_funding"
-    //            }
-    //        };
+        public async Task<decimal> GetWalletBalanceAsync(Guid userId)
+        {
+            try
+            {
+                var wallet = await dbContext.Wallets
+                    .FirstOrDefaultAsync(w => w.UserId == userId);
+                
+                return wallet?.AvailableBalance ?? 0;
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, 
+                    $"While getting wallet balance for user: {userId}");
+                return 0;
+            }
+        }
 
-    //        var response = await _paystackService.InitializePaymentAsync(initRequest);
+        public async Task<bool> LockFundsForScriptTransactionAsync(Guid producerId, Guid writerId, decimal amount, decimal fee)
+        {
+            try
+            {
+                using var transaction = await dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
 
-    //        if (response.Status)
-    //        {
-    //            transaction.PaystackReference = response.Data.Reference;
-    //            await _transactionRepository.UpdateAsync(transaction);
-    //            return response.Data.AuthorizationUrl;
-    //        }
+                var producer = await dbContext.Users
+                    .Include(u => u.Wallet)
+                    .FirstOrDefaultAsync(u => u.Id == producerId);
 
-    //        throw new Exception($"Payment initialization failed: {response.Message}");
-    //    }
+                var writer = await dbContext.Users
+                    .Include(u => u.Wallet)
+                    .FirstOrDefaultAsync(u => u.Id == writerId);
 
-    //    public async Task<bool> ProcessPaymentCallbackAsync(string reference)
-    //    {
-    //        var verification = await _paystackService.VerifyPaymentAsync(reference);
+                if (producer?.Wallet == null || writer?.Wallet == null)
+                    return false;
 
-    //        if (!verification.Status || verification.Data.Status != "success")
-    //            return false;
+                var writerShare = amount - fee;
 
-    //        var transaction = await _transactionRepository
-    //            .FirstOrDefaultAsync(t => t.PaystackReference == reference);
+                // Lock funds in producer's wallet
+                producer.Wallet.AvailableBalance -= amount;
+                producer.Wallet.LockedBalance += amount;
 
-    //        if (transaction == null) return false;
+                // Reflect pending amount in writer's wallet (locked, not available)
+                writer.Wallet.LockedBalance += writerShare;
+                writer.Wallet.TotalBalance += writerShare;
 
-    //        var user = await _userRepository.GetByIdAsync(transaction.UserId);
-    //        var amount = verification.Data.Amount / 100m; // Convert from kobo
+                dbContext.Wallets.UpdateRange(producer.Wallet, writer.Wallet);
+                await dbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
 
-    //        // Update transaction
-    //        transaction.Status = TransactionStatus.Success;
-    //        transaction.CompletedAt = DateTime.UtcNow;
-    //        transaction.Amount = amount;
+                // Send SignalR notifications
+                await notificationHub.Clients.User(producerId.ToString())
+                    .SendAsync("WalletUpdated", new
+                    {
+                        Balance = producer.Wallet.AvailableBalance,
+                        Total = producer.Wallet.TotalBalance,
+                        Locked = producer.Wallet.LockedBalance
+                    });
 
-    //        // Update user wallet
-    //        user.WalletBalance += amount;
+                await notificationHub.Clients.User(writerId.ToString())
+                    .SendAsync("WalletUpdated", new
+                    {
+                        Balance = writer.Wallet.AvailableBalance,
+                        Total = writer.Wallet.TotalBalance,
+                        Locked = writer.Wallet.LockedBalance
+                    });
 
-    //        await _transactionRepository.UpdateAsync(transaction);
-    //        await _userRepository.UpdateAsync(user);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, 
+                    $"While locking funds for script transaction - Producer: {producerId}, Writer: {writerId}");
+                return false;
+            }
+        }
 
-    //        return true;
-    //    }
+        public async Task<bool> ReleaseFundsForScriptTransactionAsync(Guid producerId, Guid writerId, decimal amount, decimal writerShare)
+        {
+            try
+            {
+                using var transaction = await dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
 
-    //    public async Task<bool> WithdrawFundsAsync(Guid userId, decimal amount, Guid bankAccountId)
-    //    {
-    //        var user = await _userRepository.GetByIdAsync(userId);
-    //        var bankAccount = await _bankAccountRepository.GetByIdAsync(bankAccountId);
+                var producer = await dbContext.Users
+                    .Include(u => u.Wallet)
+                    .FirstOrDefaultAsync(u => u.Id == producerId);
 
-    //        if (user.WalletBalance < amount)
-    //            throw new InvalidOperationException("Insufficient balance");
+                var writer = await dbContext.Users
+                    .Include(u => u.Wallet)
+                    .FirstOrDefaultAsync(u => u.Id == writerId);
 
-    //        // Create withdrawal transaction
-    //        var transaction = new Transaction
-    //        {
-    //            Id = Guid.NewGuid(),
-    //            UserId = userId,
-    //            Amount = amount,
-    //            Type = TransactionType.Withdrawal,
-    //            Status = TransactionStatus.Pending,
-    //            Description = $"Withdrawal to {bankAccount.BankName}",
-    //            ExternalReference = GenerateInternalReference("WITH"),
-    //            CreatedAt = DateTime.UtcNow
-    //        };
+                if (producer?.Wallet == null || writer?.Wallet == null)
+                    return false;
 
-    //        await _transactionRepository.AddAsync(transaction);
+                // Finalize producer's payment (remove from locked and total)
+                producer.Wallet.LockedBalance -= amount;
+                producer.Wallet.TotalBalance -= amount;
 
-    //        // Deduct from wallet immediately (will be reversed if withdrawal fails)
-    //        user.WalletBalance -= amount;
-    //        await _userRepository.UpdateAsync(user);
+                // Release funds to writer (move from locked to available)
+                writer.Wallet.LockedBalance -= writerShare;
+                writer.Wallet.AvailableBalance += writerShare;
 
-    //        var withdrawalRequest = new WithdrawalRequest
-    //        {
-    //            UserId = userId,
-    //            Amount = amount,
-    //            RecipientCode = bankAccount.PaystackRecipientCode,
-    //            Reason = "Wallet withdrawal"
-    //        };
+                dbContext.Wallets.UpdateRange(producer.Wallet, writer.Wallet);
+                await dbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
 
-    //        var response = await _paystackService.InitiateWithdrawalAsync(withdrawalRequest);
+                // Send SignalR notifications
+                await notificationHub.Clients.User(producerId.ToString())
+                    .SendAsync("WalletUpdated", new
+                    {
+                        Balance = producer.Wallet.AvailableBalance,
+                        Total = producer.Wallet.TotalBalance,
+                        Locked = producer.Wallet.LockedBalance
+                    });
 
-    //        if (response.Status)
-    //        {
-    //            transaction.PaystackTransferCode = response.Data.TransferCode;
-    //            transaction.PaystackReference = response.Data.Reference;
-    //            await _transactionRepository.UpdateAsync(transaction);
-    //            return true;
-    //        }
-    //        else
-    //        {
-    //            // Reverse the deduction
-    //            user.WalletBalance += amount;
-    //            transaction.Status = TransactionStatus.Failed;
-    //            await _userRepository.UpdateAsync(user);
-    //            await _transactionRepository.UpdateAsync(transaction);
-    //            return false;
-    //        }
-    //    }
+                await notificationHub.Clients.User(writerId.ToString())
+                    .SendAsync("WalletUpdated", new
+                    {
+                        Balance = writer.Wallet.AvailableBalance,
+                        Total = writer.Wallet.TotalBalance,
+                        Locked = writer.Wallet.LockedBalance
+                    });
 
-    //    public async Task<bool> ProcessScriptPaymentAsync(Guid producerId, Guid writerId, Guid scriptId, decimal amount)
-    //    {
-    //        var producer = await _userRepository.GetByIdAsync(producerId);
-    //        var writer = await _userRepository.GetByIdAsync(writerId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, 
+                    $"While releasing funds for script transaction - Producer: {producerId}, Writer: {writerId}");
+                return false;
+            }
+        }
 
-    //        if (producer.WalletBalance < amount)
-    //            throw new InvalidOperationException("Insufficient balance");
+        public async Task<bool> RefundFundsForScriptTransactionAsync(Guid producerId, Guid writerId, decimal amount, decimal writerShare)
+        {
+            try
+            {
+                using var transaction = await dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
 
-    //        var commissionRate = 0.1m; // 10% commission
-    //        var writerAmount = amount * (1 - commissionRate);
-    //        var commissionAmount = amount * commissionRate;
+                var producer = await dbContext.Users
+                    .Include(u => u.Wallet)
+                    .FirstOrDefaultAsync(u => u.Id == producerId);
 
-    //        // Deduct from producer
-    //        producer.WalletBalance -= amount;
+                var writer = await dbContext.Users
+                    .Include(u => u.Wallet)
+                    .FirstOrDefaultAsync(u => u.Id == writerId);
 
-    //        // Add to writer (minus commission)
-    //        writer.WalletBalance += writerAmount;
+                if (producer?.Wallet == null || writer?.Wallet == null)
+                    return false;
 
-    //        // Create payment transaction for producer
-    //        var paymentTransaction = new Transaction
-    //        {
-    //            Id = Guid.NewGuid(),
-    //            UserId = producerId,
-    //            Amount = -amount, // Negative for deduction
-    //            Type = TransactionType.Payment,
-    //            Status = TransactionStatus.Success,
-    //            Description = $"Payment for script",
-    //            RelatedUserId = writerId,
-    //            ScriptId = scriptId,
-    //            CommissionAmount = commissionAmount,
-    //            CreatedAt = DateTime.UtcNow,
-    //            CompletedAt = DateTime.UtcNow
-    //        };
+                // Refund producer (move from locked back to available)
+                producer.Wallet.LockedBalance -= amount;
+                producer.Wallet.AvailableBalance += amount;
 
-    //        // Create receipt transaction for writer
-    //        var receiptTransaction = new Transaction
-    //        {
-    //            Id = Guid.NewGuid(),
-    //            UserId = writerId,
-    //            Amount = writerAmount,
-    //            Type = TransactionType.Payment,
-    //            Status = TransactionStatus.Success,
-    //            Description = $"Payment received for script",
-    //            RelatedUserId = producerId,
-    //            ScriptId = scriptId,
-    //            CreatedAt = DateTime.UtcNow,
-    //            CompletedAt = DateTime.UtcNow
-    //        };
+                // Remove pending amount from writer's wallet
+                writer.Wallet.LockedBalance -= writerShare;
+                writer.Wallet.TotalBalance -= writerShare;
 
-    //        // Track script payment
-    //        var scriptPayment = new ScriptPayment
-    //        {
-    //            Id = Guid.NewGuid(),
-    //            ScriptId = scriptId,
-    //            ProducerId = producerId,
-    //            WriterId = writerId,
-    //            Amount = amount,
-    //            WriterAmount = writerAmount,
-    //            CommissionAmount = commissionAmount,
-    //            PaymentTransactionId = paymentTransaction.Id,
-    //            CreatedAt = DateTime.UtcNow,
-    //            IsWriterPaid = true
-    //        };
+                dbContext.Wallets.UpdateRange(producer.Wallet, writer.Wallet);
+                await dbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
 
-    //        await _userRepository.UpdateAsync(producer);
-    //        await _userRepository.UpdateAsync(writer);
-    //        await _transactionRepository.AddAsync(paymentTransaction);
-    //        await _transactionRepository.AddAsync(receiptTransaction);
-    //        await _scriptPaymentRepository.AddAsync(scriptPayment);
+                // Send SignalR notifications
+                await notificationHub.Clients.User(producerId.ToString())
+                    .SendAsync("WalletUpdated", new
+                    {
+                        Balance = producer.Wallet.AvailableBalance,
+                        Total = producer.Wallet.TotalBalance,
+                        Locked = producer.Wallet.LockedBalance
+                    });
 
-    //        return true;
-    //    }
+                await notificationHub.Clients.User(writerId.ToString())
+                    .SendAsync("WalletUpdated", new
+                    {
+                        Balance = writer.Wallet.AvailableBalance,
+                        Total = writer.Wallet.TotalBalance,
+                        Locked = writer.Wallet.LockedBalance
+                    });
 
-    //    public async Task<decimal> GetWalletBalanceAsync(Guid userId)
-    //    {
-    //        var user = await _userRepository.GetByIdAsync(userId);
-    //        return user?.WalletBalance ?? 0;
-    //    }
-
-    //    private string GenerateInternalReference(string prefix)
-    //    {
-    //        return $"{prefix}_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid().ToString()[..8]}";
-    //    }
-    //}
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, 
+                    $"While refunding funds for script transaction - Producer: {producerId}, Writer: {writerId}");
+                return false;
+            }
+        }
+    }
 }

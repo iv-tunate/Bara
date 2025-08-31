@@ -30,8 +30,12 @@
         /// <summary>
         /// Payment made by writers to suscribe for premium privileges in the application.
         /// </summary>
-
         PremiumSubscriptionPayment,
+
+        /// <summary>
+        /// Escrowed payment for script purchase, held until transaction completion or cancellation.
+        /// </summary>
+        ScriptEscrow,
 
     }
 }

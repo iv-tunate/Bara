@@ -10,6 +10,14 @@ using ScriptModule.Models;
 using Services.FileStorageServices.Interfaces;
 using SharedModule.Settings;
 using SharedModule.Utils;
+using TransactionModule.Interfaces;
+using TransactionModule.Models;
+using TransactionModule.Enums;
+using Services.MailingService;
+using Microsoft.AspNetCore.SignalR;
+using Services.SignalR;
+using Hangfire;
+using Microsoft.AspNetCore.Http;
 
 namespace Infrastructure.Repositories.ScriptRepositories
 {
@@ -21,9 +29,12 @@ namespace Infrastructure.Repositories.ScriptRepositories
         private readonly AppSettings settings;
         private readonly Secrets secrets;
         private readonly IMemoryCache memoryCache;
+        private readonly IWalletService walletService;
+        private readonly IMailService mailService;
+        private readonly IHubContext<NotificationHub> notificationHub;
 
         private const string ALL_SCRIPTS_CACHE_KEY = "All_Scripts_Cache";
-        public ScriptRepository(IFileStorageService fileStorageService, ILogger<ScriptRepository> logger, BaraContext baraContext, IOptions<Secrets> secrets, IOptions<AppSettings> appSettings, IMemoryCache memoryCache)
+        public ScriptRepository(IFileStorageService fileStorageService, ILogger<ScriptRepository> logger, BaraContext baraContext, IOptions<Secrets> secrets, IOptions<AppSettings> appSettings, IMemoryCache memoryCache, IWalletService walletService, IMailService mailService, IHubContext<NotificationHub> notificationHub)
         {
             cloudinary = fileStorageService;
             this.logger = logger;
@@ -31,6 +42,9 @@ namespace Infrastructure.Repositories.ScriptRepositories
             this.secrets = secrets.Value;
             this.settings = appSettings.Value;
             this.memoryCache = memoryCache;
+            this.walletService = walletService;
+            this.mailService = mailService;
+            this.notificationHub = notificationHub;
         }
         public async Task<ResponseDetail<Script>> AddScript(PostScriptDetailDTO scriptDetails, Guid writerId)
         {
@@ -356,5 +370,561 @@ namespace Infrastructure.Repositories.ScriptRepositories
         {
             throw new NotImplementedException();
         }
+
+        public async Task<ResponseDetail<ScriptTransactionResponse>> InitiateScriptTransactionAsync(Guid producerId, InitiateScriptTransactionRequest request)
+        {
+            var correlationId = Guid.NewGuid();
+            logger.LogInformation("Starting script transaction initiation - CorrelationId: {CorrelationId}, ProducerId: {ProducerId}, ScriptId: {ScriptId}",
+                correlationId, producerId, request.ScriptId);
+
+            try
+            {
+                using var transaction = await dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
+
+                // Validate entities exist
+                var script = await dbContext.Scripts
+                    .FirstOrDefaultAsync(s => s.Id == request.ScriptId);
+
+                if (script == null)
+                {
+                    logger.LogWarning("Script not found - CorrelationId: {CorrelationId}, ScriptId: {ScriptId}", correlationId, request.ScriptId);
+                    return ResponseDetail<ScriptTransactionResponse>.Failed("Script not found", 404);
+                }
+
+                if (script.Status != ScriptStatus.Available)
+                {
+                    logger.LogWarning("Script not available - CorrelationId: {CorrelationId}, ScriptId: {ScriptId}, Status: {Status}",
+                        correlationId, request.ScriptId, script.Status);
+                    return ResponseDetail<ScriptTransactionResponse>.Failed("Script is not available for purchase", 400);
+                }
+
+                var producer = await dbContext.Producers
+                    .Include(p => p.Wallet)
+                    .FirstOrDefaultAsync(p => p.Id == producerId);
+
+                if (producer?.Wallet == null)
+                {
+                    logger.LogWarning("Producer not found - CorrelationId: {CorrelationId}, ProducerId: {ProducerId}", correlationId, producerId);
+                    return ResponseDetail<ScriptTransactionResponse>.Failed("Producer not found", 404);
+                }
+
+                var writer = await dbContext.Writers
+                    .Include(w => w.Wallet)
+                    .FirstOrDefaultAsync(w => w.Id == request.WriterId);
+
+                if (writer?.Wallet == null)
+                {
+                    logger.LogWarning("Writer not found - CorrelationId: {CorrelationId}, WriterId: {WriterId}", correlationId, request.WriterId);
+                    return ResponseDetail<ScriptTransactionResponse>.Failed("Writer not found", 404);
+                }
+
+                if (script.WriterId != request.WriterId)
+                {
+                    logger.LogWarning("Writer does not own script - CorrelationId: {CorrelationId}, ScriptId: {ScriptId}, WriterId: {WriterId}",
+                        correlationId, request.ScriptId, request.WriterId);
+                    return ResponseDetail<ScriptTransactionResponse>.Failed("Writer does not own this script", 400);
+                }
+
+                // Check for sufficient balance
+                if (producer.Wallet.AvailableBalance < script.Price)
+                {
+                    logger.LogWarning("Insufficient balance - CorrelationId: {CorrelationId}, ProducerId: {ProducerId}, Available: {Available}, Required: {Required}",
+                        correlationId, producerId, producer.Wallet.AvailableBalance, script.Price);
+                    return ResponseDetail<ScriptTransactionResponse>.Failed("Insufficient wallet balance", 400);
+                }
+
+                // Check for existing active transaction (idempotency and business rule)
+                var existingTransaction = await dbContext.ScriptTransactions
+                    .FirstOrDefaultAsync(st => st.ProducerId == producerId && st.ScriptId == request.ScriptId &&
+                                             st.TransactionStatus == ScriptTransactionStatus.Initiated);
+
+                if (existingTransaction != null)
+                {
+                    if (!string.IsNullOrEmpty(request.IdempotencyKey) && existingTransaction.IdempotencyKey == request.IdempotencyKey)
+                    {
+                        // Return existing transaction for idempotency
+                        logger.LogInformation("Returning existing transaction for idempotency - CorrelationId: {CorrelationId}, TransactionId: {TransactionId}",
+                            correlationId, existingTransaction.Id);
+
+                        return ResponseDetail<ScriptTransactionResponse>.Successful(MapToResponse(existingTransaction, script),
+                            "Transaction already exists");
+                    }
+                    else
+                    {
+                        logger.LogWarning("Active transaction already exists - CorrelationId: {CorrelationId}, ExistingTransactionId: {ExistingTransactionId}",
+                            correlationId, existingTransaction.Id);
+                        return ResponseDetail<ScriptTransactionResponse>.Failed("An active transaction already exists for this script", 409);
+                    }
+                }
+
+                var fee = CalculateFee(script.Price);
+                var writerShare = script.Price - fee;
+
+                // Create payment transaction
+                var paymentTransaction = new PaymentTransaction
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = producerId,
+                    UserFullName = $"{producer.FirstName} {producer.LastName}",
+                    Amount = script.Price,
+                    Fee = fee,
+                    Currency = script.Currency,
+                    TransactionType = TransactionType.ScriptEscrow,
+                    Status = TransactionStatus.Escrowed,
+                    ReferenceId = GenerateTransactionReference("SCR"),
+                    Notes = $"Escrowed payment for script: {script.Title}",
+                    PaymentMethod = "wallet",
+                    WalletID = producer.Wallet.Id
+                };
+
+                await dbContext.Transactions.AddAsync(paymentTransaction);
+
+                // Create script transaction
+                var scriptTransaction = new ScriptTransaction
+                {
+                    Id = Guid.NewGuid(),
+                    ScriptId = request.ScriptId,
+                    ScriptTitle = script.Title,
+                    ProducerId = producerId,
+                    ProducerName = $"{producer.FirstName} {producer.LastName}",
+                    WriterId = request.WriterId,
+                    WriterName = $"{writer.FirstName} {writer.LastName}",
+                    Amount = script.Price,
+                    Fee = fee,
+                    WriterShare = writerShare,
+                    Currency = script.Currency,
+                    PaymentTransactionId = paymentTransaction.Id,
+                    Status = ScriptDeliveryStatus.InProgress,
+                    TransactionStatus = ScriptTransactionStatus.Initiated,
+                    ExpiresAt = DateTimeOffset.UtcNow.AddDays(14),
+                    IdempotencyKey = request.IdempotencyKey
+                };
+
+                await dbContext.ScriptTransactions.AddAsync(scriptTransaction);
+
+                // Lock funds using wallet service
+                var fundsLocked = await walletService.LockFundsForScriptTransactionAsync(producerId, request.WriterId, script.Price, fee);
+                if (!fundsLocked)
+                {
+                    logger.LogError("Failed to lock funds - CorrelationId: {CorrelationId}", correlationId);
+                    return ResponseDetail<ScriptTransactionResponse>.Failed("Failed to lock funds", 500);
+                }
+
+                // Update script status
+                script.Status = ScriptStatus.InNegotiation;
+                dbContext.Scripts.Update(script);
+
+                await dbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                // Schedule auto-complete job
+                BackgroundJob.Schedule<ScriptRepository>(
+                    repo => repo.AutoCompleteScriptTransactionAsync(scriptTransaction.Id),
+                    TimeSpan.FromDays(14));
+
+                logger.LogInformation("Script transaction initiated successfully - CorrelationId: {CorrelationId}, TransactionId: {TransactionId}",
+                    correlationId, scriptTransaction.Id);
+
+                return ResponseDetail<ScriptTransactionResponse>.Successful(MapToResponse(scriptTransaction, script),
+                    "Script transaction initiated successfully");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error initiating script transaction - CorrelationId: {CorrelationId}, ProducerId: {ProducerId}, ScriptId: {ScriptId}",
+                    correlationId, producerId, request.ScriptId);
+                return ResponseDetail<ScriptTransactionResponse>.Failed("Failed to initiate script transaction", 500, ex.Message);
+            }
+        }
+
+        public async Task<ResponseDetail<ScriptTransactionResponse>> CompleteScriptTransactionAsync(Guid producerId, Guid scriptId)
+        {
+            var correlationId = Guid.NewGuid();
+            logger.LogInformation("Starting script transaction completion - CorrelationId: {CorrelationId}, ProducerId: {ProducerId}, ScriptId: {ScriptId}",
+                correlationId, producerId, scriptId);
+
+            try
+            {
+                using var transaction = await dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
+
+                // Find the active script transaction
+                var scriptTransaction = await dbContext.ScriptTransactions
+                    .FirstOrDefaultAsync(st => st.ProducerId == producerId && st.ScriptId == scriptId &&
+                                             st.TransactionStatus == ScriptTransactionStatus.Initiated);
+
+                if (scriptTransaction == null)
+                {
+                    logger.LogWarning("Active script transaction not found - CorrelationId: {CorrelationId}, ProducerId: {ProducerId}, ScriptId: {ScriptId}",
+                        correlationId, producerId, scriptId);
+                    return ResponseDetail<ScriptTransactionResponse>.Failed("No active transaction found for this script", 404);
+                }
+
+                // Check if transaction has expired
+                if (scriptTransaction.ExpiresAt.HasValue && DateTimeOffset.UtcNow > scriptTransaction.ExpiresAt.Value)
+                {
+                    logger.LogWarning("Transaction has expired - CorrelationId: {CorrelationId}, TransactionId: {TransactionId}, ExpiresAt: {ExpiresAt}",
+                        correlationId, scriptTransaction.Id, scriptTransaction.ExpiresAt);
+                    return ResponseDetail<ScriptTransactionResponse>.Failed("Transaction has expired", 400);
+                }
+
+                // Get payment transaction
+                var paymentTransaction = await dbContext.Transactions
+                    .FirstOrDefaultAsync(pt => pt.Id == scriptTransaction.PaymentTransactionId);
+
+                if (paymentTransaction == null || paymentTransaction.Status != TransactionStatus.Escrowed)
+                {
+                    logger.LogWarning("Payment transaction not found or not escrowed - CorrelationId: {CorrelationId}, PaymentTransactionId: {PaymentTransactionId}",
+                        correlationId, scriptTransaction.PaymentTransactionId);
+                    return ResponseDetail<ScriptTransactionResponse>.Failed("Payment transaction not found or not in escrowed state", 400);
+                }
+
+                // Validate script is still available for completion
+                var script = await dbContext.Scripts.FirstOrDefaultAsync(s => s.Id == scriptId);
+                if (script == null || script.Status == ScriptStatus.Sold)
+                {
+                    logger.LogWarning("Script not available for completion - CorrelationId: {CorrelationId}, ScriptId: {ScriptId}, Status: {Status}",
+                        correlationId, scriptId, script?.Status);
+                    return ResponseDetail<ScriptTransactionResponse>.Failed("Script is no longer available", 400);
+                }
+
+                // Release funds using wallet service
+                var fundsReleased = await walletService.ReleaseFundsForScriptTransactionAsync(
+                    producerId, scriptTransaction.WriterId, scriptTransaction.Amount, scriptTransaction.WriterShare);
+
+                if (!fundsReleased)
+                {
+                    logger.LogError("Failed to release funds - CorrelationId: {CorrelationId}", correlationId);
+                    return ResponseDetail<ScriptTransactionResponse>.Failed("Failed to release funds", 500);
+                }
+
+                // Update script transaction
+                scriptTransaction.TransactionStatus = ScriptTransactionStatus.Completed;
+                scriptTransaction.Status = ScriptDeliveryStatus.Completed;
+                scriptTransaction.WriterPaidAt = DateTimeOffset.UtcNow;
+                scriptTransaction.ModifiedAt = DateTimeOffset.UtcNow;
+
+                // Update payment transaction
+                paymentTransaction.Status = TransactionStatus.Completed;
+                paymentTransaction.CompletedAt = DateTimeOffset.UtcNow;
+                paymentTransaction.ModifiedAt = DateTimeOffset.UtcNow;
+
+                // Update script status
+                script.Status = ScriptStatus.Sold;
+                script.ModifiedAt = DateTimeOffset.UtcNow;
+
+                dbContext.ScriptTransactions.Update(scriptTransaction);
+                dbContext.Transactions.Update(paymentTransaction);
+                dbContext.Scripts.Update(script);
+
+                await dbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                // Send script via email
+                await SendScriptToProducerAsync(producerId, scriptId, correlationId);
+
+                logger.LogInformation("Script transaction completed successfully - CorrelationId: {CorrelationId}, TransactionId: {TransactionId}",
+                    correlationId, scriptTransaction.Id);
+
+                return ResponseDetail<ScriptTransactionResponse>.Successful(MapToResponse(scriptTransaction, script),
+                    "Script transaction completed successfully");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error completing script transaction - CorrelationId: {CorrelationId}, ProducerId: {ProducerId}, ScriptId: {ScriptId}",
+                    correlationId, producerId, scriptId);
+                return ResponseDetail<ScriptTransactionResponse>.Failed("Failed to complete script transaction", 500, ex.Message);
+            }
+        }
+
+        public async Task<ResponseDetail<ScriptTransactionResponse>> CancelScriptTransactionAsync(Guid producerId, Guid scriptId)
+        {
+            var correlationId = Guid.NewGuid();
+            logger.LogInformation("Starting script transaction cancellation - CorrelationId: {CorrelationId}, ProducerId: {ProducerId}, ScriptId: {ScriptId}",
+                correlationId, producerId, scriptId);
+
+            try
+            {
+                using var transaction = await dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
+
+                // Find the active script transaction
+                var scriptTransaction = await dbContext.ScriptTransactions
+                    .FirstOrDefaultAsync(st => st.ProducerId == producerId && st.ScriptId == scriptId &&
+                                             st.TransactionStatus == ScriptTransactionStatus.Initiated);
+
+                if (scriptTransaction == null)
+                {
+                    logger.LogWarning("Active script transaction not found - CorrelationId: {CorrelationId}, ProducerId: {ProducerId}, ScriptId: {ScriptId}",
+                        correlationId, producerId, scriptId);
+                    return ResponseDetail<ScriptTransactionResponse>.Failed("No active transaction found for this script", 404);
+                }
+
+                // Check if transaction has expired (cannot cancel expired transactions)
+                if (scriptTransaction.ExpiresAt.HasValue && DateTimeOffset.UtcNow > scriptTransaction.ExpiresAt.Value)
+                {
+                    logger.LogWarning("Cannot cancel expired transaction - CorrelationId: {CorrelationId}, TransactionId: {TransactionId}, ExpiresAt: {ExpiresAt}",
+                        correlationId, scriptTransaction.Id, scriptTransaction.ExpiresAt);
+                    return ResponseDetail<ScriptTransactionResponse>.Failed("Cannot cancel expired transaction", 400);
+                }
+
+                // Get payment transaction
+                var paymentTransaction = await dbContext.Transactions
+                    .FirstOrDefaultAsync(pt => pt.Id == scriptTransaction.PaymentTransactionId);
+
+                if (paymentTransaction == null || paymentTransaction.Status != TransactionStatus.Escrowed)
+                {
+                    logger.LogWarning("Payment transaction not found or not escrowed - CorrelationId: {CorrelationId}, PaymentTransactionId: {PaymentTransactionId}",
+                        correlationId, scriptTransaction.PaymentTransactionId);
+                    return ResponseDetail<ScriptTransactionResponse>.Failed("Payment transaction not found or not in escrowed state", 400);
+                }
+
+                // Refund funds using wallet service
+                var fundsRefunded = await walletService.RefundFundsForScriptTransactionAsync(
+                    producerId, scriptTransaction.WriterId, scriptTransaction.Amount, scriptTransaction.WriterShare);
+
+                if (!fundsRefunded)
+                {
+                    logger.LogError("Failed to refund funds - CorrelationId: {CorrelationId}", correlationId);
+                    return ResponseDetail<ScriptTransactionResponse>.Failed("Failed to refund funds", 500);
+                }
+
+                // Update script transaction
+                scriptTransaction.TransactionStatus = ScriptTransactionStatus.Cancelled;
+                scriptTransaction.Status = ScriptDeliveryStatus.Cancelled;
+                scriptTransaction.ModifiedAt = DateTimeOffset.UtcNow;
+
+                // Update payment transaction
+                paymentTransaction.Status = TransactionStatus.Refunded;
+                paymentTransaction.ModifiedAt = DateTimeOffset.UtcNow;
+
+                // Update script status back to available
+                var script = await dbContext.Scripts.FirstOrDefaultAsync(s => s.Id == scriptId);
+                if (script != null)
+                {
+                    script.Status = ScriptStatus.Available;
+                    script.ModifiedAt = DateTimeOffset.UtcNow;
+                    dbContext.Scripts.Update(script);
+                }
+
+                dbContext.ScriptTransactions.Update(scriptTransaction);
+                dbContext.Transactions.Update(paymentTransaction);
+
+                await dbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                logger.LogInformation("Script transaction cancelled successfully - CorrelationId: {CorrelationId}, TransactionId: {TransactionId}",
+                    correlationId, scriptTransaction.Id);
+
+                return ResponseDetail<ScriptTransactionResponse>.Successful(MapToResponse(scriptTransaction, script),
+                    "Script transaction cancelled successfully");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error cancelling script transaction - CorrelationId: {CorrelationId}, ProducerId: {ProducerId}, ScriptId: {ScriptId}",
+                    correlationId, producerId, scriptId);
+                return ResponseDetail<ScriptTransactionResponse>.Failed("Failed to cancel script transaction", 500, ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Auto-completes a script transaction after 14 days. Called by Hangfire background job.
+        /// </summary>
+        /// <param name="scriptTransactionId">The ID of the script transaction to auto-complete</param>
+        public async Task AutoCompleteScriptTransactionAsync(Guid scriptTransactionId)
+        {
+            var correlationId = Guid.NewGuid();
+            logger.LogInformation("Starting auto-complete for script transaction - CorrelationId: {CorrelationId}, TransactionId: {TransactionId}",
+                correlationId, scriptTransactionId);
+
+            try
+            {
+                var scriptTransaction = await dbContext.ScriptTransactions
+                    .FirstOrDefaultAsync(st => st.Id == scriptTransactionId);
+
+                if (scriptTransaction == null)
+                {
+                    logger.LogWarning("Script transaction not found for auto-complete - CorrelationId: {CorrelationId}, TransactionId: {TransactionId}",
+                        correlationId, scriptTransactionId);
+                    return;
+                }
+
+                // Only auto-complete if still in initiated state
+                if (scriptTransaction.TransactionStatus != ScriptTransactionStatus.Initiated)
+                {
+                    logger.LogInformation("Script transaction already processed - CorrelationId: {CorrelationId}, TransactionId: {TransactionId}, Status: {Status}",
+                        correlationId, scriptTransactionId, scriptTransaction.TransactionStatus);
+                    return;
+                }
+
+                // Call the complete method
+                var result = await CompleteScriptTransactionAsync(scriptTransaction.ProducerId, scriptTransaction.ScriptId);
+
+                if (result.IsSuccess)
+                {
+                    logger.LogInformation("Auto-complete successful - CorrelationId: {CorrelationId}, TransactionId: {TransactionId}",
+                        correlationId, scriptTransactionId);
+                }
+                else
+                {
+                    logger.LogError("Auto-complete failed - CorrelationId: {CorrelationId}, TransactionId: {TransactionId}, Error: {Error}",
+                        correlationId, scriptTransactionId, result.Message);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error during auto-complete - CorrelationId: {CorrelationId}, TransactionId: {TransactionId}",
+                    correlationId, scriptTransactionId);
+            }
+        }
+
+        /// <summary>
+        /// Calculates the platform fee (10% of the amount).
+        /// </summary>
+        /// <param name="amount">The total amount</param>
+        /// <returns>The calculated fee</returns>
+        private static decimal CalculateFee(decimal amount)
+        {
+            return Math.Round(amount * 0.10m, 2);
+        }
+
+        /// <summary>
+        /// Generates a unique transaction reference.
+        /// </summary>
+        /// <param name="prefix">The prefix for the reference</param>
+        /// <returns>A unique reference string</returns>
+        private static string GenerateTransactionReference(string prefix)
+        {
+            return $"{prefix}_{DateTimeOffset.UtcNow:yyyyMMddHHmmss}_{Guid.NewGuid().ToString()[..8].ToUpper()}";
+        }
+
+        /// <summary>
+        /// Maps a ScriptTransaction to ScriptTransactionResponse.
+        /// </summary>
+        /// <param name="scriptTransaction">The script transaction</param>
+        /// <param name="script">The associated script</param>
+        /// <returns>The mapped response</returns>
+        private static ScriptTransactionResponse MapToResponse(ScriptTransaction scriptTransaction, Script script)
+        {
+            return new ScriptTransactionResponse
+            {
+                ScriptTransactionId = scriptTransaction.Id,
+                PaymentTransactionId = scriptTransaction.PaymentTransactionId,
+                Status = scriptTransaction.Status,
+                ExpiresAt = scriptTransaction.ExpiresAt ?? DateTimeOffset.MinValue,
+                Amount = scriptTransaction.Amount,
+                Fee = scriptTransaction.Fee,
+                WriterShare = scriptTransaction.WriterShare,
+                CurrencySymbol = script.CurrencySymbol,
+                ScriptTitle = script.Title,
+                WriterName = scriptTransaction.WriterName
+            };
+        }
+
+        /// <summary>
+        /// Sends the script to the producer via email after successful transaction completion.
+        /// </summary>
+        /// <param name="producerId">The ID of the producer</param>
+        /// <param name="scriptId">The ID of the script</param>
+        /// <param name="correlationId">The correlation ID for logging</param>
+        private async Task SendScriptToProducerAsync(Guid producerId, Guid scriptId, Guid correlationId)
+        {
+            try
+            {
+                // Get producer and script details
+                var producer = await dbContext.Producers
+                    .FirstOrDefaultAsync(p => p.Id == producerId);
+
+                var script = await dbContext.Scripts
+                    .FirstOrDefaultAsync(s => s.Id == scriptId);
+
+                if (producer == null || script == null)
+                {
+                    logger.LogWarning("Producer or script not found for script delivery - CorrelationId: {CorrelationId}, ProducerId: {ProducerId}, ScriptId: {ScriptId}",
+                        correlationId, producerId, scriptId);
+                    return;
+                }
+
+                // Download script from storage
+                var scriptResult = await DownloadScript(scriptId);
+                if (!scriptResult.IsSuccess || scriptResult.Data == null)
+                {
+                    logger.LogError("Failed to download script for email delivery - CorrelationId: {CorrelationId}, ScriptId: {ScriptId}",
+                        correlationId, scriptId);
+                    return;
+                }
+
+                // Convert the downloaded script to IFormFile for attachment
+                List<IFormFile>? attachments = null;
+                if (scriptResult.Data != null)
+                {
+                    // Create a memory stream from the script data
+                    var memoryStream = new MemoryStream(scriptResult.Data.File);
+                    var formFile = new ScriptFormFile(memoryStream, scriptResult.Data.Name, scriptResult.Data.ContentType);
+                    attachments = new List<IFormFile> { formFile };
+                }
+
+                // Create email using the proper mail notification template
+                var mailRequest = MailNotifications.ScriptDeliveryNotification(
+                    receiver: producer.Email,
+                    name: producer.FirstName,
+                    scriptTitle: script.Title,
+                    amount: script.Price,
+                    currency: script.CurrencySymbol,
+                    attachments: attachments
+                );
+
+                var emailResult = await mailService.SendMail(mailRequest);
+                if (emailResult.IsSuccess)
+                {
+                    logger.LogInformation("Script delivered via email successfully - CorrelationId: {CorrelationId}, ProducerId: {ProducerId}, ScriptId: {ScriptId}",
+                        correlationId, producerId, scriptId);
+                }
+                else
+                {
+                    logger.LogError("Failed to send script via email - CorrelationId: {CorrelationId}, ProducerId: {ProducerId}, ScriptId: {ScriptId}, Error: {Error}",
+                        correlationId, producerId, scriptId, emailResult.Message);
+                }
+
+                // Dispose the memory stream
+                if (attachments?.FirstOrDefault() is ScriptFormFile file)
+                {
+                    await file.OpenReadStream().DisposeAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error sending script to producer - CorrelationId: {CorrelationId}, ProducerId: {ProducerId}, ScriptId: {ScriptId}",
+                    correlationId, producerId, scriptId);
+            }
+        }
+
+
+    }
+
+    /// <summary>
+    /// Simple IFormFile implementation for script attachments
+    /// </summary>
+    internal class ScriptFormFile : IFormFile
+    {
+        private readonly Stream _stream;
+
+        public ScriptFormFile(Stream stream, string fileName, string contentType)
+        {
+            _stream = stream;
+            Name = "script";
+            FileName = fileName;
+            ContentType = contentType;
+            Length = stream.Length;
+            Headers = new HeaderDictionary();
+        }
+
+        public string ContentType { get; }
+        public string ContentDisposition => $"attachment; filename=\"{FileName}\"";
+        public IHeaderDictionary Headers { get; }
+        public long Length { get; }
+        public string Name { get; }
+        public string FileName { get; }
+
+        public void CopyTo(Stream target) => _stream.CopyTo(target);
+        public Task CopyToAsync(Stream target, CancellationToken cancellationToken = default) => _stream.CopyToAsync(target, cancellationToken);
+        public Stream OpenReadStream() => _stream;
     }
 }

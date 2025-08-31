@@ -8,5 +8,7 @@
         Failed,
         Cancelled,
         Abandoned,
+        Escrowed,
+        Refunded,
     }
 }

@@ -59,6 +59,30 @@ namespace ScriptModule.Interfaces
         Task<ResponseDetail<bool>> DeleteScript(Guid scriptId, Guid writerId);
 
         /// <summary>
+        /// Initiates a script transaction by escrowing funds from producer to purchase a script.
+        /// </summary>
+        /// <param name="producerId">The ID of the producer purchasing the script</param>
+        /// <param name="request">The transaction initiation request details</param>
+        /// <returns>A response containing the script transaction details</returns>
+        Task<ResponseDetail<ScriptTransactionResponse>> InitiateScriptTransactionAsync(Guid producerId, InitiateScriptTransactionRequest request);
+
+        /// <summary>
+        /// Completes a script transaction by releasing escrowed funds to the writer and delivering the script.
+        /// </summary>
+        /// <param name="producerId">The ID of the producer completing the transaction</param>
+        /// <param name="scriptId">The ID of the script being purchased</param>
+        /// <returns>A response containing the completed transaction details</returns>
+        Task<ResponseDetail<ScriptTransactionResponse>> CompleteScriptTransactionAsync(Guid producerId, Guid scriptId);
+
+        /// <summary>
+        /// Cancels a script transaction by refunding escrowed funds to the producer.
+        /// </summary>
+        /// <param name="producerId">The ID of the producer cancelling the transaction</param>
+        /// <param name="scriptId">The ID of the script transaction to cancel</param>
+        /// <returns>A response containing the cancelled transaction details</returns>
+        Task<ResponseDetail<ScriptTransactionResponse>> CancelScriptTransactionAsync(Guid producerId, Guid scriptId);
+
+        /// <summary>
         /// Updates the status of a script 
         /// </summary>
         /// <param name="status"></param>

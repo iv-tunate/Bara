@@ -5,6 +5,8 @@ using Infrastructure.DataContext;
 using Infrastructure.Repositories.FileRepositories;
 using Infrastructure.Repositories.ScriptRepositories;
 using Infrastructure.Repositories.UserRepositories;
+using Infrastructure.Repositories.TransactionRepositories;
+using TransactionModule.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -97,7 +99,7 @@ builder.Services.AddTransient<IProducerService, ProducerRepository>();
 builder.Services.AddTransient<IAuthService, AuthRepository>();
 builder.Services.AddTransient<IUserService, UserRepository>();
 builder.Services.AddScoped<IPaystackService, PaystackService>();
-//builder.Services.AddTransient<IWalletService, WalletService>();
+builder.Services.AddTransient<IWalletService, WalletService>();
 builder.Services.AddScoped(typeof(LogHelper<>));
 
 builder.Services.AddSignalR();

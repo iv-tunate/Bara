@@ -12,6 +12,13 @@ namespace ScriptModule.Config.ModelBuilderConfig
             builder.Property<ScriptDeliveryStatus>("Status")
                 .HasConversion<string>()
                 .HasMaxLength(50);
+
+            builder.Property<ScriptTransactionStatus>("TransactionStatus")
+                .HasConversion<string>()
+                .HasMaxLength(50);
+
+            builder.HasIndex(st => st.IdempotencyKey);
+            builder.HasIndex(st => new { st.ProducerId, st.ScriptId });
         }
     }
 }
