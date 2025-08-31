@@ -32,13 +32,13 @@ namespace Infrastructure.Repositories.ScriptRepositories
         {
             try
             {
-                dbContext.Chats.Add(chat);
+                await dbContext.Chats.AddAsync(chat);
                 await dbContext.SaveChangesAsync();
                 return chat;
             }
             catch (Exception ex)
             {
-                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, 
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name,
                     $"While creating chat for script {chat.ScriptId}");
                 throw;
             }
@@ -59,7 +59,7 @@ namespace Infrastructure.Repositories.ScriptRepositories
             }
             catch (Exception ex)
             {
-                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, 
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name,
                     $"While retrieving chat {chatId}");
                 return null;
             }
@@ -78,13 +78,13 @@ namespace Infrastructure.Repositories.ScriptRepositories
             {
                 return await dbContext.Chats
                     .Include(c => c.Messages.OrderBy(m => m.SentAt))
-                    .FirstOrDefaultAsync(c => c.ScriptId == scriptId && 
-                                            c.ProducerId == producerId && 
+                    .FirstOrDefaultAsync(c => c.ScriptId == scriptId &&
+                                            c.ProducerId == producerId &&
                                             c.WriterId == writerId);
             }
             catch (Exception ex)
             {
-                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, 
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name,
                     $"While retrieving chat for script {scriptId}, producer {producerId}, writer {writerId}");
                 return null;
             }
@@ -99,13 +99,13 @@ namespace Infrastructure.Repositories.ScriptRepositories
         {
             try
             {
-                dbContext.ChatMessages.Add(message);
+                await dbContext.ChatMessages.AddAsync(message);
                 await dbContext.SaveChangesAsync();
                 return message;
             }
             catch (Exception ex)
             {
-                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, 
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name,
                     $"While adding message to chat {message.ChatId}");
                 throw;
             }
@@ -135,7 +135,7 @@ namespace Infrastructure.Repositories.ScriptRepositories
             }
             catch (Exception ex)
             {
-                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, 
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name,
                     $"While marking messages as read for chat {chatId}, user {userId}");
                 return 0;
             }
@@ -156,7 +156,7 @@ namespace Infrastructure.Repositories.ScriptRepositories
             }
             catch (Exception ex)
             {
-                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, 
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name,
                     $"While getting unread count for chat {chatId}, user {userId}");
                 return 0;
             }
@@ -180,7 +180,7 @@ namespace Infrastructure.Repositories.ScriptRepositories
             }
             catch (Exception ex)
             {
-                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, 
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name,
                     $"While closing chat {chatId}");
                 return false;
             }
@@ -201,7 +201,7 @@ namespace Infrastructure.Repositories.ScriptRepositories
             }
             catch (Exception ex)
             {
-                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, 
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name,
                     $"While checking user access for chat {chatId}, user {userId}");
                 return false;
             }
