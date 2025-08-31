@@ -21,11 +21,14 @@ namespace TransactionModule.Interfaces
         Task<ResponseDetail<bool>> VerifyTransactionAsync(Guid userId, string reference);
         //Task<ResponseDetail<bool>> ProcessScriptPurchaseAsync(Guid producerId, Guid writerId, Guid scriptId, decimal amount);
         /// <summary>
-        /// Initiates a withdrawal request for a user to their bank account.
+        /// Initiates a withdrawal request for a user to their bank account after it has been confirmed on our system.
         /// </summary>
         /// <param name="userId"></param>
         /// <param name="data"></param>
+        /// <param name="token"></param>
         /// <returns></returns>
-        Task<ResponseDetail<bool>> InitiateWithdrawalAsync(Guid userId, InitiateWithdrawalDTO data);
+        Task<ResponseDetail<bool>> ContinueWithdrawalInitiation(Guid userId, string token, InitiateWithdrawalDTO data);
+
+        Task<ResponseDetail<bool>> InitiateWithdrawalProcess(Guid userId, InitiateWithdrawalDTO data);
     }
 }

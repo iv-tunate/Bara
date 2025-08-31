@@ -265,5 +265,59 @@
                 Body = BaseEmailTemplate(name, body),
             };
         }
+
+        /// <summary>
+        /// Constructs a password reset notification email with a reset token.
+        /// </summary>
+        /// <param name="receiver"></param>
+        /// <param name="name"></param>
+        /// <param name="token"></param>
+        /// <returns></returns>
+        public static MailRequestDTO PasswordResetNotification(string receiver, string name, string token)
+        {
+            var subject = "PASSWORD RESET REQUEST";
+            var body = $@"
+                <br/>
+                <p>Hi {name},</p>
+                <p>We received a request to reset your password. Use the token below to reset it:</p>
+                <h2 style='color:#800000'>{token}</h2>
+                <p style='margin-top:-10px;'>This token will expire in <strong>10 minutes</strong>.</p>
+                <br/>
+                <p>If you did not request a password reset, please ignore this email or contact our support team.</p>";
+            return new MailRequestDTO
+            {
+                Receiver = receiver,
+                Subject = subject,
+                Body = BaseEmailTemplate(name, body),
+            };
+        }
+
+        public static MailRequestDTO WithdrawalInitiationNotification(WithdrawalNotificationDTO data)
+        {
+            var subject = "WITHDRAWAL INITIATED";
+            var body = $@"
+                <br/>
+                <p>Hi {data.Name},</p>
+                <p>Your withdrawal request has been initiated successfully. Here are the details:</p>
+                <ul>
+                    <li><strong>Amount:</strong> {data.Amount} {data.Currency}</li>
+                    <li><strong>Initiated At:</strong> {data.InitiatedAt:dddd, MMMM dd, yyyy 'at' hh:mm tt} (UTC)</li>
+                    <li><strong>Device:</strong> {data.Device}</li>
+                    <li><strong>IP Address:</strong> {data.Ip}</li>
+                    <li><strong>Location:</strong> {data.Country}</li>
+                </ul>
+                <p>Please confirm this withdrawal using the token below:</p>    
+                <h2 style='color:#800000'>{data.Token}</h2>
+                <p style='margin-top:-10px;'>This token will expire in <strong>10 minutes</strong>.</p>
+                <br/>
+                <br/>
+                <p>If you did not initiate this withdrawal, please contact our support team immediately.</p>";
+            return new MailRequestDTO
+            {
+                Receiver = data.Receiver,
+                Subject = subject,
+                Body = BaseEmailTemplate(data.Name, body),
+            };
+        }
     }
 }

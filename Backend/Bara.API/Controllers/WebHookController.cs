@@ -138,13 +138,20 @@ namespace Bara.API.Controllers
                     logger.LogError("Invalid payload received from Paystack webhook");
                     return BadRequest("Invalid payload");
                 }
-                if (payload.Data.Metadata == null || string.IsNullOrEmpty(payload.Data.Metadata.Reference))
+                else if (payload.Data.Metadata == null || string.IsNullOrEmpty(payload.Data.Metadata.Reference))
                 {
                     logger.LogError("Metadata or UserId is missing in the payload");
                     return BadRequest("Invalid payload");
                 }
                 string reference = payload.Data.Metadata.Reference;
-                var verifyReq = await paystack.VerifyPaymentAsync(reference);
+                if (payload.Event.Contains("charge"))
+                {
+                    await paystack.VerifyPaymentAsync(reference);
+                }
+                else if (payload.Event.Contains("transfer"))
+                {
+                    await paystack.VerifyTransferAsync(reference);
+                }
 
                 return Ok();
             }

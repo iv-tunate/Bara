@@ -7,8 +7,6 @@ using PayStack.Net;
 using Services.Paystack.DTOs;
 using SharedModule.Settings;
 using SharedModule.Utils;
-using System.Text;
-using System.Text.Json;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Services.Paystack
@@ -113,7 +111,6 @@ namespace Services.Paystack
                     Channel = response.Data.Channel,
                     Currency = response.Data.Currency,
                     Fees = (decimal)response.Data.Fees / 100m,
-
                     Authorization = response.Data.Authorization == null ? null : new AuthorizationData
                     {
                         AuthorizationCode = response.Data.Authorization.AuthorizationCode,
@@ -149,6 +146,69 @@ namespace Services.Paystack
             }
         }
 
+        public async Task<PaymentVerifyResponse> VerifyTransferAsync(string reference)
+        {
+            var result = new PaymentVerifyResponse();
+
+            try
+            {
+                var req = await _httpClient.GetAsync($"{_baseUrl}/transfer/{reference}");
+                if (!req.IsSuccessStatusCode)
+                {
+                    logger.LogError("Failed to verify transfer with Paystack. Reference: {Reference}, StatusCode: {StatusCode}", reference, req.StatusCode);
+                    return result;
+                }
+
+                var content = await req.Content.ReadAsStringAsync();
+                var response = JsonConvert.DeserializeObject<PaymentVerifyResponse>(content);
+
+                if (response == null || !response.Status || response.Data == null)
+                {
+                    return result;
+                }
+
+                result.Status = response.Status;
+                result.Message = response.Message;
+
+                result.Data = new PaymentVerificationData
+                {
+                    Domain = response.Data.Domain,
+                    Status = response.Data.Status,
+                    Reference = response.Data.Reference,
+                    Amount = response.Data.Amount / 100m,
+                    GatewayResponse = response.Data.GatewayResponse,
+                    CreatedAt = response.Data.CreatedAt,
+                    Currency = response.Data.Currency,
+                    Fees = response.Data.Fees / 100m,
+                    Reason = response.Data.Reason,
+                    TransferCode = response.Data.TransferCode,
+                    Recipient = response.Data.Recipient == null ? null : new RecipientTransferData
+                    {
+                        Id = response.Data.Recipient.Id,
+                        Name = response.Data.Recipient.Name,
+                        RecipientCode = response.Data.Recipient.RecipientCode,
+                        Details = response.Data.Recipient.Details == null ? null : new RecipientDetails
+                        {
+                            BankName = response.Data.Recipient.Details.BankName,
+                            AccountNumber = response.Data.Recipient.Details.AccountNumber
+                        }
+                    }
+                };
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(
+                    ex.GetType().Name,
+                    ex.GetBaseException().GetType().Name,
+                    $"Verifying transfer with Paystack. Reference: {reference}"
+                );
+
+                return result;
+            }
+        }
+
         public async Task<RecipientData> CreateRecipientAsync(CreateRecipientRequest data)
         {
             try
@@ -171,24 +231,20 @@ namespace Services.Paystack
 
         public async Task<WithdrawalResponse> InitiateWithdrawalAsync(WithdrawalRequest request)
         {
-            var payload = new
+            var paystack = new PayStackApi(secrets.PaystackSecret);
+            var amount = (int)request.Amount * 100;
+
+            //var reqbody = JsonConvert.SerializeObject(request);
+            //var serialIzedBody = new StringContent(reqbody, Encoding.UTF8, "application/json");
+            //var response = await _httpClient.PostAsync($"{_baseUrl}/transfer", serialIzedBody);
+            //request.Reference = GenerateReference(request.TransactionId);
+            var req = paystack.Transfers.InitiateTransfer(amount, request.RecipientCode, reason: request.Reason);
+            if (req.RawJson != null)
             {
-                source = "balance",
-                amount = (int)(request.Amount * 100), // Convert to kobo
-                recipient = request.RecipientCode,
-                reason = request.Reason,
-                currency = request.Currency,
-                // reference = GenerateReference()
-            };
-
-            var json = JsonSerializer.Serialize(payload);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-            var response = await _httpClient.PostAsync($"{_baseUrl}/transfer", content);
-            var responseContent = await response.Content.ReadAsStringAsync();
-
-            return JsonSerializer.Deserialize<WithdrawalResponse>(responseContent,
-                new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+                var responseContent = req.RawJson;
+                return JsonConvert.DeserializeObject<WithdrawalResponse>(responseContent);
+            }
+            return new WithdrawalResponse();
         }
 
         public async Task<List<BankData>> GetBanksAsync()
@@ -206,7 +262,7 @@ namespace Services.Paystack
                 if (!response.IsSuccessStatusCode)
                 {
                     logger.LogError("Failed to fetch banks from Paystack {}", response.StatusCode.ToString());
-                    return new List<BankData>();
+                    return [];
                 }
                 var responseContent = await response.Content.ReadAsStringAsync();
                 var bankResponse = JsonSerializer.Deserialize<BankInfoResponse>(responseContent);

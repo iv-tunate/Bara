@@ -13,5 +13,9 @@
         /// The bank account ID to which the withdrawal will be made
         /// </summary>
         public Guid BankAccountId { get; set; }
+
+        public string Reason { get; set; } = string.Empty;
+        public string Currency { get; set; } = "Naira";
+        public string Device { get; set; }
     }
 }

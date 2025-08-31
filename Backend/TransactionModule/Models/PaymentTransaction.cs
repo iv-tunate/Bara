@@ -47,6 +47,7 @@ namespace TransactionModule.Models
         //public PaymentDetail? PaymentDetail { get; set; }
 
         public string? AccessCode { get; set; }
+        public string? TransferCode { get; set; }
 
         [ForeignKey("Wallet")]
         public Guid? WalletID { get; set; }

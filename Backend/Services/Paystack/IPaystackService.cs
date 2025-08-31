@@ -19,6 +19,13 @@ namespace Services.Paystack
         /// <param name="reference"></param>
         /// <returns></returns>
         Task<PaymentVerifyResponse> VerifyPaymentAsync(string reference);
+
+        /// <summary>
+        /// Verifies a transfer transaction with Paystack using the provided reference.
+        /// </summary>
+        /// <param name="reference"></param>
+        /// <returns></returns>
+        Task<PaymentVerifyResponse> VerifyTransferAsync(string reference);
         /// <summary>
         /// Initiates a withdrawal request to Paystack.
         /// </summary>

@@ -1,4 +1,6 @@
-﻿namespace Services.Paystack.DTOs
+﻿using Newtonsoft.Json;
+
+namespace Services.Paystack.DTOs
 {
     public class PaymentVerifyResponse
     {
@@ -21,6 +23,10 @@
         public decimal Fees { get; set; }
         public AuthorizationData? Authorization { get; set; }
         public CustomerData? Customer { get; set; }
+        public RecipientTransferData? Recipient { get; set; }
+        [JsonProperty("transfer_code")]
+        public string? TransferCode { get; set; }
+        public string? Reason { get; set; }
     }
 
     public class AuthorizationData
@@ -41,5 +47,19 @@
         public long Id { get; set; }
         public string Email { get; set; }
         public string CustomerCode { get; set; }
+    }
+
+    public class RecipientTransferData
+    {
+        public long Id { get; set; }
+        public string Name { get; set; }
+        public string RecipientCode { get; set; }
+        public RecipientDetails? Details { get; set; }
+    }
+
+    public class RecipientDetails
+    {
+        public string BankName { get; set; }
+        public string AccountNumber { get; set; }
     }
 }
