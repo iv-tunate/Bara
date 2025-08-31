@@ -256,18 +256,7 @@ namespace Infrastructure.Repositories.TransactionRepositories
             }
         }
 
-        public Task<ResponseDetail<bool>> ProcessScriptPurchaseAsync(Guid producerId, Guid writerId, Guid scriptId, decimal amount)
-        {
-            throw new NotImplementedException();
-        }
-
-
-
-
-
-
-
-        public async Task<ResponseDetail<bool>> VerifyTransactionAsync(Guid userId, string reference)
+        public async Task<ResponseDetail<bool>> VerifyTransactionAsync(string reference)
         {
             //var transaction = await dbContext.Database.BeginTransactionAsync();
             try
@@ -275,7 +264,7 @@ namespace Infrastructure.Repositories.TransactionRepositories
                 var result = await (
                                 from t in dbContext.Transactions
                                 join u in dbContext.Users on t.UserId equals u.Id
-                                where t.UserId == userId && t.ReferenceId == reference
+                                where t.ReferenceId == reference
                                 select new
                                 {
                                     u.Id,
@@ -287,7 +276,7 @@ namespace Infrastructure.Repositories.TransactionRepositories
 
                 if (result is null)
                 {
-                    logger.LogInformation($"Transaction with reference {reference} for user with ID {userId} not found while verifying transaction.");
+                    logger.LogInformation($"Transaction with reference {reference} not found while verifying transaction.");
                     return ResponseDetail<bool>.Failed("Transaction not found", 404);
                 }
 
@@ -306,12 +295,12 @@ namespace Infrastructure.Repositories.TransactionRepositories
                     }
                     else if (verifyReq.Data.Status == "success" && verifyReq.Data.Amount == userTransaction.Amount)
                     {
-                        var paymentDetail = result.PaymentDetails.FirstOrDefault(x => x.AuthorizationCode == verifyReq.Data.Authorization.AuthorizationCode && x.UserId == userId);
+                        var paymentDetail = result.PaymentDetails.FirstOrDefault(x => x.AuthorizationCode == verifyReq.Data.Authorization.AuthorizationCode && x.UserId == result.Id);
                         if (paymentDetail is null)
                         {
                             var newPaymentDetail = new PaymentDetail
                             {
-                                UserId = userId,
+                                UserId = result.Id,
                                 AuthorizationCode = verifyReq.Data.Authorization.AuthorizationCode,
                                 Last4 = verifyReq.Data.Authorization.Last4,
                                 CardType = verifyReq.Data.Authorization.CardType,
@@ -343,7 +332,7 @@ namespace Infrastructure.Repositories.TransactionRepositories
                         dbContext.Wallets.Update(result.Wallet);
                         await dbContext.SaveChangesAsync();
 
-                        await notificationHub.Clients.User(userId.ToString())
+                        await notificationHub.Clients.User(result.Id.ToString())
                             .SendAsync("WalletUpdated", new
                             {
                                 Balance = result.Wallet.AvailableBalance,
@@ -369,26 +358,26 @@ namespace Infrastructure.Repositories.TransactionRepositories
                 }
                 else
                 {
-                    logger.LogError($"Failed to verify transaction for user {userId}. Error: {verifyReq.Message}");
+                    logger.LogError($"Failed to verify transaction for user {result.Id}. Error: {verifyReq.Message}");
                     return ResponseDetail<bool>.Failed(verifyReq.Message, 500);
                 }
 
             }
             catch (Exception ex)
             {
-                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"while verifying transaction for {userId}");
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"while verifying transaction");
                 return ResponseDetail<bool>.Failed("An error occured while verifying the transaction", 500, ex.Message);
             }
         }
 
-        public async Task<ResponseDetail<bool>> VerifyTransferAsync(Guid userId, string reference)
+        public async Task<ResponseDetail<bool>> VerifyTransferAsync(string reference)
         {
             try
             {
                 var result = await (
                                 from t in dbContext.Transactions
                                 join u in dbContext.Users on t.UserId equals u.Id
-                                where t.UserId == userId && t.ReferenceId == reference
+                                where t.ReferenceId == reference
                                 select new
                                 {
                                     u.Id,
@@ -399,7 +388,7 @@ namespace Infrastructure.Repositories.TransactionRepositories
 
                 if (result is null)
                 {
-                    logger.LogInformation($"Transfer with reference {reference} for user {userId} not found while verifying transfer.");
+                    logger.LogInformation($"Transfer with reference {reference} not found while verifying transfer.");
                     return ResponseDetail<bool>.Failed("Transfer not found", 404);
                 }
 
@@ -433,7 +422,7 @@ namespace Infrastructure.Repositories.TransactionRepositories
                         dbContext.Transactions.Update(userTransaction);
                         await dbContext.SaveChangesAsync();
 
-                        await notificationHub.Clients.User(userId.ToString())
+                        await notificationHub.Clients.User(result.Id.ToString())
                             .SendAsync("TransferVerified", new
                             {
                                 Reference = userTransaction.ReferenceId,
@@ -465,13 +454,13 @@ namespace Infrastructure.Repositories.TransactionRepositories
                 }
                 else
                 {
-                    logger.LogError($"Failed to verify transfer for user {userId}. Error: {verifyReq.Message}");
+                    logger.LogError($"Failed to verify transfer with reference {reference}. Error: {verifyReq.Message}");
                     return ResponseDetail<bool>.Failed(verifyReq.Message, 500);
                 }
             }
             catch (Exception ex)
             {
-                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"while verifying transfer for {userId}");
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"while verifying transfer with reference {reference}");
                 return ResponseDetail<bool>.Failed("An error occurred while verifying the transfer", 500, ex.Message);
             }
         }

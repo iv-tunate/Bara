@@ -7,6 +7,7 @@ using Services.YouVerifyIntegration;
 using SharedModule.Settings;
 using SharedModule.Utils;
 using System.Text;
+using TransactionModule.Interfaces;
 using UserModule.Interfaces.UserInterfaces;
 
 namespace Bara.API.Controllers
@@ -21,8 +22,8 @@ namespace Bara.API.Controllers
         private readonly LogHelper<WebHookController> logHelper;
         private readonly ILogger<WebHookController> logger;
         private readonly IUserService userService;
-        private readonly IPaystackService paystack;
-        public WebHookController(IYouVerifyService youVerifyService, IOptions<Secrets> secretOptions, IPaystackService paystackService,
+        private readonly ITransactionService transactionService;
+        public WebHookController(IYouVerifyService youVerifyService, IOptions<Secrets> secretOptions, ITransactionService transactionService,
             LogHelper<WebHookController> logHelper, IUserService userService, ILogger<WebHookController> logger)
         {
             youVerify = youVerifyService;
@@ -30,7 +31,7 @@ namespace Bara.API.Controllers
             this.logHelper = logHelper;
             this.userService = userService;
             this.logger = logger;
-            paystack = paystackService;
+            this.transactionService = transactionService;
         }
 
         //[HttpPost("youverify")]
@@ -122,7 +123,7 @@ namespace Bara.API.Controllers
                     return Unauthorized("Signature header missing");
                 }
 
-                string secret = secrets.PaystackPublic;
+                string secret = secrets.PaystackSecret; // Fixed: Use PaystackSecret not PaystackPublic for webhook verification
                 if (!PaystackWebhookVerifier.IsValidPaystackSignature(rawBody, signatureHeader, secret))
                 {
                     logger.LogWarning("Invalid webhook signature from Paystack");
@@ -133,24 +134,24 @@ namespace Bara.API.Controllers
 
                 var payload = JsonConvert.DeserializeObject<PaystackWebhookPayload>(rawBody);
 
-                if (payload == null && payload.Data == null)
+                if (payload == null || payload.Data == null) // Fixed: Use || not &&
                 {
                     logger.LogError("Invalid payload received from Paystack webhook");
                     return BadRequest("Invalid payload");
                 }
                 else if (payload.Data.Metadata == null || string.IsNullOrEmpty(payload.Data.Metadata.Reference))
                 {
-                    logger.LogError("Metadata or UserId is missing in the payload");
+                    logger.LogError("Metadata or Reference is missing in the payload");
                     return BadRequest("Invalid payload");
                 }
                 string reference = payload.Data.Metadata.Reference;
                 if (payload.Event.Contains("charge"))
                 {
-                    await paystack.VerifyPaymentAsync(reference);
+                    await transactionService.VerifyTransactionAsync(reference); // Fixed: Use TransactionService
                 }
                 else if (payload.Event.Contains("transfer"))
                 {
-                    await paystack.VerifyTransferAsync(reference);
+                    await transactionService.VerifyTransferAsync(reference); // Fixed: Use TransactionService
                 }
 
                 return Ok();

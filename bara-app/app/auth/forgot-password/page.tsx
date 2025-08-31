@@ -1,21 +1,41 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { api } from "@/utils/api";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+
+  const router = useRouter();
+
+  const canSubmit = email.trim() !== "" && email.includes("@");
 
   const handleForgotPassword = async () => {
-    if (!email) return;
+    if (!canSubmit) return;
     setIsLoading(true);
+    setError("");
 
-    // simulate API call
-    setTimeout(() => {
+    try {
+      const response = await api.forgotPassword({ Email: email });
+
+      if (response.success) {
+        setSuccess(true);
+      } else {
+        setError(
+          response.message || "Failed to send reset email. Please try again."
+        );
+      }
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
       setIsLoading(false);
-      alert("Password reset link sent to " + email);
-    }, 1500);
+    }
   };
 
   return (
@@ -37,6 +57,22 @@ export default function ForgotPasswordPage() {
             password.
           </p>
 
+          {/* Error Message */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
+          {/* Success Message */}
+          {success && (
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+              <p className="text-sm text-green-600">
+                Password reset link sent to your email!
+              </p>
+            </div>
+          )}
+
           {/* Email Input */}
           <label className="block text-sm font-medium text-[#22242A] mb-2">
             Email
@@ -54,15 +90,26 @@ export default function ForgotPasswordPage() {
           <button
             type="button"
             onClick={handleForgotPassword}
-            disabled={!email || isLoading}
-            className={`w-full font-medium py-3 rounded-md flex items-center justify-center transition-colors ${
-              email && !isLoading
+            disabled={!canSubmit || isLoading}
+            className={`w-full font-medium py-3 rounded-md flex items-center justify-center transition-colors mb-4 ${
+              canSubmit && !isLoading
                 ? "bg-[#800000] text-white hover:bg-[#1a0000]"
                 : "bg-[#F5F5F5] text-[#858990] cursor-not-allowed"
             }`}
           >
             {isLoading ? "Sending..." : "Continue"}
           </button>
+
+          {/* Back to Login */}
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={() => router.push("/auth/login")}
+              className="text-[#333740] hover:text-[#800000] transition-colors text-sm"
+            >
+              ← Back to Login
+            </button>
+          </div>
         </div>
       </div>
     </div>

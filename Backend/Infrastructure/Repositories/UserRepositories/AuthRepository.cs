@@ -358,5 +358,82 @@ namespace Infrastructure.Repositories.UserRepositories
             var finalToken = new JwtSecurityTokenHandler().WriteToken(token);
             return finalToken;
         }
+
+        public async Task<ResponseDetail<string>> ForgotPassword(ForgotPasswordRequestDTO request)
+        {
+            try
+            {
+                var user = await dbContext.AuthProfiles.FirstOrDefaultAsync(x => x.Email == request.Email);
+                if (user is null)
+                {
+                    logger.LogInformation($"Password reset requested for non-existent email: {request.Email}");
+                    return ResponseDetail<string>.Successful("If the email exists, a password reset link has been sent", "");
+                }
+
+                var resetToken = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
+                var cacheKey = $"User_Password_Reset_Token_{request.Email}";
+                cache.Set(cacheKey, resetToken, absoluteExpiration: DateTimeOffset.UtcNow.AddMinutes(30)); 
+                logger.LogInformation($"User_Password_Reset_Token_{request.Email}: {resetToken}");
+                Console.WriteLine($"User_Password_Reset_Token_{request.Email}: {resetToken}");
+
+                var resetMail = MailNotifications.PasswordResetMailNotification(user.Email, user.FullName, resetToken);
+                var mailRes = await mailer.SendMail(resetMail);
+                if (!mailRes.IsSuccess)
+                {
+                    return ResponseDetail<string>.Failed("An error occurred while sending password reset email", 500, "Unexpected Error");
+                }
+
+                logger.LogInformation($"Password reset token sent successfully for user with email {request.Email}.");
+                return ResponseDetail<string>.Successful("Password reset link has been sent to your email", resetToken);
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"while processing forgot password for {request.Email}");
+                return ResponseDetail<string>.Failed("An error occurred while processing your request", 500, ex.Message);
+            }
+        }
+
+        public async Task<ResponseDetail<bool>> ResetPassword(ResetPasswordDTO request)
+        {
+            try
+            {
+                var user = await dbContext.AuthProfiles.FirstOrDefaultAsync(x => x.Email == request.Email);
+                if (user is null)
+                {
+                    logger.LogInformation($"Password reset attempted for non-existent email: {request.Email}");
+                    return ResponseDetail<bool>.Failed("Invalid reset request", 400);
+                }
+
+                var cacheKey = $"User_Password_Reset_Token_{request.Email}";
+                cache.TryGetValue(cacheKey, out string cachedToken);
+                if (cachedToken == null || cachedToken != request.Token)
+                {
+                    logger.LogInformation($"Invalid reset token provided for user with email {request.Email}.");
+                    return ResponseDetail<bool>.Failed("Invalid or expired reset token", 400);
+                }
+
+                if (string.IsNullOrWhiteSpace(request.NewPassword) || request.NewPassword.Length < 6)
+                {
+                    return ResponseDetail<bool>.Failed("Password must be at least 6 characters long", 400);
+                }
+
+                var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+
+                user.Password = hashedPassword;
+                user.ModifiedAt = DateTimeOffset.UtcNow;
+                cache.Remove(cacheKey); 
+
+                dbContext.AuthProfiles.Update(user);
+                await dbContext.SaveChangesAsync();
+
+                logger.LogInformation($"Password reset successfully for user with email {request.Email}.");
+                return ResponseDetail<bool>.Successful(true, "Password reset successfully");
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"while resetting password for {request.Email}");
+                return ResponseDetail<bool>.Failed("An error occurred while resetting your password", 500, ex.Message);
+            }
+        }
     }
 }

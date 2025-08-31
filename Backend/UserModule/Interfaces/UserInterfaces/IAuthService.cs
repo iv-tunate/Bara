@@ -57,6 +57,20 @@ namespace UserModule.Interfaces.UserInterfaces
         /// <param name="email">The email address to resend the verification token to.</param>
         /// <returns>A response containing the new verification token or an error message.</returns>
         Task<ResponseDetail<string>> ResendVerificationToken(string email);
+
+        /// <summary>
+        /// Initiates a password reset process by sending a reset token to the user's email.
+        /// </summary>
+        /// <param name="request">The forgot password request containing the user's email.</param>
+        /// <returns>A response indicating whether the reset token was sent successfully.</returns>
+        Task<ResponseDetail<string>> ForgotPassword(ForgotPasswordRequestDTO request);
+
+        /// <summary>
+        /// Resets a user's password using the provided reset token and new password.
+        /// </summary>
+        /// <param name="request">The reset password request containing email, token, and new password.</param>
+        /// <returns>A response indicating whether the password was reset successfully.</returns>
+        Task<ResponseDetail<bool>> ResetPassword(ResetPasswordDTO request);
     }
 }
 

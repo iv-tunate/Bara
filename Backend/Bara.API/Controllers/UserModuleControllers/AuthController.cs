@@ -179,5 +179,85 @@ namespace Bara.API.Controllers.UserModuleControllers
                 return StatusCode(500, ResponseDetail<string>.Failed("Your request failed", 500, "Internal server error"));
             }
         }
+
+        /// <summary>
+        /// Initiates a password reset process by sending a reset token to the user's email.
+        /// </summary>
+        /// <param name="request">The forgot password request containing the user's email.</param>
+        /// <returns>Returns a success response if the reset token was sent successfully.</returns>
+        /// <response code="200">Password reset token sent successfully</response>
+        /// <response code="400">Invalid email format or other validation errors</response>
+        /// <response code="500">Internal server error</response>
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestDTO request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.Email))
+                {
+                    return BadRequest(ResponseDetail<string>.Failed("Email is required", 400));
+                }
+
+                var response = await authService.ForgotPassword(request);
+                if (response.IsSuccess)
+                {
+                    logger.LogInformation("Password reset token sent for email {email}", request.Email);
+                    return Ok(response);
+                }
+                else if (response.StatusCode == 500)
+                {
+                    logger.LogError("Forgot password failed with status code 500: {response}", response);
+                    return StatusCode(500, response);
+                }
+
+                logger.LogError("Forgot password failed {response}", response);
+                return StatusCode(response.StatusCode, response);
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"Processing forgot password for {request.Email}");
+                return StatusCode(500, ResponseDetail<string>.Failed("Your request failed", 500, "Internal server error"));
+            }
+        }
+
+        /// <summary>
+        /// Resets a user's password using the provided reset token and new password.
+        /// </summary>
+        /// <param name="request">The reset password request containing email, token, and new password.</param>
+        /// <returns>Returns a success response if the password was reset successfully.</returns>
+        /// <response code="200">Password reset successfully</response>
+        /// <response code="400">Invalid token, expired token, or validation errors</response>
+        /// <response code="500">Internal server error</response>
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDTO request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Token) || string.IsNullOrWhiteSpace(request.NewPassword))
+                {
+                    return BadRequest(ResponseDetail<bool>.Failed("Email, token, and new password are required", 400));
+                }
+
+                var response = await authService.ResetPassword(request);
+                if (response.IsSuccess)
+                {
+                    logger.LogInformation("Password reset successful for email {email}", request.Email);
+                    return Ok(response);
+                }
+                else if (response.StatusCode == 500)
+                {
+                    logger.LogError("Reset password failed with status code 500: {response}", response);
+                    return StatusCode(500, response);
+                }
+
+                logger.LogError("Reset password failed {response}", response);
+                return StatusCode(response.StatusCode, response);
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"Resetting password for {request.Email}");
+                return StatusCode(500, ResponseDetail<bool>.Failed("Your request failed", 500, "Internal server error"));
+            }
+        }
     }
 }

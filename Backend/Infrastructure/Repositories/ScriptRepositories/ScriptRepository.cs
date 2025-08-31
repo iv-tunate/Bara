@@ -383,7 +383,6 @@ namespace Infrastructure.Repositories.ScriptRepositories
             {
                 using var transaction = await dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
 
-                // Validate entities exist
                 var script = await dbContext.Scripts
                     .FirstOrDefaultAsync(s => s.Id == request.ScriptId);
 
@@ -427,7 +426,6 @@ namespace Infrastructure.Repositories.ScriptRepositories
                     return ResponseDetail<ScriptTransactionResponse>.Failed("Writer does not own this script", 400);
                 }
 
-                // Check for sufficient balance
                 if (producer.Wallet.AvailableBalance < script.Price)
                 {
                     logger.LogWarning("Insufficient balance - CorrelationId: {CorrelationId}, ProducerId: {ProducerId}, Available: {Available}, Required: {Required}",
@@ -435,7 +433,6 @@ namespace Infrastructure.Repositories.ScriptRepositories
                     return ResponseDetail<ScriptTransactionResponse>.Failed("Insufficient wallet balance", 400);
                 }
 
-                // Check for existing active transaction (idempotency and business rule)
                 var existingTransaction = await dbContext.ScriptTransactions
                     .FirstOrDefaultAsync(st => st.ProducerId == producerId && st.ScriptId == request.ScriptId &&
                                              st.TransactionStatus == ScriptTransactionStatus.Initiated);
@@ -444,7 +441,6 @@ namespace Infrastructure.Repositories.ScriptRepositories
                 {
                     if (!string.IsNullOrEmpty(request.IdempotencyKey) && existingTransaction.IdempotencyKey == request.IdempotencyKey)
                     {
-                        // Return existing transaction for idempotency
                         logger.LogInformation("Returning existing transaction for idempotency - CorrelationId: {CorrelationId}, TransactionId: {TransactionId}",
                             correlationId, existingTransaction.Id);
 
@@ -462,7 +458,6 @@ namespace Infrastructure.Repositories.ScriptRepositories
                 var fee = CalculateFee(script.Price);
                 var writerShare = script.Price - fee;
 
-                // Create payment transaction
                 var paymentTransaction = new PaymentTransaction
                 {
                     Id = Guid.NewGuid(),
@@ -481,7 +476,6 @@ namespace Infrastructure.Repositories.ScriptRepositories
 
                 await dbContext.Transactions.AddAsync(paymentTransaction);
 
-                // Create script transaction
                 var scriptTransaction = new ScriptTransaction
                 {
                     Id = Guid.NewGuid(),
@@ -504,7 +498,6 @@ namespace Infrastructure.Repositories.ScriptRepositories
 
                 await dbContext.ScriptTransactions.AddAsync(scriptTransaction);
 
-                // Create chat for the transaction
                 var chatResult = await chatService.CreateChatAsync(
                     scriptId: request.ScriptId,
                     scriptTitle: script.Title,
@@ -517,16 +510,13 @@ namespace Infrastructure.Repositories.ScriptRepositories
                 if (!chatResult.IsSuccess)
                 {
                     logger.LogWarning("Failed to create chat - CorrelationId: {CorrelationId}, Error: {Error}", correlationId, chatResult.Message);
-                    // Continue with transaction even if chat creation fails - it's not critical
                 }
                 else
                 {
-                    // Link the chat to the script transaction
                     scriptTransaction.ScriptComments = await dbContext.Chats.FirstOrDefaultAsync(c => c.Id == chatResult.Data);
                     logger.LogInformation("Chat created for script transaction - CorrelationId: {CorrelationId}, ChatId: {ChatId}", correlationId, chatResult.Data);
                 }
 
-                // Lock funds using wallet service
                 var fundsLocked = await walletService.LockFundsForScriptTransactionAsync(producerId, request.WriterId, script.Price, fee);
                 if (!fundsLocked)
                 {
@@ -534,14 +524,12 @@ namespace Infrastructure.Repositories.ScriptRepositories
                     return ResponseDetail<ScriptTransactionResponse>.Failed("Failed to lock funds", 500);
                 }
 
-                // Update script status
                 script.Status = ScriptStatus.InNegotiation;
                 dbContext.Scripts.Update(script);
 
                 await dbContext.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                // Schedule auto-complete job
                 BackgroundJob.Schedule<ScriptRepository>(
                     repo => repo.AutoCompleteScriptTransactionAsync(scriptTransaction.Id),
                     TimeSpan.FromDays(14));
@@ -570,7 +558,6 @@ namespace Infrastructure.Repositories.ScriptRepositories
             {
                 using var transaction = await dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
 
-                // Find the active script transaction
                 var scriptTransaction = await dbContext.ScriptTransactions
                     .FirstOrDefaultAsync(st => st.ProducerId == producerId && st.ScriptId == scriptId &&
                                              st.TransactionStatus == ScriptTransactionStatus.Initiated);
@@ -582,7 +569,6 @@ namespace Infrastructure.Repositories.ScriptRepositories
                     return ResponseDetail<ScriptTransactionResponse>.Failed("No active transaction found for this script", 404);
                 }
 
-                // Check if transaction has expired
                 if (scriptTransaction.ExpiresAt.HasValue && DateTimeOffset.UtcNow > scriptTransaction.ExpiresAt.Value)
                 {
                     logger.LogWarning("Transaction has expired - CorrelationId: {CorrelationId}, TransactionId: {TransactionId}, ExpiresAt: {ExpiresAt}",
@@ -590,7 +576,6 @@ namespace Infrastructure.Repositories.ScriptRepositories
                     return ResponseDetail<ScriptTransactionResponse>.Failed("Transaction has expired", 400);
                 }
 
-                // Get payment transaction
                 var paymentTransaction = await dbContext.Transactions
                     .FirstOrDefaultAsync(pt => pt.Id == scriptTransaction.PaymentTransactionId);
 
@@ -601,7 +586,6 @@ namespace Infrastructure.Repositories.ScriptRepositories
                     return ResponseDetail<ScriptTransactionResponse>.Failed("Payment transaction not found or not in escrowed state", 400);
                 }
 
-                // Validate script is still available for completion
                 var script = await dbContext.Scripts.FirstOrDefaultAsync(s => s.Id == scriptId);
                 if (script == null || script.Status == ScriptStatus.Sold)
                 {
@@ -610,7 +594,6 @@ namespace Infrastructure.Repositories.ScriptRepositories
                     return ResponseDetail<ScriptTransactionResponse>.Failed("Script is no longer available", 400);
                 }
 
-                // Release funds using wallet service
                 var fundsReleased = await walletService.ReleaseFundsForScriptTransactionAsync(
                     producerId, scriptTransaction.WriterId, scriptTransaction.Amount, scriptTransaction.WriterShare);
 
@@ -620,18 +603,15 @@ namespace Infrastructure.Repositories.ScriptRepositories
                     return ResponseDetail<ScriptTransactionResponse>.Failed("Failed to release funds", 500);
                 }
 
-                // Update script transaction
                 scriptTransaction.TransactionStatus = ScriptTransactionStatus.Completed;
                 scriptTransaction.Status = ScriptDeliveryStatus.Completed;
                 scriptTransaction.WriterPaidAt = DateTimeOffset.UtcNow;
                 scriptTransaction.ModifiedAt = DateTimeOffset.UtcNow;
 
-                // Update payment transaction
                 paymentTransaction.Status = TransactionStatus.Completed;
                 paymentTransaction.CompletedAt = DateTimeOffset.UtcNow;
                 paymentTransaction.ModifiedAt = DateTimeOffset.UtcNow;
 
-                // Update script status
                 script.Status = ScriptStatus.Sold;
                 script.ModifiedAt = DateTimeOffset.UtcNow;
 
@@ -642,7 +622,6 @@ namespace Infrastructure.Repositories.ScriptRepositories
                 await dbContext.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                // Close the chat
                 if (scriptTransaction.ScriptComments != null)
                 {
                     var chatCloseResult = await chatService.CloseChatAsync(scriptTransaction.ScriptComments.Id);
@@ -658,7 +637,6 @@ namespace Infrastructure.Repositories.ScriptRepositories
                     }
                 }
 
-                // Send script via email
                 await SendScriptToProducerAsync(producerId, scriptId, correlationId);
 
                 logger.LogInformation("Script transaction completed successfully - CorrelationId: {CorrelationId}, TransactionId: {TransactionId}",
@@ -884,7 +862,6 @@ namespace Infrastructure.Repositories.ScriptRepositories
         {
             try
             {
-                // Get producer and script details
                 var producer = await dbContext.Producers
                     .FirstOrDefaultAsync(p => p.Id == producerId);
 
@@ -898,7 +875,6 @@ namespace Infrastructure.Repositories.ScriptRepositories
                     return;
                 }
 
-                // Download script from storage
                 var scriptResult = await DownloadScript(scriptId);
                 if (!scriptResult.IsSuccess || scriptResult.Data == null)
                 {
@@ -907,11 +883,9 @@ namespace Infrastructure.Repositories.ScriptRepositories
                     return;
                 }
 
-                // Convert the downloaded script to IFormFile for attachment
                 List<IFormFile>? attachments = null;
                 if (scriptResult.Data != null)
                 {
-                    // Create a memory stream from the script data
                     var memoryStream = new MemoryStream(scriptResult.Data.File);
                     var formFile = new ScriptFormFile(memoryStream, scriptResult.Data.Name, scriptResult.Data.ContentType);
                     attachments = new List<IFormFile> { formFile };
@@ -938,7 +912,6 @@ namespace Infrastructure.Repositories.ScriptRepositories
                         correlationId, producerId, scriptId, emailResult.Message);
                 }
 
-                // Dispose the memory stream
                 if (attachments?.FirstOrDefault() is ScriptFormFile file)
                 {
                     await file.OpenReadStream().DisposeAsync();

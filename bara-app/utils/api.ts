@@ -1,5 +1,8 @@
+import { getAuthHeader, clearUserSession } from "./tokenManager";
+
 interface ApiRequestOptions extends RequestInit {
   skipNgrokWarning?: boolean;
+  requireAuth?: boolean;
 }
 
 interface ApiResponse<T = any> {
@@ -13,12 +16,26 @@ export async function apiRequest<T = any>(
   url: string,
   options: ApiRequestOptions = {}
 ): Promise<ApiResponse<T>> {
-  const { skipNgrokWarning = true, headers = {}, ...restOptions } = options;
+  const {
+    skipNgrokWarning = true,
+    requireAuth = false,
+    headers = {},
+    body,
+    ...restOptions
+  } = options;
 
   const requestHeaders: HeadersInit = {
-    "Content-Type": "application/json",
     ...headers,
   };
+  if (!(body instanceof FormData)) {
+    (requestHeaders as Record<string, string>)["Content-Type"] =
+      "application/json";
+  }
+
+  if (requireAuth) {
+    const authHeaders = getAuthHeader();
+    Object.assign(requestHeaders, authHeaders);
+  }
 
   if (skipNgrokWarning) {
     (requestHeaders as Record<string, string>)["ngrok-skip-browser-warning"] =
@@ -29,6 +46,7 @@ export async function apiRequest<T = any>(
     const response = await fetch(url, {
       ...restOptions,
       headers: requestHeaders,
+      body,
     });
 
     const contentType = response.headers.get("content-type");
@@ -47,6 +65,15 @@ export async function apiRequest<T = any>(
         statusCode: response.status,
       };
     } else {
+      // Handle unauthorized access
+      if (response.status === 401 && requireAuth) {
+        clearUserSession();
+        // Redirect to login page
+        if (typeof window !== "undefined") {
+          window.location.href = "/auth/login";
+        }
+      }
+
       return {
         success: false,
         message:
@@ -63,7 +90,7 @@ export async function apiRequest<T = any>(
     return {
       success: false,
       message: errorMessage,
-      statusCode: 0, 
+      statusCode: 0,
     };
   }
 }
@@ -75,6 +102,58 @@ export const api = {
       process.env.NEXT_PUBLIC_REGISTER_URL || "/api/user/register";
 
     return apiRequest(`${baseUrl}${registerUrl}`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  login: async (data: {
+    Email: string;
+    Password: string;
+    LoginDevice: string;
+  }) => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    const loginUrl = process.env.NEXT_PUBLIC_LOGIN_USER || "/api/auth/login";
+
+    return apiRequest(`${baseUrl}${loginUrl}`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  verifyLogin: async (data: {
+    Email: string;
+    Token: string;
+    Device: string;
+  }) => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    const verifyUrl = "/api/auth/verify-login";
+
+    return apiRequest(`${baseUrl}${verifyUrl}`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  forgotPassword: async (data: { Email: string }) => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    const forgotUrl = "/api/auth/forgot-password";
+
+    return apiRequest(`${baseUrl}${forgotUrl}`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  resetPassword: async (data: {
+    Email: string;
+    Token: string;
+    NewPassword: string;
+  }) => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    const resetUrl = "/api/auth/reset-password";
+
+    return apiRequest(`${baseUrl}${resetUrl}`, {
       method: "POST",
       body: JSON.stringify(data),
     });
@@ -95,6 +174,28 @@ export const api = {
 
     return apiRequest(`${baseUrl}${resendUrl}/${email}`, {
       method: "POST",
+    });
+  },
+
+  createProducer: async (formData: FormData, userId: string) => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    const producerUrl = `/api/producer/${userId}`;
+
+    return apiRequest(`${baseUrl}${producerUrl}`, {
+      method: "POST",
+      body: formData,
+      requireAuth: true,
+    });
+  },
+
+  createWriter: async (formData: FormData, userId: string) => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    const writerUrl = `/api/writer?userId=${userId}`;
+
+    return apiRequest(`${baseUrl}${writerUrl}`, {
+      method: "POST",
+      body: formData,
+      requireAuth: true,
     });
   },
 };

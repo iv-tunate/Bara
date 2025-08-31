@@ -56,18 +56,17 @@ namespace Bara.API.Controllers.TransactionControllers
         }
 
         /// <summary>
-        /// Verifies a paystack payment transaction for a user.
+        /// Verifies a paystack payment transaction using reference.
         /// </summary>
-        /// <param name="userId"></param>
         /// <param name="reference"></param>
         /// <returns></returns>
         [Authorize(Roles = "Admin, Producer, Writer")]
-        [HttpPost("verify-payment/{userId}/{reference}")]
-        public async Task<IActionResult> VerifyPayment(Guid userId, string reference)
+        [HttpPost("verify-payment/{reference}")]
+        public async Task<IActionResult> VerifyPayment(string reference)
         {
             try
             {
-                var response = await transactionService.VerifyTransactionAsync(userId, reference);
+                var response = await transactionService.VerifyTransactionAsync(reference);
                 if (response.IsSuccess)
                 {
                     return Ok(response);

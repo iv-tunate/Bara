@@ -371,5 +371,50 @@
                 Attachments = attachments
             };
         }
+
+        /// <summary>
+        /// Constructs a password reset email with token for password recovery.
+        /// </summary>
+        /// <param name="receiver">The email address of the recipient.</param>
+        /// <param name="name">The name of the recipient.</param>
+        /// <param name="token">The password reset token.</param>
+        /// <returns>A populated <see cref="MailRequestDTO"/> ready to be sent.</returns>
+        public static MailRequestDTO PasswordResetMailNotification(string receiver, string name, string token)
+        {
+            var subject = "🔑 Password Reset Request";
+
+            string body = $@"
+                    <p>Hi {name},</p>
+
+                    <p>We received a request to reset your password for your Bara account.</p>
+
+                    <p>Please use the token below to reset your password:</p>
+
+                    <h2 style='color:#800000; background-color:#f5f5f5; padding:15px; text-align:center; border-radius:5px;'>{token}</h2>
+                    <p style='margin-top:-10px; text-align:center;'>This token will expire in <strong>30 minutes</strong>.</p>
+
+                    <br/>
+                    <p><strong>Important Security Information:</strong></p>
+                    <ul>
+                        <li>If you didn't request this password reset, please ignore this email</li>
+                        <li>Never share this token with anyone</li>
+                        <li>Our support team will never ask for your password or reset token</li>
+                    </ul>
+
+                    <br/>
+                    <p>If you continue to have issues accessing your account, please contact our support team.</p>
+
+                    <br/>
+                    <p style='color:gray; font-size:0.9em;'>This is an automated message. Please do not reply directly to this email.</p>
+                ";
+
+            return new MailRequestDTO
+            {
+                Receiver = receiver,
+                ReceiverName = name,
+                Subject = subject,
+                Body = BaseEmailTemplate(name, body)
+            };
+        }
     }
 }
