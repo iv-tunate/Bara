@@ -25,6 +25,9 @@ export default function ForgotPasswordPage() {
 
       if (response.success) {
         setSuccess(true);
+         router.push(
+           `/auth/otp-verification?email=${encodeURIComponent(email)}`
+         );
       } else {
         setError(
           response.message || "Failed to send reset email. Please try again."
