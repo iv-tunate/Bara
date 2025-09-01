@@ -23,7 +23,7 @@ namespace UserModule.Models
         /// Required for bank transfers and account verification.
         /// Example: "0123456789"
         /// </summary>
-        [DataType(DataType.Text), Column(TypeName = "Nvarchar(50)")]
+        [DataType(DataType.Text), MaxLength(60)]
         public string AccountNumber { get; set; }
 
         /// <summary>
@@ -31,7 +31,7 @@ namespace UserModule.Models
         /// Retrieved from Paystack's bank list API during account verification.
         /// Example: "First Bank of Nigeria", "Guaranty Trust Bank"
         /// </summary>
-        [DataType(DataType.Text), Column(TypeName = "Nvarchar(100)")]
+        [DataType(DataType.Text), MaxLength(60)]
         public string BankName { get; set; }
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace UserModule.Models
         /// Used by Paystack API to identify which bank to transfer money to.
         /// Example: "011" (First Bank), "058" (GTBank), "044" (Access Bank)
         /// </summary>
-        [DataType(DataType.Text), Column(TypeName = "Nvarchar(10)")]
+        [DataType(DataType.Text), MaxLength(20)]
         public string BankCode { get; set; }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace UserModule.Models
         /// Retrieved during account verification to ensure account number matches actual holder.
         /// Example: "John Olumide Adebayo"
         /// </summary>
-        [DataType(DataType.Text), Column(TypeName = "Nvarchar(100)")]
+        [DataType(DataType.Text), MaxLength(100)]
         public string AccountName { get; set; }
 
         ///// <summary>

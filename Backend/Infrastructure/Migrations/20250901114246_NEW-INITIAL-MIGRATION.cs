@@ -5,7 +5,7 @@
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialMigration : Migration
+    public partial class NEWINITIALMIGRATION : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -31,47 +31,22 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ScriptTransactions",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ScriptId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ScriptTitle = table.Column<string>(type: "text", nullable: false),
-                    ProducerId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ProducerName = table.Column<string>(type: "text", nullable: false),
-                    WriterId = table.Column<Guid>(type: "uuid", nullable: false),
-                    WriterName = table.Column<string>(type: "text", nullable: false),
-                    TotalAmount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
-                    WriterAmount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
-                    PlatformFee = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
-                    PaymentTransactionId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    WriterPaidAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    ModifiedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ScriptTransactions", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    FirstName = table.Column<string>(type: "text", nullable: false),
-                    LastName = table.Column<string>(type: "text", nullable: false),
-                    MiddleName = table.Column<string>(type: "text", nullable: false),
+                    FirstName = table.Column<string>(type: "character varying(60)", maxLength: 60, nullable: false),
+                    LastName = table.Column<string>(type: "character varying(60)", maxLength: 60, nullable: false),
+                    MiddleName = table.Column<string>(type: "character varying(60)", maxLength: 60, nullable: false),
                     Email = table.Column<string>(type: "text", nullable: false),
                     PhoneNumber = table.Column<string>(type: "text", nullable: false),
-                    Bio = table.Column<string>(type: "text", nullable: false),
+                    Bio = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     Gender = table.Column<string>(type: "text", nullable: false),
                     DateOfBirth = table.Column<DateOnly>(type: "date", nullable: false),
                     IsBlacklisted = table.Column<bool>(type: "boolean", nullable: false),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
                     VerificationStatus = table.Column<string>(type: "text", nullable: false),
-                    Type = table.Column<int>(type: "integer", nullable: false),
+                    Type = table.Column<string>(type: "text", nullable: false),
                     DeletedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     ModifiedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
@@ -105,6 +80,44 @@ namespace Infrastructure.Migrations
                         principalTable: "Chats",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ScriptTransactions",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ScriptId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ScriptTitle = table.Column<string>(type: "text", nullable: false),
+                    ProducerId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ProducerName = table.Column<string>(type: "text", nullable: false),
+                    WriterId = table.Column<Guid>(type: "uuid", nullable: false),
+                    WriterName = table.Column<string>(type: "text", nullable: false),
+                    TotalAmount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    WriterAmount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    PlatformFee = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    PaymentTransactionId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    TransactionStatus = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    ExpiresAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    IdempotencyKey = table.Column<string>(type: "text", nullable: true),
+                    Amount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    Fee = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    WriterShare = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    Currency = table.Column<int>(type: "integer", nullable: false),
+                    ScriptCommentsId = table.Column<Guid>(type: "uuid", nullable: true),
+                    WriterPaidAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    ModifiedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ScriptTransactions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ScriptTransactions_Chats_ScriptCommentsId",
+                        column: x => x.ScriptCommentsId,
+                        principalTable: "Chats",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -172,12 +185,13 @@ namespace Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    AccountNumber = table.Column<string>(type: "text", nullable: false),
-                    BankName = table.Column<string>(type: "text", nullable: false),
-                    BankCode = table.Column<string>(type: "text", nullable: false),
+                    AccountNumber = table.Column<string>(type: "character varying(60)", maxLength: 60, nullable: false),
+                    BankName = table.Column<string>(type: "character varying(60)", maxLength: 60, nullable: false),
+                    BankCode = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     BankId = table.Column<string>(type: "text", nullable: false),
                     BankType = table.Column<string>(type: "text", nullable: false),
-                    AccountName = table.Column<string>(type: "text", nullable: false),
+                    AccountName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    RecipientCode = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     ModifiedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
@@ -295,7 +309,7 @@ namespace Infrastructure.Migrations
                     TotalBalance = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
                     LockedBalance = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
                     AvailableBalance = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
-                    Currency = table.Column<int>(type: "integer", nullable: false),
+                    Currency = table.Column<string>(type: "text", nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     ModifiedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
@@ -346,6 +360,7 @@ namespace Infrastructure.Migrations
                     Notes = table.Column<string>(type: "text", nullable: true),
                     GatewayResponse = table.Column<string>(type: "text", nullable: true),
                     AccessCode = table.Column<string>(type: "text", nullable: true),
+                    TransferCode = table.Column<string>(type: "text", nullable: true),
                     WalletID = table.Column<Guid>(type: "uuid", nullable: true),
                     PaymentMethod = table.Column<string>(type: "text", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
@@ -398,8 +413,8 @@ namespace Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Title = table.Column<string>(type: "text", maxLength: 200, nullable: false),
-                    Genre = table.Column<string>(type: "text", maxLength: 100, nullable: false),
+                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Genre = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Logline = table.Column<string>(type: "text", nullable: false),
                     Synopsis = table.Column<string>(type: "text", nullable: false),
                     Price = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
@@ -440,8 +455,8 @@ namespace Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "text", nullable: false),
-                    Description = table.Column<string>(type: "text", nullable: false),
+                    Name = table.Column<string>(type: "character varying(60)", maxLength: 60, nullable: false),
+                    Description = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     MinPrice = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
                     MaxPrice = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
                     Currency = table.Column<string>(type: "text", nullable: false),
@@ -579,6 +594,21 @@ namespace Infrastructure.Migrations
                 column: "WriterId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ScriptTransactions_IdempotencyKey",
+                table: "ScriptTransactions",
+                column: "IdempotencyKey");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ScriptTransactions_ProducerId_ScriptId",
+                table: "ScriptTransactions",
+                columns: new[] { "ProducerId", "ScriptId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ScriptTransactions_ScriptCommentsId",
+                table: "ScriptTransactions",
+                column: "ScriptCommentsId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Services_WriterId",
                 table: "Services",
                 column: "WriterId");
@@ -678,13 +708,13 @@ namespace Infrastructure.Migrations
                 name: "Services");
 
             migrationBuilder.DropTable(
-                name: "Chats");
-
-            migrationBuilder.DropTable(
                 name: "Transactions");
 
             migrationBuilder.DropTable(
                 name: "Producers");
+
+            migrationBuilder.DropTable(
+                name: "Chats");
 
             migrationBuilder.DropTable(
                 name: "Writers");

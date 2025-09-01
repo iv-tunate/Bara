@@ -1,6 +1,5 @@
 ﻿using SharedModule.Models;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using TransactionModule.Models;
 using UserModule.Enums;
 
@@ -15,19 +14,19 @@ namespace UserModule.Models
         /// <summary>
         /// The user's first name.
         /// </summary>
-        [DataType(DataType.Text), Column(TypeName = "Nvarchar(60)")]
+        [DataType(DataType.Text), MaxLength(60)]
         public string FirstName { get; set; } = string.Empty;
 
         /// <summary>
         /// The user's last name.
         /// </summary>
-        [DataType(DataType.Text), Column(TypeName = "Nvarchar(60)")]
+        [DataType(DataType.Text), MaxLength(60)]
         public string LastName { get; set; } = string.Empty;
 
         /// <summary>
         /// The user's optional middle name.
         /// </summary>
-        [DataType(DataType.Text), Column(TypeName = "Nvarchar(60)")]
+        [DataType(DataType.Text), MaxLength(60)]
         public string MiddleName { get; set; } = "";
 
         /// <summary>
@@ -46,7 +45,7 @@ namespace UserModule.Models
         /// <summary>
         /// A brief biography or description provided by the user.
         /// </summary>
-        [DataType(DataType.Text), Column(TypeName = "Nvarchar(200)")]
+        [DataType(DataType.Text), MaxLength(200)]
         public string Bio { get; set; } = string.Empty;
         /// <summary>
         /// The user's gender.

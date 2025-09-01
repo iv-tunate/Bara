@@ -35,7 +35,7 @@ namespace Bara.API.Controllers.UserModuleControllers
                 var response = await authService.Login(loginPayload);
                 if (response.IsSuccess)
                 {
-                    //logger.LogInformation("User {email} logged in successfully", loginPayload.Email);
+                    logger.LogInformation("User {email} logged in successfully", loginPayload.Email);
                     return Ok(response);
                 }
                 else if (response.StatusCode == 500)

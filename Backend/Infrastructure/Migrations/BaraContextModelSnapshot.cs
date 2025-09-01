@@ -42,7 +42,7 @@ namespace Infrastructure.Migrations
                     b.Property<string>("Genre")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("Nvarchar(60)");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Image")
                         .HasColumnType("text");
@@ -89,7 +89,7 @@ namespace Infrastructure.Migrations
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("Nvarchar(100)");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<DateTimeOffset>("UploadedOn")
                         .HasColumnType("timestamp with time zone");
@@ -628,15 +628,18 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("AccountName")
                         .IsRequired()
-                        .HasColumnType("Nvarchar(100)");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("AccountNumber")
                         .IsRequired()
-                        .HasColumnType("Nvarchar(50)");
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
 
                     b.Property<string>("BankCode")
                         .IsRequired()
-                        .HasColumnType("Nvarchar(10)");
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<string>("BankId")
                         .IsRequired()
@@ -644,7 +647,8 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("BankName")
                         .IsRequired()
-                        .HasColumnType("Nvarchar(100)");
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
 
                     b.Property<string>("BankType")
                         .IsRequired()
@@ -810,7 +814,8 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("Nvarchar(200)");
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<List<string>>("Genre")
                         .IsRequired()
@@ -832,7 +837,8 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("Nvarchar(60)");
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
 
                     b.Property<string>("PaymentType")
                         .IsRequired()
@@ -860,7 +866,8 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("Bio")
                         .IsRequired()
-                        .HasColumnType("Nvarchar(200)");
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -877,7 +884,8 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasColumnType("Nvarchar(60)");
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
 
                     b.Property<string>("Gender")
                         .IsRequired()
@@ -891,11 +899,13 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("Nvarchar(60)");
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
 
                     b.Property<string>("MiddleName")
                         .IsRequired()
-                        .HasColumnType("Nvarchar(60)");
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
 
                     b.Property<DateTimeOffset?>("ModifiedAt")
                         .HasColumnType("timestamp with time zone");

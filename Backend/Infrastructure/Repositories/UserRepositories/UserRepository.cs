@@ -76,21 +76,60 @@ namespace Infrastructure.Repositories.UserRepositories
 
                 var verificationMail = MailNotifications.RegistrationConfirmationMailNotification(detail.Email, token.ToString());
 
-
-                var user = new User
+                User user;
+                if (detail.Type == Role.Writer)
                 {
-                    Email = detail.Email,
-                    Type = detail.Type,
-                    VerificationStatus = detail.Type == Role.Admin ? VerificationStatus.Approved : VerificationStatus.Pending,
-                    AuthProfile = new AuthProfile
+                    Writer writerProfile = new Writer
                     {
                         Email = detail.Email,
-                        Password = BCrypt.Net.BCrypt.HashPassword(detail.Password),
-                        Role = detail.Type.ToString(),
-                        IsVerified = detail.Type == Role.Admin
-                    },
-                };
-                await dbContext.Users.AddAsync(user);
+                        Type = detail.Type,
+                        VerificationStatus = detail.Type == Role.Admin ? VerificationStatus.Approved : VerificationStatus.Pending,
+                        AuthProfile = new AuthProfile
+                        {
+                            Email = detail.Email,
+                            Password = BCrypt.Net.BCrypt.HashPassword(detail.Password),
+                            Role = detail.Type.ToString(),
+                        },
+                    };
+                    await dbContext.Writers.AddAsync(writerProfile);
+                    user = writerProfile;
+                }
+
+                else if (detail.Type == Role.Producer)
+                {
+                    Producer producerProfile = new Producer
+                    {
+                        Email = detail.Email,
+                        Type = detail.Type,
+                        VerificationStatus = detail.Type == Role.Admin ? VerificationStatus.Approved : VerificationStatus.Pending,
+                        AuthProfile = new AuthProfile
+                        {
+                            Email = detail.Email,
+                            Password = BCrypt.Net.BCrypt.HashPassword(detail.Password),
+                            Role = detail.Type.ToString(),
+                        },
+                    };
+                    await dbContext.Producers.AddAsync(producerProfile);
+                    user = producerProfile;
+                }
+                else
+                {
+                    user = new User
+                    {
+                        Email = detail.Email,
+                        Type = detail.Type,
+                        VerificationStatus = detail.Type == Role.Admin ? VerificationStatus.Approved : VerificationStatus.Pending,
+                        AuthProfile = new AuthProfile
+                        {
+                            Email = detail.Email,
+                            Password = BCrypt.Net.BCrypt.HashPassword(detail.Password),
+                            Role = detail.Type.ToString(),
+                            IsVerified = detail.Type == Role.Admin
+                        },
+                    };
+
+                    await dbContext.Users.AddAsync(user);
+                }
                 await dbContext.SaveChangesAsync();
 
                 BackgroundJob.Enqueue(() => hangfire.SendMailAsync(verificationMail));

@@ -1,5 +1,4 @@
-﻿using CloudinaryDotNet.Actions;
-using Hangfire;
+﻿using Hangfire;
 using Infrastructure.DataContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -82,7 +81,7 @@ namespace Infrastructure.Repositories.UserRepositories
                 }
 
                 else if (!user.IsEmailVerified) validationErrors.Add("Login unsuccessful...Email address is unverified... Please verify yout email and try again");
-                else if (!user.IsVerified && user.Role != Role.Admin.ToString()) validationErrors.Add("Login unsuccessful... Account verification failed or is still in progress");
+                //else if (!user.IsVerified && user.Role != Role.Admin.ToString()) validationErrors.Add("Login unsuccessful... Account verification failed or is still in progress");
 
                 if (validationErrors.Count > 0)
                 {
@@ -264,7 +263,7 @@ namespace Infrastructure.Repositories.UserRepositories
                 {
                     Email = loginDetails.Email,
                     Name = user.FullName,
-                    UserId = user.Id,
+                    UserId = user.UserId,
                     WrongLoginAttempts = user.LoginAttempts,
                 };
 
@@ -372,7 +371,7 @@ namespace Infrastructure.Repositories.UserRepositories
 
                 var resetToken = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
                 var cacheKey = $"User_Password_Reset_Token_{request.Email}";
-                cache.Set(cacheKey, resetToken, absoluteExpiration: DateTimeOffset.UtcNow.AddMinutes(30)); 
+                cache.Set(cacheKey, resetToken, absoluteExpiration: DateTimeOffset.UtcNow.AddMinutes(30));
                 logger.LogInformation($"User_Password_Reset_Token_{request.Email}: {resetToken}");
                 Console.WriteLine($"User_Password_Reset_Token_{request.Email}: {resetToken}");
 
@@ -421,7 +420,7 @@ namespace Infrastructure.Repositories.UserRepositories
 
                 user.Password = hashedPassword;
                 user.ModifiedAt = DateTimeOffset.UtcNow;
-                cache.Remove(cacheKey); 
+                cache.Remove(cacheKey);
 
                 dbContext.AuthProfiles.Update(user);
                 await dbContext.SaveChangesAsync();

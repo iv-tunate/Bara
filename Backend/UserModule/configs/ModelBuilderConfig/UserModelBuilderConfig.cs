@@ -15,6 +15,7 @@ namespace UserModule.configs.ModelBuilderConfig
             builder.HasIndex(x => x.Email);
             builder.HasIndex(x => x.IsBlacklisted);
             builder.HasIndex(x => x.Gender);
+            builder.Property(x => x.Type).HasConversion<string>();
         }
     }
 }

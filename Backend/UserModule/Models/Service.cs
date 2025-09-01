@@ -14,13 +14,13 @@ namespace UserModule.Models
         /// <summary>
         /// The name of the service (e.g., "Script Proofreading").
         /// </summary>
-        [DataType(DataType.Text), Column(TypeName = "Nvarchar(60)")]
+        [DataType(DataType.Text), MaxLength(60)]
         public required string Name { get; set; }
 
         /// <summary>
         /// A short description of what the service entails.
         /// </summary>
-        [DataType(DataType.Text), Column(TypeName = "Nvarchar(200)")]
+        [DataType(DataType.Text), MaxLength(200)]
         public required string Description { get; set; }
 
         /// <summary>

@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(BaraContext))]
-    [Migration("20250831173611_AddScriptTransactionEnhancements")]
-    partial class AddScriptTransactionEnhancements
+    [Migration("20250901114246_NEW-INITIAL-MIGRATION")]
+    partial class NEWINITIALMIGRATION
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -45,7 +45,7 @@ namespace Infrastructure.Migrations
                     b.Property<string>("Genre")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("Nvarchar(60)");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Image")
                         .HasColumnType("text");
@@ -92,7 +92,7 @@ namespace Infrastructure.Migrations
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("Nvarchar(100)");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<DateTimeOffset>("UploadedOn")
                         .HasColumnType("timestamp with time zone");
@@ -247,6 +247,9 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("ScriptCommentsId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("ScriptId")
                         .HasColumnType("uuid");
 
@@ -286,6 +289,8 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("IdempotencyKey");
+
+                    b.HasIndex("ScriptCommentsId");
 
                     b.HasIndex("ProducerId", "ScriptId");
 
@@ -626,15 +631,18 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("AccountName")
                         .IsRequired()
-                        .HasColumnType("Nvarchar(100)");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("AccountNumber")
                         .IsRequired()
-                        .HasColumnType("Nvarchar(50)");
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
 
                     b.Property<string>("BankCode")
                         .IsRequired()
-                        .HasColumnType("Nvarchar(10)");
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<string>("BankId")
                         .IsRequired()
@@ -642,7 +650,8 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("BankName")
                         .IsRequired()
-                        .HasColumnType("Nvarchar(100)");
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
 
                     b.Property<string>("BankType")
                         .IsRequired()
@@ -808,7 +817,8 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("Nvarchar(200)");
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<List<string>>("Genre")
                         .IsRequired()
@@ -830,7 +840,8 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("Nvarchar(60)");
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
 
                     b.Property<string>("PaymentType")
                         .IsRequired()
@@ -858,7 +869,8 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("Bio")
                         .IsRequired()
-                        .HasColumnType("Nvarchar(200)");
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -875,7 +887,8 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasColumnType("Nvarchar(60)");
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
 
                     b.Property<string>("Gender")
                         .IsRequired()
@@ -889,11 +902,13 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("Nvarchar(60)");
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
 
                     b.Property<string>("MiddleName")
                         .IsRequired()
-                        .HasColumnType("Nvarchar(60)");
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
 
                     b.Property<DateTimeOffset?>("ModifiedAt")
                         .HasColumnType("timestamp with time zone");
@@ -965,6 +980,15 @@ namespace Infrastructure.Migrations
                         .HasForeignKey("ChatId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("ScriptModule.Models.ScriptTransaction", b =>
+                {
+                    b.HasOne("ScriptModule.Models.ScriptRelatedChats.Chat", "ScriptComments")
+                        .WithMany()
+                        .HasForeignKey("ScriptCommentsId");
+
+                    b.Navigation("ScriptComments");
                 });
 
             modelBuilder.Entity("TransactionModule.Models.Escrow", b =>

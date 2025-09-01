@@ -1,6 +1,5 @@
 ﻿using ScriptModule.Models;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 
 namespace UserModule.Models
@@ -13,7 +12,7 @@ namespace UserModule.Models
         /// <summary>
         /// A brief biography or description provided by the user.
         /// </summary>
-        [DataType(DataType.Text), Column(TypeName = "Nvarchar(200)")]
+        [DataType(DataType.Text), MaxLength(200)]
         public string Bio { get; set; } = string.Empty;
         public List<BioExperience> Experiences { get; set; }
         public bool IsPremiumMember { get; set; }

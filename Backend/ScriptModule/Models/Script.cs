@@ -13,13 +13,13 @@ namespace ScriptModule.Models
         /// <summary>
         /// The title of the script.
         /// </summary>
-        [Column(TypeName = "Nvarchar(100)")]
+        [MaxLength(200)]
         public required string Title { get; set; }
 
         /// <summary>
         /// The genre of the script (e.g., Drama, Thriller, Comedy).
         /// </summary>
-        [Column(TypeName = "Nvarchar(60)")]
+        [MaxLength(30)]
         public required string Genre { get; set; }
 
         /// <summary>
