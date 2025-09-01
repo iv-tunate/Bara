@@ -130,7 +130,7 @@ export const api = {
     const verifyUrl = "/api/auth/verify-login";
 
     return apiRequest(`${baseUrl}${verifyUrl}`, {
-      method: "POST",
+      method: "PUT",
       body: JSON.stringify(data),
     });
   },
