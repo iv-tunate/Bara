@@ -72,10 +72,7 @@ namespace Infrastructure.Repositories.UserRepositories
                 producer.Gender = producerDetailDTO.Gender;
                 producer.DateOfBirth = producerDetailDTO.DateOfBirth;
                 producer.Type = Role.Producer;
-                producer.AuthProfile = new()
-                {
-                    FullName = $"{producerDetailDTO.FirstName} {producerDetailDTO.LastName}".ToUpperInvariant(),
-                };
+                producer.AuthProfile.FullName = $"{producerDetailDTO.FirstName} {producerDetailDTO.LastName}".ToUpperInvariant();
                 producer.Wallet = new Wallet
                 {
                     TotalBalance = 0,

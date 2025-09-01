@@ -87,10 +87,7 @@ namespace Infrastructure.Repositories.UserRepositories
                 writerProfile.Gender = writerDetailDTO.Gender;
                 writerProfile.DateOfBirth = writerDetailDTO.DateOfBirth;
                 writerProfile.IsPremiumMember = writerDetailDTO.IsPremiumMember;
-                writerProfile.AuthProfile = new()
-                {
-                    FullName = $"{writerDetailDTO.FirstName} {writerDetailDTO.LastName}".ToUpperInvariant(),
-                };
+                writerProfile.AuthProfile.FullName = $"{writerDetailDTO.FirstName} {writerDetailDTO.LastName}".ToUpperInvariant();
                 writerProfile.Services = writerDetailDTO.PostServiceDetail?
                 .Select(dto => new Service
                 {
