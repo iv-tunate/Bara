@@ -7,11 +7,9 @@ using Microsoft.Extensions.Options;
 using Services.BackgroudServices;
 using Services.FileStorageServices.Interfaces;
 using Services.YouVerifyIntegration;
-using SharedModule.Models;
 using SharedModule.Settings;
 using SharedModule.Utils;
 using TransactionModule.DTOs;
-using TransactionModule.Models;
 using UserModule.DTOs.AddressDTOs;
 using UserModule.DTOs.ServiceDTOs;
 using UserModule.DTOs.WriterDTOs;
@@ -61,7 +59,7 @@ namespace Infrastructure.Repositories.UserRepositories
                 }
 
                 // -------------------- UPDATE WRITER PROFILE --------------------
-                var writerProfile = await dbContext.Writers.FindAsync(userId);
+                var writerProfile = await dbContext.Writers.Include(x => x.AuthProfile).FirstOrDefaultAsync(x => x.Id == userId);
                 if (writerProfile is null)
                 {
                     logger.LogError($"Writer profile with ID {userId} does not exist.");
@@ -103,14 +101,6 @@ namespace Infrastructure.Repositories.UserRepositories
                     WriterId = userId
                 })
                 .ToList() ?? [];
-                writerProfile.Wallet = new Wallet
-                {
-                    TotalBalance = 0,
-                    AvailableBalance = 0,
-                    LockedBalance = 0,
-                    Currency = Currency.NAIRA,
-                    UserId = userId
-                };
                 writerProfile.Address = new Address
                 {
                     City = writerDetailDTO.AddressDetail.City.ToUpperInvariant(),

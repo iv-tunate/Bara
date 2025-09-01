@@ -137,7 +137,7 @@ namespace Services.YouVerifyIntegration
                     {
                         Success = true,
                         Status = "completed",
-                        Message = "Verification completed successfully",
+                        Message = "Operation initiated successfully",
                     };
                 }
 

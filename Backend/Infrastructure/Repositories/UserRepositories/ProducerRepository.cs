@@ -6,10 +6,8 @@ using Microsoft.Extensions.Logging;
 using Services.BackgroudServices;
 using Services.FileStorageServices.Interfaces;
 using Services.YouVerifyIntegration;
-using SharedModule.Models;
 using SharedModule.Utils;
 using TransactionModule.DTOs;
-using TransactionModule.Models;
 using UserModule.DTOs.AddressDTOs;
 using UserModule.DTOs.ProducerDTOs;
 using UserModule.Enums;
@@ -58,7 +56,7 @@ namespace Infrastructure.Repositories.UserRepositories
                 }
 
                 // -------------------- CREATE PRODUCER PROFILE --------------------
-                var producer = await dbContext.Producers.FindAsync(userId);
+                var producer = await dbContext.Producers.Include(x => x.AuthProfile).FirstOrDefaultAsync(x => x.Id == userId);
                 if (producer is null)
                 {
                     logger.LogError($"Producer profile with ID {userId} does not exist.");
@@ -73,24 +71,6 @@ namespace Infrastructure.Repositories.UserRepositories
                 producer.DateOfBirth = producerDetailDTO.DateOfBirth;
                 producer.Type = Role.Producer;
                 producer.AuthProfile.FullName = $"{producerDetailDTO.FirstName} {producerDetailDTO.LastName}".ToUpperInvariant();
-                producer.Wallet = new Wallet
-                {
-                    TotalBalance = 0,
-                    AvailableBalance = 0,
-                    LockedBalance = 0,
-                    Currency = Currency.NAIRA,
-                    UserId = userId
-                };
-                producer.Address = new Address
-                {
-                    City = producerDetailDTO.AddressDetail.City.ToUpperInvariant(),
-                    Country = producerDetailDTO.AddressDetail.Country.ToUpperInvariant(),
-                    State = producerDetailDTO.AddressDetail.State.ToUpperInvariant(),
-                    Street = producerDetailDTO.AddressDetail.Street.ToUpperInvariant(),
-                    PostalCode = producerDetailDTO.AddressDetail.PostalCode,
-                    AdditionalDetails = producerDetailDTO.AddressDetail.AdditionalDetails.ToUpperInvariant(),
-                    UserId = userId
-                };
                 producer.Address = new Address
                 {
                     City = producerDetailDTO.AddressDetail.City.ToUpperInvariant(),
