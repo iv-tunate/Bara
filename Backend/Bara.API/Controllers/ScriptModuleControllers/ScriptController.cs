@@ -116,7 +116,7 @@ namespace Bara.API.Controllers.ScriptModuleControllers
         /// </returns>
 
         [HttpGet("scripts/{pageNumber}/{pageSize}")]
-        public async Task<IActionResult> GetAllScripts(int pageNumber, int pageSize)
+        public async Task<IActionResult> GetAllScripts(int pageNumber = 1, int pageSize = 10)
         {
             try
             {
