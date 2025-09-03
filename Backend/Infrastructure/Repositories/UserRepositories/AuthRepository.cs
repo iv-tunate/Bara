@@ -302,7 +302,7 @@ namespace Infrastructure.Repositories.UserRepositories
 
         // Here lies UnlockAccount method: private.
         // Called only by this class.
-        // Let no other dare invoke or try to perform any magic, lest the compiler raises its voice... Well, except you can hangle the errors you get (if any).
+        // Let no other dare invoke or try to perform any magic, lest the compiler raises its voice... Well, except you can handle the errors you get (if any).
         //You have been warned
         [AutomaticRetry(Attempts = 3, DelaysInSeconds = [10, 30, 60])]
         private async Task<bool> UnlockAccount(Guid userId)
