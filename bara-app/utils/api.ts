@@ -114,7 +114,7 @@ export const api = {
   }) => {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
     const loginUrl = process.env.NEXT_PUBLIC_LOGIN_USER || "/api/auth/login";
-
+console.log('Login URL:', `${baseUrl}${loginUrl}`);
     return apiRequest(`${baseUrl}${loginUrl}`, {
       method: "POST",
       body: JSON.stringify(data),
@@ -190,7 +190,7 @@ export const api = {
 
   createWriter: async (formData: FormData, userId: string) => {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-    const writerUrl = `/api/writer?userId=${userId}`;
+    const writerUrl = `/api/writer/${userId}`;
 
     return apiRequest(`${baseUrl}${writerUrl}`, {
       method: "POST",
@@ -202,7 +202,7 @@ export const api = {
   // Dashboard API methods
   getAllScripts: async (pageNumber: number, pageSize: number) => {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-    const scriptsUrl = `/api/scripts/${pageNumber}/${pageSize}`;
+    const scriptsUrl = `/api/script/scripts/${pageNumber}/${pageSize}`;
 
     return apiRequest(`${baseUrl}${scriptsUrl}`, {
       method: "GET",
@@ -216,7 +216,7 @@ export const api = {
     pageSize: number
   ) => {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-    const scriptsUrl = `/api/scripts/genre/${encodeURIComponent(
+    const scriptsUrl = `/api/script/scripts/genre/${encodeURIComponent(
       genre
     )}/${pageNumber}/${pageSize}`;
 
@@ -232,7 +232,7 @@ export const api = {
     pageSize: number
   ) => {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-    const searchUrl = `/api/scripts/search/${encodeURIComponent(
+    const searchUrl = `/api/script/scripts/search/${encodeURIComponent(
       searchTerm
     )}/${pageNumber}/${pageSize}`;
 
@@ -278,7 +278,7 @@ export const api = {
 
   addScript: async (formData: FormData, writerId: string) => {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-    const scriptUrl = `/api/scripts?writerId=${writerId}`;
+    const scriptUrl = `/api/script/${writerId}`;
 
     return apiRequest(`${baseUrl}${scriptUrl}`, {
       method: "POST",

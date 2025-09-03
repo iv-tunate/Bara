@@ -58,9 +58,10 @@ export default function DashboardPage() {
           pageSize
         );
       } else {
+
         response = await api.getAllScripts(currentPage, pageSize);
       }
-
+console.log("API Response:", response);
       if (response.success && response.data) {
         setScripts(response.data.data || []);
         setTotalPages(response.data.totalPages || 1);
