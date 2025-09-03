@@ -60,6 +60,8 @@ namespace Infrastructure.Repositories.UserRepositories
                     Email = authReqBody.Email,
                     Name = user.FullName,
                     UserId = user.UserId,
+                    IsProfileSetupComplete = user.IsProfileSetupComplete,
+                    Role = user.Role
                 };
                 var confirmPassword = BCrypt.Net.BCrypt.Verify(authReqBody.Password, user.Password);
                 if (!confirmPassword)
@@ -265,6 +267,8 @@ namespace Infrastructure.Repositories.UserRepositories
                     Name = user.FullName,
                     UserId = user.UserId,
                     WrongLoginAttempts = user.LoginAttempts,
+                    IsProfileSetupComplete = user.IsProfileSetupComplete,
+                    Role = user.Role
                 };
 
                 var cacheKey = $"User_Login_Token_{user.UserId}";
@@ -328,7 +332,7 @@ namespace Infrastructure.Repositories.UserRepositories
             }
         }
 
-        private string GenerateJwtToken(string role, string verificationStatus, Guid userId)
+        public string GenerateJwtToken(string role, string verificationStatus, Guid userId)
         {
             var claims = new List<Claim>
             {

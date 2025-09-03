@@ -30,6 +30,9 @@
         /// May be null if additional verification (e.g., token or email confirmation) is required.
         /// </summary>
         public string? AccessToken { get; set; }
+
+        public bool IsProfileSetupComplete { get; set; }
+        public string Role { get; set; }
     }
 
 }

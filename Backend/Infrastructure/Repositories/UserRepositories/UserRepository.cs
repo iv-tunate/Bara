@@ -29,8 +29,9 @@ namespace Infrastructure.Repositories.UserRepositories
         private readonly HangfireJobs hangfire;
         private readonly IMemoryCache cache;
         private readonly IPaystackService paystack;
+        private readonly IAuthService authService;
         public UserRepository(BaraContext baraContext, LogHelper<UserRepository> logHelper, HangfireJobs hangfire,
-        ILogger<UserRepository> logger, IHubContext<NotificationHub> hubContext, IMemoryCache cache, IPaystackService paystackService)
+        ILogger<UserRepository> logger, IHubContext<NotificationHub> hubContext, IMemoryCache cache, IPaystackService paystackService, IAuthService authService)
         {
             dbContext = baraContext;
             this.logHelper = logHelper;
@@ -39,6 +40,7 @@ namespace Infrastructure.Repositories.UserRepositories
             this.hangfire = hangfire;
             this.cache = cache;
             paystack = paystackService;
+            this.authService = authService;
         }
 
         public async Task<ResponseDetail<RegisterResponseDTO>> BeginRegistration(RegisterDTO detail)
@@ -133,10 +135,12 @@ namespace Infrastructure.Repositories.UserRepositories
                 await dbContext.SaveChangesAsync();
 
                 BackgroundJob.Enqueue(() => hangfire.SendMailAsync(verificationMail));
+                var jwt_token = authService.GenerateJwtToken(user.AuthProfile.Role, user.AuthProfile.IsVerified ? "Verified" : "Unverified", user.Id);
                 var response = new RegisterResponseDTO
                 {
                     UserId = user.Id,
                     Email = user.Email,
+                    AccessToken = jwt_token
                 };
                 return ResponseDetail<RegisterResponseDTO>.Successful(response, $"A verification token has been sent to {detail.Email}. Please check your inbox to complete the registration process.", 201);
             }

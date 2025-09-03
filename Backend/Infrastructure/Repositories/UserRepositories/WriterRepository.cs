@@ -28,6 +28,7 @@ namespace Infrastructure.Repositories.UserRepositories
         private readonly HangfireJobs hangfire;
         private readonly IMemoryCache cache;
         private readonly IYouVerifyService youVerify;
+
         public WriterRepository(BaraContext dbContext, ILogger<WriterRepository> logger, IOptions<AppSettings> appSettings,
             IFileService fileService, HangfireJobs hangfireJobs, IMemoryCache memoryCache, IYouVerifyService youVerifyService)
         {
@@ -86,6 +87,7 @@ namespace Infrastructure.Repositories.UserRepositories
                 writerProfile.DateOfBirth = writerDetailDTO.DateOfBirth;
                 writerProfile.IsPremiumMember = writerDetailDTO.IsPremiumMember;
                 writerProfile.AuthProfile.FullName = $"{writerDetailDTO.FirstName} {writerDetailDTO.LastName}".ToUpperInvariant();
+                writerProfile.AuthProfile.IsProfileSetupComplete = true;
                 writerProfile.Services = writerDetailDTO.PostServiceDetail?
                 .Select(dto => new Service
                 {

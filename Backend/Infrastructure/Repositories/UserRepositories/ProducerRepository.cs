@@ -71,6 +71,7 @@ namespace Infrastructure.Repositories.UserRepositories
                 producer.DateOfBirth = producerDetailDTO.DateOfBirth;
                 producer.Type = Role.Producer;
                 producer.AuthProfile.FullName = $"{producerDetailDTO.FirstName} {producerDetailDTO.LastName}".ToUpperInvariant();
+                producer.AuthProfile.IsProfileSetupComplete = true;
                 producer.Address = new Address
                 {
                     City = producerDetailDTO.AddressDetail.City.ToUpperInvariant(),

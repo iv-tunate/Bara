@@ -40,6 +40,8 @@ namespace UserModule.Models
         /// </summary>
         public bool IsEmailVerified { get; set; }
 
+        public bool IsProfileSetupComplete { get; set; }
+
         /// <summary>
         /// The most recent device used to log in to the account.
         /// </summary>

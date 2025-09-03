@@ -71,6 +71,14 @@ namespace UserModule.Interfaces.UserInterfaces
         /// <param name="request">The reset password request containing email, token, and new password.</param>
         /// <returns>A response indicating whether the password was reset successfully.</returns>
         Task<ResponseDetail<bool>> ResetPassword(ResetPasswordDTO request);
+        /// <summary>
+        /// Generates a JWT token for the specified user with given role and verification status.
+        /// </summary>
+        /// <param name="role"></param>
+        /// <param name="verificationStatus"></param>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        string GenerateJwtToken(string role, string verificationStatus, Guid userId);
     }
 }
 
