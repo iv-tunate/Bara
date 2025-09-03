@@ -37,5 +37,14 @@ namespace TransactionModule.Interfaces
         Task<ResponseDetail<bool>> ContinueWithdrawalInitiation(Guid userId, string token, InitiateWithdrawalDTO data);
 
         Task<ResponseDetail<bool>> InitiateWithdrawalProcess(Guid userId, InitiateWithdrawalDTO data);
+
+        /// <summary>
+        /// Retrieves paginated transaction history for a specific user.
+        /// </summary>
+        /// <param name="userId">The ID of the user whose transactions to retrieve</param>
+        /// <param name="pageNumber">The page number for pagination</param>
+        /// <param name="pageSize">The number of items per page</param>
+        /// <returns>A paginated list of user transactions</returns>
+        Task<ResponseDetail<List<GetTransactionDetail>>> GetUserTransactions(Guid userId, int pageNumber, int pageSize);
     }
 }

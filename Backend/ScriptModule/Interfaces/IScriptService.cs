@@ -83,12 +83,30 @@ namespace ScriptModule.Interfaces
         Task<ResponseDetail<ScriptTransactionResponse>> CancelScriptTransactionAsync(Guid producerId, Guid scriptId);
 
         /// <summary>
-        /// Updates the status of a script 
+        /// Updates the status of a script
         /// </summary>
         /// <param name="status"></param>
         /// <param name="scriptId"></param>
         /// <param name="writerId"></param>
         /// <returns>A script object</returns>
         Task<ResponseDetail<Script>> UpdateScriptStatus(ScriptStatus status, Guid scriptId, Guid writerId);
+
+        /// <summary>
+        /// Retrieves scripts filtered by genre with pagination.
+        /// </summary>
+        /// <param name="genre">The genre to filter by</param>
+        /// <param name="pageNumber">The page number for pagination</param>
+        /// <param name="pageSize">The number of items per page</param>
+        /// <returns>A paginated list of scripts in the specified genre</returns>
+        Task<ResponseDetail<List<Script>>> GetScriptsByGenre(string genre, int pageNumber, int pageSize);
+
+        /// <summary>
+        /// Searches scripts by title, description, or genre with pagination.
+        /// </summary>
+        /// <param name="searchTerm">The search term to filter scripts</param>
+        /// <param name="pageNumber">The page number for pagination</param>
+        /// <param name="pageSize">The number of items per page</param>
+        /// <returns>A paginated list of scripts matching the search criteria</returns>
+        Task<ResponseDetail<List<Script>>> SearchScripts(string searchTerm, int pageNumber, int pageSize);
     }
 }

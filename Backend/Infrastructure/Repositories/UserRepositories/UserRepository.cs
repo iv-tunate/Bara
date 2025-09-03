@@ -140,7 +140,8 @@ namespace Infrastructure.Repositories.UserRepositories
                 {
                     UserId = user.Id,
                     Email = user.Email,
-                    AccessToken = jwt_token
+                    AccessToken = jwt_token,
+                    Role = user.AuthProfile.Role
                 };
                 return ResponseDetail<RegisterResponseDTO>.Successful(response, $"A verification token has been sent to {detail.Email}. Please check your inbox to complete the registration process.", 201);
             }

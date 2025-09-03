@@ -88,5 +88,39 @@ namespace Bara.API.Controllers.TransactionControllers
                 return StatusCode(500, ResponseDetail<string>.Failed("An error occured", 500, "Internal server error"));
             }
         }
+
+        /// <summary>
+        /// Retrieves paginated transaction history for a specific user.
+        /// </summary>
+        /// <param name="userId">The ID of the user whose transactions to retrieve</param>
+        /// <param name="pageNumber">The page number for pagination</param>
+        /// <param name="pageSize">The number of items per page</param>
+        /// <returns>A paginated list of user transactions</returns>
+        [Authorize(Roles = "Admin, Producer, Writer")]
+        [HttpGet("users/{userId}/transactions/{pageNumber}/{pageSize}")]
+        public async Task<IActionResult> GetUserTransactions(Guid userId, int pageNumber, int pageSize)
+        {
+            try
+            {
+                var response = await transactionService.GetUserTransactions(userId, pageNumber, pageSize);
+                if (response.IsSuccess)
+                {
+                    return Ok(response);
+                }
+                else if (response.StatusCode == 500)
+                {
+                    logger.LogError("Get user transactions failed with status code 500: {Message}", response.Message);
+                    return StatusCode(500, response);
+                }
+
+                logger.LogError("Get user transactions failed {response}", response);
+                return StatusCode(response.StatusCode, response);
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"Getting transactions for user {userId}");
+                return StatusCode(500, ResponseDetail<string>.Failed("Your request failed", 500, "Internal server error"));
+            }
+        }
     }
 }

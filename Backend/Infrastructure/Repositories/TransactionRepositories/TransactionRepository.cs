@@ -464,5 +464,63 @@ namespace Infrastructure.Repositories.TransactionRepositories
                 return ResponseDetail<bool>.Failed("An error occurred while verifying the transfer", 500, ex.Message);
             }
         }
+
+        public async Task<ResponseDetail<List<GetTransactionDetail>>> GetUserTransactions(Guid userId, int pageNumber, int pageSize)
+        {
+            try
+            {
+                var cacheKey = $"User_{userId}_Transactions";
+                cache.TryGetValue<List<GetTransactionDetail>>(cacheKey, out var cachedTransactions);
+                if (cachedTransactions == null)
+                {
+                    var transactions = await dbContext.Transactions
+                        .Where(t => t.UserId == userId)
+                        .OrderByDescending(t => t.CreatedAt)
+                        .Select(t => new GetTransactionDetail
+                        {
+                            Id = t.Id,
+                            Amount = t.Amount,
+                            Currency = t.Currency.ToString(),
+                            CurrencySymbol = t.CurrencySymbol,
+                            TransactionDate = t.CreatedAt.DateTime,
+                            Status = t.Status.ToString(),
+                            Notes = t.Notes,
+                            ReferenceId = t.ReferenceId,
+                            GatewayResponse = t.GatewayResponse,
+                            CompletedAt = t.ModifiedAt,
+                            DateCompleted = t.ModifiedAt.HasValue ? DateOnly.FromDateTime(t.ModifiedAt.Value.DateTime) : null,
+                            TimeCompleted = t.ModifiedAt.HasValue ? TimeOnly.FromDateTime(t.ModifiedAt.Value.DateTime) : null
+                        })
+                        .ToListAsync();
+
+                    cachedTransactions = transactions;
+
+                    var cacheOptions = new MemoryCacheEntryOptions()
+                        .SetAbsoluteExpiration(TimeSpan.FromMinutes(5)) // Shorter cache for transaction data
+                        .SetSlidingExpiration(TimeSpan.FromMinutes(2));
+
+                    cache.Set(cacheKey, cachedTransactions, cacheOptions);
+                }
+
+                var totalCount = cachedTransactions.Count;
+                var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+                var paginatedTransactions = cachedTransactions
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+
+                if (totalCount < 1)
+                {
+                    return ResponseDetail<List<GetTransactionDetail>>.SuccessfulPaginatedResponse(paginatedTransactions, totalCount, totalPages, pageNumber, "No transactions found", 204);
+                }
+
+                return ResponseDetail<List<GetTransactionDetail>>.SuccessfulPaginatedResponse(paginatedTransactions, totalCount, totalPages, pageNumber, "Transactions retrieved successfully");
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"fetching transactions for user {userId}");
+                return ResponseDetail<List<GetTransactionDetail>>.Failed("Your request failed", 500, "Unexpected error");
+            }
+        }
     }
 }

@@ -205,5 +205,57 @@ namespace Bara.API.Controllers.ScriptModuleControllers
                 return StatusCode(500, ResponseDetail<string>.Failed("Your request failed...", 500, "Error"));
             }
         }
+
+        /// <summary>
+        /// Retrieves scripts filtered by genre with pagination.
+        /// </summary>
+        /// <param name="genre">The genre to filter by</param>
+        /// <param name="pageNumber">The page number for pagination</param>
+        /// <param name="pageSize">The number of items per page</param>
+        /// <returns>A paginated list of scripts in the specified genre</returns>
+        [HttpGet("scripts/genre/{genre}/{pageNumber}/{pageSize}")]
+        public async Task<IActionResult> GetScriptsByGenre(string genre, int pageNumber, int pageSize)
+        {
+            try
+            {
+                var response = await scriptService.GetScriptsByGenre(genre, pageNumber, pageSize);
+                if (response.IsSuccess is false)
+                {
+                    return BadRequest(response);
+                }
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"An exception: {ex.GetType().Name} was thrown at {ex.Source} while fetching scripts by genre {genre}...\nBase Exception: {ex.GetBaseException().GetType().Name}", $"Exception Code: {ex.HResult}");
+                return StatusCode(500, ResponseDetail<string>.Failed("Your request failed...", 500, "Error"));
+            }
+        }
+
+        /// <summary>
+        /// Searches scripts by title, description, or genre with pagination.
+        /// </summary>
+        /// <param name="searchTerm">The search term to filter scripts</param>
+        /// <param name="pageNumber">The page number for pagination</param>
+        /// <param name="pageSize">The number of items per page</param>
+        /// <returns>A paginated list of scripts matching the search criteria</returns>
+        [HttpGet("scripts/search/{searchTerm}/{pageNumber}/{pageSize}")]
+        public async Task<IActionResult> SearchScripts(string searchTerm, int pageNumber, int pageSize)
+        {
+            try
+            {
+                var response = await scriptService.SearchScripts(searchTerm, pageNumber, pageSize);
+                if (response.IsSuccess is false)
+                {
+                    return BadRequest(response);
+                }
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"An exception: {ex.GetType().Name} was thrown at {ex.Source} while searching scripts with term {searchTerm}...\nBase Exception: {ex.GetBaseException().GetType().Name}", $"Exception Code: {ex.HResult}");
+                return StatusCode(500, ResponseDetail<string>.Failed("Your request failed...", 500, "Error"));
+            }
+        }
     }
 }

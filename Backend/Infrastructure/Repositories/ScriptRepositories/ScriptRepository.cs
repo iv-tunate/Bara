@@ -33,9 +33,10 @@ namespace Infrastructure.Repositories.ScriptRepositories
         private readonly IMailService mailService;
         private readonly IHubContext<NotificationHub> notificationHub;
         private readonly IChatService chatService;
+        private readonly LogHelper<ScriptRepository> logHelper;
 
         private const string ALL_SCRIPTS_CACHE_KEY = "All_Scripts_Cache";
-        public ScriptRepository(IFileStorageService fileStorageService, ILogger<ScriptRepository> logger, BaraContext baraContext, IOptions<Secrets> secrets, IOptions<AppSettings> appSettings, IMemoryCache memoryCache, IWalletService walletService, IMailService mailService, IHubContext<NotificationHub> notificationHub, IChatService chatService)
+        public ScriptRepository(IFileStorageService fileStorageService, ILogger<ScriptRepository> logger, LogHelper<ScriptRepository> logHelper, BaraContext baraContext, IOptions<Secrets> secrets, IOptions<AppSettings> appSettings, IMemoryCache memoryCache, IWalletService walletService, IMailService mailService, IHubContext<NotificationHub> notificationHub, IChatService chatService)
         {
             cloudinary = fileStorageService;
             this.logger = logger;
@@ -47,6 +48,7 @@ namespace Infrastructure.Repositories.ScriptRepositories
             this.mailService = mailService;
             this.notificationHub = notificationHub;
             this.chatService = chatService;
+            this.logHelper = logHelper;
         }
         public async Task<ResponseDetail<Script>> AddScript(PostScriptDetailDTO scriptDetails, Guid writerId)
         {
@@ -921,6 +923,110 @@ namespace Infrastructure.Repositories.ScriptRepositories
             {
                 logger.LogError(ex, "Error sending script to producer - CorrelationId: {CorrelationId}, ProducerId: {ProducerId}, ScriptId: {ScriptId}",
                     correlationId, producerId, scriptId);
+            }
+        }
+
+        public async Task<ResponseDetail<List<Script>>> GetScriptsByGenre(string genre, int pageNumber, int pageSize)
+        {
+            try
+            {
+                var cacheKey = $"Scripts_Genre_{genre}";
+                memoryCache.TryGetValue<List<Script>>(cacheKey, out var cachedScripts);
+                if (cachedScripts == null)
+                {
+                    var writer = await dbContext.Writers.Select(x => new
+                    {
+                        PremiumStatus = x.IsPremiumMember,
+                        x.Scripts,
+                        x.CreatedAt,
+                        x.AuthProfile,
+                    }).ToListAsync();
+
+                    cachedScripts = writer
+                                    .OrderByDescending(x => x.PremiumStatus)
+                                    .ThenByDescending(x => x.CreatedAt)
+                                    .SelectMany(x => x.Scripts.Where(s => s.Status == ScriptStatus.Available &&
+                                                                          s.Genre.Equals(genre, StringComparison.OrdinalIgnoreCase)))
+                                    .ToList();
+
+                    var cacheOptions = new MemoryCacheEntryOptions()
+                        .SetAbsoluteExpiration(TimeSpan.FromMinutes(10))
+                        .SetSlidingExpiration(TimeSpan.FromMinutes(5));
+
+                    memoryCache.Set(cacheKey, cachedScripts, cacheOptions);
+                }
+
+                var totalCount = cachedScripts.Count;
+                var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+                var paginatedScripts = cachedScripts
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+
+                if (totalCount < 1)
+                {
+                    return ResponseDetail<List<Script>>.SuccessfulPaginatedResponse(paginatedScripts, totalCount, totalPages, pageNumber, $"No scripts found for genre '{genre}'", 204);
+                }
+
+                return ResponseDetail<List<Script>>.SuccessfulPaginatedResponse(paginatedScripts, totalCount, totalPages, pageNumber, "Scripts retrieved successfully");
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"fetching scripts by genre {genre}");
+                return ResponseDetail<List<Script>>.Failed("Your request failed", 500, "Unexpected error");
+            }
+        }
+
+        public async Task<ResponseDetail<List<Script>>> SearchScripts(string searchTerm, int pageNumber, int pageSize)
+        {
+            try
+            {
+                var cacheKey = $"Scripts_Search_{searchTerm}";
+                memoryCache.TryGetValue<List<Script>>(cacheKey, out var cachedScripts);
+                if (cachedScripts == null)
+                {
+                    var writer = await dbContext.Writers.Select(x => new
+                    {
+                        PremiumStatus = x.IsPremiumMember,
+                        x.Scripts,
+                        x.CreatedAt,
+                        x.AuthProfile,
+                    }).ToListAsync();
+
+                    cachedScripts = writer
+                                    .OrderByDescending(x => x.PremiumStatus)
+                                    .ThenByDescending(x => x.CreatedAt)
+                                    .SelectMany(x => x.Scripts.Where(s => s.Status == ScriptStatus.Available &&
+                                                                          (s.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                                                                           s.Synopsis.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                                                                           s.Genre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))))
+                                    .ToList();
+
+                    var cacheOptions = new MemoryCacheEntryOptions()
+                        .SetAbsoluteExpiration(TimeSpan.FromMinutes(5)) // Shorter cache for search results
+                        .SetSlidingExpiration(TimeSpan.FromMinutes(2));
+
+                    memoryCache.Set(cacheKey, cachedScripts, cacheOptions);
+                }
+
+                var totalCount = cachedScripts.Count;
+                var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+                var paginatedScripts = cachedScripts
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+
+                if (totalCount < 1)
+                {
+                    return ResponseDetail<List<Script>>.SuccessfulPaginatedResponse(paginatedScripts, totalCount, totalPages, pageNumber, $"No scripts found for '{searchTerm}'", 204);
+                }
+
+                return ResponseDetail<List<Script>>.SuccessfulPaginatedResponse(paginatedScripts, totalCount, totalPages, pageNumber, "Scripts retrieved successfully");
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"searching scripts with term {searchTerm}");
+                return ResponseDetail<List<Script>>.Failed("Your request failed", 500, "Unexpected error");
             }
         }
 

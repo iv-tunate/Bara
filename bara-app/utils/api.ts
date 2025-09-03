@@ -198,6 +198,94 @@ export const api = {
       requireAuth: true,
     });
   },
+
+  // Dashboard API methods
+  getAllScripts: async (pageNumber: number, pageSize: number) => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    const scriptsUrl = `/api/scripts/${pageNumber}/${pageSize}`;
+
+    return apiRequest(`${baseUrl}${scriptsUrl}`, {
+      method: "GET",
+      requireAuth: true,
+    });
+  },
+
+  getScriptsByGenre: async (
+    genre: string,
+    pageNumber: number,
+    pageSize: number
+  ) => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    const scriptsUrl = `/api/scripts/genre/${encodeURIComponent(
+      genre
+    )}/${pageNumber}/${pageSize}`;
+
+    return apiRequest(`${baseUrl}${scriptsUrl}`, {
+      method: "GET",
+      requireAuth: true,
+    });
+  },
+
+  searchScripts: async (
+    searchTerm: string,
+    pageNumber: number,
+    pageSize: number
+  ) => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    const searchUrl = `/api/scripts/search/${encodeURIComponent(
+      searchTerm
+    )}/${pageNumber}/${pageSize}`;
+
+    return apiRequest(`${baseUrl}${searchUrl}`, {
+      method: "GET",
+      requireAuth: true,
+    });
+  },
+
+  getProducerProfile: async (producerId: string) => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    const profileUrl = `/api/producer/profile/${producerId}`;
+
+    return apiRequest(`${baseUrl}${profileUrl}`, {
+      method: "GET",
+      requireAuth: true,
+    });
+  },
+
+  getWriterProfile: async (writerId: string) => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    const profileUrl = `/api/writer/profile/${writerId}`;
+
+    return apiRequest(`${baseUrl}${profileUrl}`, {
+      method: "GET",
+      requireAuth: true,
+    });
+  },
+
+  getUserTransactions: async (
+    userId: string,
+    pageNumber: number,
+    pageSize: number
+  ) => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    const transactionsUrl = `/api/transaction/users/${userId}/transactions/${pageNumber}/${pageSize}`;
+
+    return apiRequest(`${baseUrl}${transactionsUrl}`, {
+      method: "GET",
+      requireAuth: true,
+    });
+  },
+
+  addScript: async (formData: FormData, writerId: string) => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    const scriptUrl = `/api/scripts?writerId=${writerId}`;
+
+    return apiRequest(`${baseUrl}${scriptUrl}`, {
+      method: "POST",
+      body: formData,
+      requireAuth: true,
+    });
+  },
 };
 
 export const API_ERROR_MESSAGES = {
