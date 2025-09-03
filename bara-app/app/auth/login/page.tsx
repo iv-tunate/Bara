@@ -160,8 +160,8 @@ export default function LoginPage() {
               <>
                 <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
                   <p className="text-sm text-blue-800">
-                    We've sent a verification code to your email. Please enter
-                    it below to complete your login.
+                    We&apos;ve sent a verification code to your email. Please
+                    enter it below to complete your login.
                   </p>
                 </div>
 

@@ -324,7 +324,7 @@ export default function AddScriptPage() {
                 htmlFor="commission"
                 className="text-sm text-gray-700 leading-relaxed"
               >
-                I agree to Bara's 15% commission on successful sales
+                I agree to Bara&apos;s 15% commission on successful sales
               </Label>
             </div>
           </div>

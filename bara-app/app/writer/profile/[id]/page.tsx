@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import Link from "next/link";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { api } from "@/utils/api";
 import { getUserSession } from "@/utils/tokenManager";
