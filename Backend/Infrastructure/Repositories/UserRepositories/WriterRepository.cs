@@ -208,7 +208,8 @@ namespace Infrastructure.Repositories.UserRepositories
                     Wallet = new GetWalletDetailDTO
                     {
                         Id = writerProfile.Wallet.Id,
-                        Balance = writerProfile.Wallet.TotalBalance,
+                        TotalBalance = writerProfile.Wallet.TotalBalance,
+                        AvailableBalance = writerProfile.Wallet.AvailableBalance,
                         LockedBalance = writerProfile.Wallet.LockedBalance,
                         Currency = writerProfile.Wallet.Currency,
                         CurrencySymbol = writerProfile.Wallet.CurrencySymbol,
@@ -309,10 +310,11 @@ namespace Infrastructure.Repositories.UserRepositories
                                         Role = x.AuthProfile.Role,
                                         Wallet = new GetWalletDetailDTO
                                         {
-                                            Balance = x.Wallet.TotalBalance,
+                                            TotalBalance = x.Wallet.TotalBalance,
+                                            AvailableBalance = x.Wallet.AvailableBalance,
+                                            LockedBalance = x.Wallet.LockedBalance,
                                             Currency = x.Wallet.Currency,
                                             CurrencySymbol = x.Wallet.CurrencySymbol,
-                                            LockedBalance = x.Wallet.LockedBalance,
                                             Id = x.Wallet.Id,
                                             UserId = x.Id
                                         },

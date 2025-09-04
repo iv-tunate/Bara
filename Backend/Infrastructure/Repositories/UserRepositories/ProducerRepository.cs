@@ -205,7 +205,8 @@ namespace Infrastructure.Repositories.UserRepositories
                                         IsVerified = x.AuthProfile.IsVerified,
                                         Wallet = new GetWalletDetailDTO
                                         {
-                                            Balance = x.Wallet.TotalBalance,
+                                            TotalBalance = x.Wallet.TotalBalance,
+                                            AvailableBalance = x.Wallet.AvailableBalance,
                                             Currency = x.Wallet.Currency,
                                             CurrencySymbol = x.Wallet.CurrencySymbol,
                                             LockedBalance = x.Wallet.LockedBalance,
