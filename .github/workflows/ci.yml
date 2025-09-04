@@ -51,108 +51,108 @@ jobs:
       #     run: sudo apt-get install -y libssl-dev
       - name: Build Backend
         run: dotnet build Backend/Backend.sln
-      # - name: Login to Docker Hub
-      #   uses: docker/login-action@v2
-      #   with:
-      #     username: ${{ secrets.DOCKER_USERNAME }}
-      #     password: ${{ secrets.DOCKER_PASSWORD }}
-      # - name: Set image tag
-      #   id: vars
-      #   run: |
-      #     if [ "${{ github.ref_name }}" = "main" ]; then
-      #       echo "TAG=latest" >> $GITHUB_ENV
-      #       echo "tag=latest" >> $GITHUB_OUTPUT
-      #     elif [ "${{ github.ref_name }}" = "dev" ]; then
-      #       echo "TAG=dev" >> $GITHUB_ENV
-      #       echo "tag=dev" >> $GITHUB_OUTPUT
-      #     else
-      #       echo "TAG=${{ github.ref_name }}" >> $GITHUB_ENV
-      #       echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
-      #     fi
+  #     - name: Login to Docker Hub
+  #       uses: docker/login-action@v2
+  #       with:
+  #         username: ${{ secrets.DOCKER_USERNAME }}
+  #         password: ${{ secrets.DOCKER_PASSWORD }}
+  #     - name: Set image tag
+  #       id: vars
+  #       run: |
+  #         if [ "${{ github.ref_name }}" = "main" ]; then
+  #           echo "TAG=latest" >> $GITHUB_ENV
+  #           echo "tag=latest" >> $GITHUB_OUTPUT
+  #         elif [ "${{ github.ref_name }}" = "dev" ]; then
+  #           echo "TAG=dev" >> $GITHUB_ENV
+  #           echo "tag=dev" >> $GITHUB_OUTPUT
+  #         else
+  #           echo "TAG=${{ github.ref_name }}" >> $GITHUB_ENV
+  #           echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+  #         fi
 
-      # - name: Build Docker image
-      #   working-directory: Backend
-      #   run: docker build -t fortunateomonuwa/bara-backend:${{ steps.vars.outputs.tag }} .
+  #     - name: Build Docker image
+  #       working-directory: Backend
+  #       run: docker build -t fortunateomonuwa/bara-backend:${{ steps.vars.outputs.tag }} .
 
-      # - name: Push Docker image to Docker Hub
-      #   run: docker push fortunateomonuwa/bara-backend:${{ steps.vars.outputs.tag }}
+  #     - name: Push Docker image to Docker Hub
+  #       run: docker push fortunateomonuwa/bara-backend:${{ steps.vars.outputs.tag }}
 
-      # - name: Create .env file
-      #   run: |
-      #     cat <<EOF > .env
-      #     ConnectionStrings__Connection=${{ secrets.CONNECTION }}
-      #     Secrets__JwtSickRit=${{ secrets.JWT_SECRET }}
-      #     Secrets__CloudinaryAPISecret=${{ secrets.CLOUDINARY_API_SECRET }}
-      #     Secrets__CloudinaryAPIKEY=${{ secrets.CLOUDINARY_API_KEY }}
-      #     Secrets__CloudinaryURL=${{ secrets.CLOUDINARY_URL }}
-      #     Secrets__CloudinaryName=${{ secrets.CLOUDINARY_NAME }}
-      #     Secrets__CloudinaryFolderName=${{ secrets.CLOUDINARY_FOLDER_NAME }}
-      #     Secrets__YouVerifyTestAPIKEY=${{ secrets.YOUVERIFY_TEST_API_KEY }}
-      #     Secrets__YouVerifyLiveAPIKEY=${{ secrets.YOUVERIFY_LIVE_API_KEY }}
-      #     Secrets__YouVerifyWebhookSigningSecret=${{ secrets.YOUVERIFY_WEBHOOK_SIGNING_SECRET }}
-      #     Secrets__SendGridApiKey=${{ secrets.SENDGRID_API_KEY }}
-      #     Secrets__PaystackSecret=${{ secrets.PAYSTACK_SECRET }}
-      #     Secrets__PaystackPublic=${{ secrets.PAYSTACK_PUBLIC }}
-      #     Secrets__IpInfoKey=${{ secrets.IPINFO_KEY }}
-      #     Secrets__RabbitMqHost=${{ secrets.RABBITMQ_HOST }}
-      #     Secrets__RabbitMqPort=${{ secrets.RABBITMQ_PORT }}
-      #     Secrets__RabbitMqUsername=${{ secrets.RABBITMQ_USERNAME }}
-      #     Secrets__RabbitMqPassword=${{ secrets.RABBITMQ_PASSWORD }}
-      #     AppSettings_Sender=${{ secrets.SENDER }}
-      #     AppSettings__SenderName=${{ secrets.SENDER_NAME }}
-      #     AppSettings__YouVerifyBaseUrl=${{ secrets.YOUVERIFY_BASE_URL }}
-      #     AppSettings__CloudinaryBaseURL=${{ secrets.CLOUDINARY_BASE_URL }}
-      #     AppSettings__CloudinaryStoragePath=${{ secrets.CLOUDINARY_STORAGE_PATH }}
-      #     AppSettings__YouVerify_BVN_VerificationUrl=${{ secrets.YOUVERIFY_BVN_VERIFICATION_URL }}
-      #     AppSettings__YouVerify_Drivers_License_VerificationUrl=${{ secrets.YOUVERIFY_DRIVERS_LICENSE_VERIFICATION_URL }}
-      #     AppSettings__YouVerify_NIN_VerificationUrl=${{ secrets.YOUVERIFY_NIN_VERIFICATION_URL }}
-      #     AppSettings__YouVerify_International_Passport_VerificationUrl=${{ secrets.YOUVERIFY_INTERNATIONAL_PASSPORT_VERIFICATION_URL }}
-      #     EOF
+  #     - name: Create .env file
+  #       run: |
+  #         cat <<EOF > .env
+  #         ConnectionStrings__Connection=${{ secrets.CONNECTION }}
+  #         Secrets__JwtSickRit=${{ secrets.JWT_SECRET }}
+  #         Secrets__CloudinaryAPISecret=${{ secrets.CLOUDINARY_API_SECRET }}
+  #         Secrets__CloudinaryAPIKEY=${{ secrets.CLOUDINARY_API_KEY }}
+  #         Secrets__CloudinaryURL=${{ secrets.CLOUDINARY_URL }}
+  #         Secrets__CloudinaryName=${{ secrets.CLOUDINARY_NAME }}
+  #         Secrets__CloudinaryFolderName=${{ secrets.CLOUDINARY_FOLDER_NAME }}
+  #         Secrets__YouVerifyTestAPIKEY=${{ secrets.YOUVERIFY_TEST_API_KEY }}
+  #         Secrets__YouVerifyLiveAPIKEY=${{ secrets.YOUVERIFY_LIVE_API_KEY }}
+  #         Secrets__YouVerifyWebhookSigningSecret=${{ secrets.YOUVERIFY_WEBHOOK_SIGNING_SECRET }}
+  #         Secrets__SendGridApiKey=${{ secrets.SENDGRID_API_KEY }}
+  #         Secrets__PaystackSecret=${{ secrets.PAYSTACK_SECRET }}
+  #         Secrets__PaystackPublic=${{ secrets.PAYSTACK_PUBLIC }}
+  #         Secrets__IpInfoKey=${{ secrets.IPINFO_KEY }}
+  #         Secrets__RabbitMqHost=${{ secrets.RABBITMQ_HOST }}
+  #         Secrets__RabbitMqPort=${{ secrets.RABBITMQ_PORT }}
+  #         Secrets__RabbitMqUsername=${{ secrets.RABBITMQ_USERNAME }}
+  #         Secrets__RabbitMqPassword=${{ secrets.RABBITMQ_PASSWORD }}
+  #         AppSettings_Sender=${{ secrets.SENDER }}
+  #         AppSettings__SenderName=${{ secrets.SENDER_NAME }}
+  #         AppSettings__YouVerifyBaseUrl=${{ secrets.YOUVERIFY_BASE_URL }}
+  #         AppSettings__CloudinaryBaseURL=${{ secrets.CLOUDINARY_BASE_URL }}
+  #         AppSettings__CloudinaryStoragePath=${{ secrets.CLOUDINARY_STORAGE_PATH }}
+  #         AppSettings__YouVerify_BVN_VerificationUrl=${{ secrets.YOUVERIFY_BVN_VERIFICATION_URL }}
+  #         AppSettings__YouVerify_Drivers_License_VerificationUrl=${{ secrets.YOUVERIFY_DRIVERS_LICENSE_VERIFICATION_URL }}
+  #         AppSettings__YouVerify_NIN_VerificationUrl=${{ secrets.YOUVERIFY_NIN_VERIFICATION_URL }}
+  #         AppSettings__YouVerify_International_Passport_VerificationUrl=${{ secrets.YOUVERIFY_INTERNATIONAL_PASSPORT_VERIFICATION_URL }}
+  #         EOF
 
-      # - name: Run container
-      #   run: |
-      #     docker run -d \
-      #       --name bara-backend \
-      #       --env-file .env \
-      #       -p 8080:8080 \
-      #       fortunateomonuwa/bara-backend:${{ steps.vars.outputs.tag }}
+  #     - name: Run container
+  #       run: |
+  #         docker run -d \
+  #           --name bara-backend \
+  #           --env-file .env \
+  #           -p 8080:8080 \
+  #           fortunateomonuwa/bara-backend:${{ steps.vars.outputs.tag }}
 
-      # - name: Wait for app and show container status
-      #   run: |
-      #     sleep 30
-      #     docker ps
-      #     docker logs bara-backend
+  #     - name: Wait for app and show container status
+  #       run: |
+  #         sleep 30
+  #         docker ps
+  #         docker logs bara-backend
 
-      # - name: Debug container and network
-      #   run: |
-      #     echo "=== Container Status ==="
-      #     docker ps -a
-      #     echo "=== Container Logs ==="
-      #     docker logs bara-backend
-      #     echo "=== Network Check ==="
-      #     docker port bara-backend
-      #     echo "=== Process Check ==="
-      #     netstat -tulpn | grep :8080 || echo "No process listening on 8080"
-      #     echo "=== Container Inspection ==="
-      #     docker inspect bara-backend --format='{{.State.Status}}'
-      #     docker inspect bara-backend --format='{{.State.Health.Status}}' || echo "No health check defined"
+  #     - name: Debug container and network
+  #       run: |
+  #         echo "=== Container Status ==="
+  #         docker ps -a
+  #         echo "=== Container Logs ==="
+  #         docker logs bara-backend
+  #         echo "=== Network Check ==="
+  #         docker port bara-backend
+  #         echo "=== Process Check ==="
+  #         netstat -tulpn | grep :8080 || echo "No process listening on 8080"
+  #         echo "=== Container Inspection ==="
+  #         docker inspect bara-backend --format='{{.State.Status}}'
+  #         docker inspect bara-backend --format='{{.State.Health.Status}}' || echo "No health check defined"
 
-      # - name: Run health check
-      #   run: |
-      #     echo "=== Testing health endpoints ==="
-      #     echo "Basic health check:"
-      #     curl -s http://localhost:8080/health/basic_health_check
-      #     echo -e "\n=== Detailed health check ==="
-      #     curl -s http://localhost:8080/health/detailed | jq . || curl -s http://localhost:8080/health/detailed
+  #     - name: Run health check
+  #       run: |
+  #         echo "=== Testing health endpoints ==="
+  #         echo "Basic health check:"
+  #         curl -s http://localhost:8080/health/basic_health_check
+  #         echo -e "\n=== Detailed health check ==="
+  #         curl -s http://localhost:8080/health/detailed | jq . || curl -s http://localhost:8080/health/detailed
 
-  deploy-to-render:
-    needs: [paths-filter, build-backend]
-    if: needs.paths-filter.outputs.should-build-backend == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy to Staging
-        if: github.ref == 'refs/heads/dev'
-        run: curl -X POST ${{ secrets.BACKEND_STAGING_DEPLOY_HOOK }}
-      # - name: Deploy to Production
-      #   if: github.ref == 'refs/heads/main'
-      #   run: curl -X POST ${{ secrets.BACKEND_PRODUCTION_DEPLOY_HOOK }}
+  # deploy-to-render:
+  #   needs: [paths-filter, build-backend]
+  #   if: needs.paths-filter.outputs.should-build-backend == 'true'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Deploy to Staging
+  #       if: github.ref == 'refs/heads/dev'
+  #       run: curl -X POST ${{ secrets.BACKEND_STAGING_DEPLOY_HOOK }}
+  #     - name: Deploy to Production
+  #       if: github.ref == 'refs/heads/main'
+  #       run: curl -X POST ${{ secrets.BACKEND_PRODUCTION_DEPLOY_HOOK }}
