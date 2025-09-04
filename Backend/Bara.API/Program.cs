@@ -127,7 +127,7 @@ builder.Services.AddHealthChecks();
 var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins:Origins").Get<string[]>() ?? ["*"];
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowRegisterdOrigins",
+    options.AddPolicy("AllowRegisteredOrigins",
         builder => builder.WithOrigins(allowedOrigins)
                 .AllowAnyHeader()
                 .AllowAnyMethod());
@@ -233,26 +233,28 @@ builder.Services.AddSwaggerGen(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.  
-//if (app.Environment.IsDevelopment())
-//{
-//    app.UseSwagger();
-//    app.UseSwaggerUI(s =>
-//    {
-//        s.SwaggerEndpoint("/swagger/bara/swagger.json", "Bara-API");
-//        s.RoutePrefix = "docs";
-//        s.ConfigObject.AdditionalItems["persistAuthorization"] = true;
-//    });
-//}
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(s =>
+    {
+        s.SwaggerEndpoint("/swagger/bara/swagger.json", "Bara-API");
+        // s.RoutePrefix = "docs";
+        s.ConfigObject.AdditionalItems["persistAuthorization"] = true;
+    });
+}
 
 app.UseSerilogRequestLogging();
 app.UseHttpsRedirection();
-app.UseSwagger();
-app.UseSwaggerUI(s =>
-{
-    s.SwaggerEndpoint("/swagger/bara/swagger.json", "Bara-API");
-    //s.RoutePrefix = "docs";
-    s.ConfigObject.AdditionalItems["persistAuthorization"] = true;
-});
+//app.UseSwagger();
+//app.UseSwaggerUI(s =>
+//{
+//    s.SwaggerEndpoint("/swagger/bara/swagger.json", "Bara-API");
+//    //s.RoutePrefix = "docs";
+//    s.ConfigObject.AdditionalItems["persistAuthorization"] = true;
+//});
+
+
 //app.Use(async (context, next) =>
 //{
 //    if (context.Request.Path.StartsWithSegments("/swagger") &&
@@ -267,7 +269,7 @@ app.UseSwaggerUI(s =>
 //});
 
 
-app.UseCors("AllowRegisterdOrigins");
+app.UseCors("AllowRegisteredOrigins");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

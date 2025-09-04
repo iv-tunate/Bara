@@ -266,7 +266,7 @@ export default function AccountDropdown({ onClose }: Props) {
         {/* Scripts - Only for Writers */}
         {userData?.userType === "Writer" && (
           <Link
-            href="/writer/scripts"
+            href="/writer/add-script"
             onClick={onClose}
             className="flex items-center px-4 py-2 text-sm text-[#22242A] hover:bg-gray-50 transition-colors"
           >

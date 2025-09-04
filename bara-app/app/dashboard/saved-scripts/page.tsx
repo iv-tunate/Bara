@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { getUserSession } from "@/utils/tokenManager";
 
-export default function ProjectsPage() {
+export default function SavedScriptsPage() {
   const router = useRouter();
 
   useEffect(() => {
@@ -24,10 +24,10 @@ export default function ProjectsPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-[#22242A] mb-2">
-            My Projects
+            Saved Scripts
           </h1>
           <p className="text-[#666] text-sm">
-            Manage your ongoing projects and collaborations
+            Your collection of saved scripts for easy access
           </p>
         </div>
 
@@ -44,22 +44,23 @@ export default function ProjectsPage() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
           </div>
           <h3 className="text-lg font-medium text-[#22242A] mb-2">
-            No projects yet
+            No saved scripts yet
           </h3>
           <p className="text-[#666] text-center max-w-md mb-6">
-            Start collaborating on scripts and managing your projects here.
+            Start exploring scripts and save your favorites to access them
+            quickly later.
           </p>
           <button
             type="button"
             onClick={() => router.push("/dashboard")}
             className="bg-[#800000] text-white px-6 py-2 rounded-md hover:bg-[#1a0000] transition-colors"
           >
-            Explore Scripts
+            Browse Scripts
           </button>
         </div>
       </div>

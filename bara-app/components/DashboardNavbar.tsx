@@ -66,14 +66,14 @@ export default function DashboardNavbar() {
           )}
         </div>
         <Link
-          href="/saved-scripts"
+          href="/dashboard/saved-scripts"
           className="hover:text-[#800000] flex items-center gap-1"
         >
           <Image src="/Shape.png" alt="Saved Scripts" width={16} height={16} />
           Saved scripts
         </Link>
         <Link
-          href="/projects"
+          href="/dashboard/projects"
           className="hover:text-[#800000] flex items-center gap-1"
         >
           <Image
