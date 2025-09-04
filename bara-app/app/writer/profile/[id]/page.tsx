@@ -6,6 +6,7 @@ import Image from "next/image";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { api } from "@/utils/api";
 import { getUserSession } from "@/utils/tokenManager";
+import { Suspense } from "react";
 
 interface WriterProfile {
   id: string;
@@ -46,7 +47,7 @@ interface WriterProfile {
   }>;
 }
 
-export default function ProfilePage() {
+function ProfilePageContent() {
   const params = useParams();
   const router = useRouter();
   const [profile, setProfile] = useState<WriterProfile | null>(null);
@@ -414,5 +415,13 @@ export default function ProfilePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={<div>Loading profile...</div>}>
+      <ProfilePageContent />
+    </Suspense>
   );
 }

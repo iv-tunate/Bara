@@ -5,8 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import EyeToggle from "@/components/EyeToggle";
 import { api } from "@/utils/api";
+import { Suspense } from "react";
 
-export default function ResetPasswordPage() {
+function ResetPasswordPageContent() {
   const [email, setEmail] = useState("");
   const [token, setToken] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -230,5 +231,13 @@ export default function ResetPasswordPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div>Loading register form…</div>}>
+      <ResetPasswordPageContent />
+    </Suspense>
   );
 }
