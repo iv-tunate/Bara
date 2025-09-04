@@ -9,7 +9,7 @@ import IdentityVerificationForm from "@/components/IdentityVerificationForm";
 
 type TabType = "personal" | "location" | "identity";
 
-export default function ProfilePage() {
+export default function WriterProfilePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("personal");
 

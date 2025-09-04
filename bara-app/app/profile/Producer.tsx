@@ -16,7 +16,7 @@ import {
 
 type TabType = "personal" | "location" | "identity";
 
-export default function ProfilePage() {
+export default function ProducerProfilePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("personal");
   const [isLoading, setIsLoading] = useState(false);
