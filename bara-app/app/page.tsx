@@ -26,8 +26,8 @@ export default function HomePage() {
 
           <div className="mt-6 flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
             {/* <div className="relative"> */}
-              {/* Create Account button*/}
-              {/* <button
+            {/* Create Account button*/}
+            {/* <button
                 type="button"
                 onClick={(e) => {
                   e.preventDefault();
@@ -62,7 +62,7 @@ export default function HomePage() {
         {/* Right Image */}
         <div className="md:w-1/2 flex justify-center md:justify-end mt-8 md:mt-0">
           <Image
-            src="/hero-image.png"
+            src="/hero.png"
             alt="Bara App Hero"
             width={500}
             height={400}

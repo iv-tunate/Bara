@@ -70,7 +70,7 @@ export default function HomePage() {
 
             <div className="flex-shrink-0 w-full lg:w-auto">
               <img
-                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Frame%20422-d8cZHAsTCNdF8Vj7R7SOGBRsA1xwLb.png"
+                src="/writerdashboard.png"
                 alt="Group of diverse writers and producers collaborating"
                 className="w-full lg:w-80 xl:w-96 h-auto rounded-lg"
               />

@@ -8,6 +8,7 @@ import WriterProfileCard from "@/components/WriterProfileCard";
 import PaymentSuccessModal from "@/components/PaymentSuccessModal";
 import { getUserSession } from "@/utils/tokenManager";
 import { api } from "@/utils/api";
+
 interface Script {
   id: string;
   title: string;
