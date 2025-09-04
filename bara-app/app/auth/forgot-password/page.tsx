@@ -103,16 +103,6 @@ export default function ForgotPasswordPage() {
             {isLoading ? "Sending..." : "Continue"}
           </button>
 
-          {/* Back to Login */}
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={() => router.push("/auth/login")}
-              className="text-[#333740] hover:text-[#800000] transition-colors text-sm"
-            >
-              ← Back to Login
-            </button>
-          </div>
         </div>
       </div>
     </div>

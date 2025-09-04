@@ -6,7 +6,6 @@ import Image from "next/image";
 
 export default function OtpVerificationPage() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   const router = useRouter();
@@ -24,26 +23,15 @@ export default function OtpVerificationPage() {
     }
   };
 
-  const handleVerify = async () => {
-    setIsLoading(true);
-    setError("");
-
+  const handleVerify = () => {
     const code = otp.join("");
     if (code.length !== 6) {
       setError("Please enter all 6 digits.");
-      setIsLoading(false);
       return;
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      if (code === "123456") {
-        router.push("/auth/reset-password"); // redirect after OTP success
-      } else {
-        setError("Invalid OTP. Please try again.");
-      }
-    }, 1500);
+  
+    router.push("/auth/reset-password");
   };
 
   return (
@@ -98,26 +86,16 @@ export default function OtpVerificationPage() {
           <button
             type="button"
             onClick={handleVerify}
-            disabled={isLoading}
+            disabled={otp.join("").length !== 6}
             className={`w-full font-medium py-3 rounded-md flex items-center justify-center transition-colors mb-4 ${
-              !isLoading
-                ? "bg-[#800000] text-white hover:bg-[#1a0000]"
-                : "bg-[#F5F5F5] text-[#858990] cursor-not-allowed"
+              otp.join("").length !== 6
+                ? "bg-[#F5F5F5] text-[#858990] cursor-not-allowed"
+                : "bg-[#800000] text-white hover:bg-[#1a0000]"
             }`}
           >
-            {isLoading ? "Verifying..." : "Continue"}
+            Continue
           </button>
 
-          {/* Back */}
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={() => router.push("/auth/forgot-password")}
-              className="text-[#333740] hover:text-[#800000] transition-colors text-sm"
-            >
-              ← Back
-            </button>
-          </div>
         </div>
       </div>
     </div>
