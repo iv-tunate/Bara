@@ -10,6 +10,10 @@ interface ApiResponse<T = any> {
   data?: T;
   message?: string;
   statusCode?: number;
+  error?: string;
+  totalCount?: number;
+  totalPages?: number;
+  pageNumber?: number;
 }
 
 export async function apiRequest<T = any>(
@@ -65,10 +69,8 @@ export async function apiRequest<T = any>(
         statusCode: response.status,
       };
     } else {
-      // Handle unauthorized access
       if (response.status === 401 && requireAuth) {
         clearUserSession();
-        // Redirect to login page
         if (typeof window !== "undefined") {
           window.location.href = "/auth/login";
         }
@@ -114,7 +116,7 @@ export const api = {
   }) => {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
     const loginUrl = process.env.NEXT_PUBLIC_LOGIN_USER || "/api/auth/login";
-console.log('Login URL:', `${baseUrl}${loginUrl}`);
+    console.log("Login URL:", `${baseUrl}${loginUrl}`);
     return apiRequest(`${baseUrl}${loginUrl}`, {
       method: "POST",
       body: JSON.stringify(data),
@@ -285,6 +287,134 @@ console.log('Login URL:', `${baseUrl}${loginUrl}`);
       body: formData,
       requireAuth: true,
     });
+  },
+
+  // Wallet API methods
+  async getWalletBalance(userId: string) {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    return apiRequest(`${baseUrl}/api/wallet/balance/${userId}`, {
+      method: "GET",
+      requireAuth: true,
+    });
+  },
+
+  async getUserTransactions(
+    userId: string,
+    pageNumber: number = 1,
+    pageSize: number = 10
+  ) {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    return apiRequest(
+      `${baseUrl}/api/transaction/users/${userId}/transactions/${pageNumber}/${pageSize}`,
+      {
+        method: "GET",
+        requireAuth: true,
+      }
+    );
+  },
+
+  async initiateFundWallet(userId: string, amount: number) {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    return apiRequest(`${baseUrl}/api/transaction/initiate/${userId}`, {
+      method: "POST",
+      requireAuth: true,
+      body: JSON.stringify({ amount }),
+    });
+  },
+
+  async verifyPayment(reference: string) {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    return apiRequest(
+      `${baseUrl}/api/transaction/verify-payment/${reference}`,
+      {
+        method: "POST",
+        requireAuth: true,
+      }
+    );
+  },
+
+  // Bank Details API methods
+  async addBankDetails(userId: string, bankDetails: Record<string, unknown>) {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    return apiRequest(`${baseUrl}/api/user/bank-details/${userId}`, {
+      method: "POST",
+      requireAuth: true,
+      body: JSON.stringify(bankDetails),
+    });
+  },
+
+  async getBankDetails(userId: string) {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    return apiRequest(`${baseUrl}/api/user/bank-details/${userId}`, {
+      method: "GET",
+      requireAuth: true,
+    });
+  },
+
+  async getBanks() {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    return apiRequest(`${baseUrl}/api/utility/banks`, {
+      method: "GET",
+      requireAuth: true,
+    });
+  },
+
+  // Profile API methods
+  async getWriterProfile(writerId: string) {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    return apiRequest(`${baseUrl}/api/writer/profile/${writerId}`, {
+      method: "GET",
+      requireAuth: true,
+    });
+  },
+
+  async getProducerProfile(producerId: string) {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    return apiRequest(`${baseUrl}/api/producer/profile/${producerId}`, {
+      method: "GET",
+      requireAuth: true,
+    });
+  },
+
+  // Script API methods
+  async getAllScripts(pageNumber: number = 1, pageSize: number = 10) {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    return apiRequest(
+      `${baseUrl}/api/script/scripts/${pageNumber}/${pageSize}`,
+      {
+        method: "GET",
+        requireAuth: false,
+      }
+    );
+  },
+
+  async getScriptById(scriptId: string) {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    return apiRequest(`${baseUrl}/api/script/${scriptId}`, {
+      method: "GET",
+      requireAuth: false,
+    });
+  },
+
+  // Script Transaction API methods
+  async initiateScriptTransaction(
+    producerId: string,
+    scriptId: string,
+    writerId: string
+  ) {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    return apiRequest(
+      `${baseUrl}/api/producers/${producerId}/scripts/transactions:initiate`,
+      {
+        method: "POST",
+        requireAuth: true,
+        body: JSON.stringify({
+          scriptId,
+          writerId,
+          idempotencyKey: `${producerId}-${scriptId}-${Date.now()}`,
+        }),
+      }
+    );
   },
 };
 

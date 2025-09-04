@@ -108,7 +108,13 @@ export default function LoginPage() {
             router.push("/dashboard");
           }
         } else {
-          router.push("/dashboard");
+          if (response.data.role === "Producer") {
+            router.push("/dashboard");
+          } else if (response.data.role === "Writer") {
+            router.push("/writer/dashboard");
+          } else {
+            router.push("/dashboard");
+          }
         }
       } else {
         setError(response.message || "Verification failed. Please try again.");

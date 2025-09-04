@@ -1,4 +1,6 @@
-﻿namespace TransactionModule.Interfaces
+﻿using TransactionModule.DTOs;
+
+namespace TransactionModule.Interfaces
 {
     public interface IWalletService
     {
@@ -7,6 +9,7 @@
         Task<bool> WithdrawFundsAsync(Guid userId, decimal amount, Guid bankAccountId);
         Task<bool> ProcessScriptPaymentAsync(Guid producerId, Guid writerId, Guid scriptId, decimal amount);
         Task<decimal> GetWalletBalanceAsync(Guid userId);
+        Task<GetWalletDetailDTO?> GetWalletDetailsAsync(Guid userId);
 
         /// <summary>
         /// Locks funds in producer's wallet and reflects pending amount in writer's wallet for script transaction.

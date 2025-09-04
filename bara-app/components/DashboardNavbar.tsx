@@ -1,9 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import AccountDropdown from "./AccountDropdown";
 
 export default function DashboardNavbar() {
+  const [showAccountDropdown, setShowAccountDropdown] = useState(false);
+
   return (
     <nav
       className="
@@ -46,13 +50,21 @@ export default function DashboardNavbar() {
 
       {/* Right: Links */}
       <div className="flex items-center gap-6 text-sm font-semibold text-[#22242A] mr-8">
-        <Link
-          href="/account"
-          className="hover:text-[#800000] flex items-center gap-1"
-        >
-          <Image src="/User_alt.png" alt="Account" width={16} height={16} />
-          Account
-        </Link>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShowAccountDropdown((prev) => !prev)}
+            className="hover:text-[#800000] flex items-center gap-1 transition-colors"
+          >
+            <Image src="/User_alt.png" alt="Account" width={16} height={16} />
+            Account
+          </button>
+          {showAccountDropdown && (
+            <div className="absolute top-full right-0 mt-2">
+              <AccountDropdown onClose={() => setShowAccountDropdown(false)} />
+            </div>
+          )}
+        </div>
         <Link
           href="/saved-scripts"
           className="hover:text-[#800000] flex items-center gap-1"

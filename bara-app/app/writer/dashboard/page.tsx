@@ -1,16 +1,32 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Heart, Menu, X } from "lucide-react";
+import { getUserSession } from "@/utils/tokenManager";
 
 export default function HomePage() {
+  const router = useRouter();
+  const [userName, setUserName] = useState("Writer");
+
+  useEffect(() => {
+    const session = getUserSession();
+    if (!session) {
+      router.push("/auth/login");
+      return;
+    }
+    setUserName(session.name || "Writer");
+  }, [router]);
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="flex items-center justify-between px-4 md:px-6 py-4 border-b">
         <div>
           <h1 className="text-xl md:text-2xl font-medium text-[#22242a] mb-1">
-            Hello Timothy! 👋
+            Hello {userName}! 👋
           </h1>
           <p className="text-sm md:text-base text-[#444955] max-w-md md:max-w-lg">
             Showcase powerful stories, connect with producers, and get your

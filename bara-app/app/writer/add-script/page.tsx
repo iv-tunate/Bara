@@ -19,20 +19,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
 export default function AddScriptPage() {
-  const [coverImage, setCoverImage] = useState<string>(
-    "/restaurant-scene-with-person.jpg"
-  );
+  const [coverImage, setCoverImage] = useState<string>("");
   const [formData, setFormData] = useState({
-    scriptLink:
-      "https://drive.google.com/file/d/1AbCdeFgHijkLmNoPqrStUvWxYz123456/view",
-    title: "The Waiter's Dream",
-    genre: "Romance",
-    logline:
-      "A struggling waiter in Lagos risks everything to chase his secret ambition of becoming a playwright, but when a mysterious guest offers him a chance at success, he must choose between loyalty, love, and the cost of fame.",
-    synopsis:
-      "In the bustling heart of Lagos, Kola, a quiet and observant waiter at a popular restaurant, serves tables by day but writes stories by night. Unknown to his colleagues and even his family, Kola harbors a lifelong dream of becoming a renowned playwright — a dream he's kept buried beneath...",
-    ownership: "I retain full rights",
-    price: "280,000",
+    scriptLink: "",
+    title: "",
+    genre: "",
+    logline: "",
+    synopsis: "",
+    ownership: "",
+    price: "",
   });
   const [agreements, setAgreements] = useState({
     originalWork: true,

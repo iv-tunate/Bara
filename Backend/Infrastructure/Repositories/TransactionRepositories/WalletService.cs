@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Services.Paystack;
 using Services.SignalR;
 using SharedModule.Utils;
+using TransactionModule.DTOs;
 using TransactionModule.Interfaces;
 
 namespace Infrastructure.Repositories.TransactionRepositories
@@ -68,6 +69,37 @@ namespace Infrastructure.Repositories.TransactionRepositories
                 logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, 
                     $"While getting wallet balance for user: {userId}");
                 return 0;
+            }
+        }
+
+        public async Task<GetWalletDetailDTO?> GetWalletDetailsAsync(Guid userId)
+        {
+            try
+            {
+                var wallet = await dbContext.Wallets
+                    .FirstOrDefaultAsync(w => w.UserId == userId);
+
+                if (wallet == null)
+                {
+                    return null;
+                }
+
+                return new GetWalletDetailDTO
+                {
+                    Id = wallet.Id,
+                    TotalBalance = wallet.TotalBalance,
+                    AvailableBalance = wallet.AvailableBalance,
+                    LockedBalance = wallet.LockedBalance,
+                    Currency = wallet.Currency,
+                    CurrencySymbol = wallet.CurrencySymbol,
+                    UserId = wallet.UserId
+                };
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name,
+                    $"While getting wallet details for user: {userId}");
+                return null;
             }
         }
 

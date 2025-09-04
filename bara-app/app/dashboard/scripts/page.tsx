@@ -2,48 +2,122 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import WriterProfileCard from "@/components/WriterProfileCard";
-import PaymentSuccessModal from "@/components/PaymentSuccessModal"; 
+import PaymentSuccessModal from "@/components/PaymentSuccessModal";
+import { getUserSession } from "@/utils/tokenManager";
+import { api } from "@/utils/api";
 interface Script {
   id: string;
   title: string;
   price: number;
-  imageUrl: string;
+  imageUrl?: string;
   logline: string;
   synopsis?: string;
-  ipOwnedByProducer?: boolean;
+  genre: string;
+  writerId: string;
+  writerName: string;
+  status: string;
+  currency: string;
+  currencySymbol: string;
 }
 
 export default function ScriptPage() {
+  const router = useRouter();
   const [script, setScript] = useState<Script | null>(null);
   const [copied, setCopied] = useState(false);
-
   const [selectedMethod, setSelectedMethod] = useState<"wallet" | "card">(
     "card"
   );
-  const walletBalance = 0;
-
-  // modal state
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [showPaymentSuccessModal, setShowPaymentSuccessModal] = useState(false);
+  const [error, setError] = useState("");
 
-  const scriptLink = "https://your-script-link.com";
+  const scriptLink = script
+    ? `${window.location.origin}/dashboard/scripts?scriptId=${script.id}`
+    : "";
 
   useEffect(() => {
-    async function fetchScript() {
-      const data: Script = {
-        id: "1",
-        title: "Broken Promise",
-        price: 300000,
-        imageUrl: "/flowery.png",
-        logline:
-          "A desperate journalist uncovers a hidden AI network controlling world events and must race against time to expose the truth before becoming its next target.",
-        ipOwnedByProducer: true,
-      };
-      setScript(data);
+    async function loadData() {
+      try {
+        const session = getUserSession();
+        if (!session) {
+          router.push("/auth/login");
+          return;
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const scriptId = urlParams.get("scriptId");
+
+        if (scriptId) {
+          const scriptResponse = await api.getScriptById(scriptId);
+          if (scriptResponse.success && scriptResponse.data) {
+            setScript({
+              id: scriptResponse.data.id,
+              title: scriptResponse.data.title,
+              price: scriptResponse.data.price,
+              imageUrl: scriptResponse.data.image || "/flowery.png",
+              logline: scriptResponse.data.logline,
+              synopsis: scriptResponse.data.synopsis,
+              genre: scriptResponse.data.genre,
+              writerId:
+                scriptResponse.data.writer?.id || scriptResponse.data.writerId,
+              writerName:
+                scriptResponse.data.writer?.firstName +
+                  " " +
+                  scriptResponse.data.writer?.lastName ||
+                scriptResponse.data.writerName,
+              status: scriptResponse.data.status,
+              currency: scriptResponse.data.currency || "NAIRA",
+              currencySymbol: scriptResponse.data.currencySymbol || "₦",
+            });
+          } else {
+            setError("Script not found");
+          }
+        } else {
+          const scriptsResponse = await api.getAllScripts(1, 10);
+          if (
+            scriptsResponse.success &&
+            scriptsResponse.data &&
+            scriptsResponse.data.length > 0
+          ) {
+            const firstScript = scriptsResponse.data[0];
+            setScript({
+              id: firstScript.id,
+              title: firstScript.title,
+              price: firstScript.price,
+              imageUrl: firstScript.image || "/flowery.png",
+              logline: firstScript.logline,
+              synopsis: firstScript.synopsis,
+              genre: firstScript.genre,
+              writerId: firstScript.writerId,
+              writerName: firstScript.writerName,
+              status: firstScript.status,
+              currency: firstScript.currency || "NAIRA",
+              currencySymbol: firstScript.currencySymbol || "₦",
+            });
+          } else {
+            setError("No scripts available");
+          }
+        }
+
+        // Load wallet balance
+        const walletResponse = await api.getWalletBalance(session.userId);
+        if (walletResponse.success && walletResponse.data) {
+          setWalletBalance(walletResponse.data.availableBalance || 0);
+        }
+      } catch (error) {
+        console.error("Error loading data:", error);
+        setError("Failed to load data");
+      } finally {
+        setIsLoading(false);
+      }
     }
-    fetchScript();
-  }, []);
+    loadData();
+  }, [router]);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(scriptLink);
@@ -51,9 +125,49 @@ export default function ScriptPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handlePayment = () => {
-    // here you would call your API for payment
-    setShowPaymentSuccessModal(true);
+  const handlePayment = async () => {
+    if (!script) return;
+
+    const session = getUserSession();
+    if (!session) {
+      router.push("/auth/login");
+      return;
+    }
+
+    setIsProcessingPayment(true);
+    setError("");
+
+    try {
+      if (selectedMethod === "wallet" && walletBalance >= script.price) {
+        const response = await api.initiateScriptTransaction(
+          session.userId,
+          script.id,
+          script.writerId
+        );
+
+        if (response.success) {
+          setShowPaymentSuccessModal(true);
+        } else {
+          setError(response.message || "Failed to process payment");
+        }
+      } else {
+        const fundingResponse = await api.initiateFundWallet(
+          session.userId,
+          script.price
+        );
+
+        if (fundingResponse.success && fundingResponse.data?.paymentUrl) {
+          window.location.href = fundingResponse.data.paymentUrl;
+        } else {
+          setError(fundingResponse.message || "Failed to initiate payment");
+        }
+      }
+    } catch (error) {
+      console.error("Payment error:", error);
+      setError("An error occurred while processing payment");
+    } finally {
+      setIsProcessingPayment(false);
+    }
   };
 
   if (!script) {
@@ -86,7 +200,8 @@ export default function ScriptPage() {
           />
 
           <p className="text-lg font-semibold text-[#22242A]">
-            ₦{script.price.toLocaleString()}
+            {script.currencySymbol}
+            {script.price.toLocaleString()}
           </p>
 
           <button className="w-full bg-[#FFEDEE] text-[#810306] text-sm font-semibold py-3 rounded-md">
@@ -219,12 +334,25 @@ export default function ScriptPage() {
                 </div>
               </div>
 
+              {/* Error Display */}
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm">
+                  {error}
+                </div>
+              )}
+
               {/* Payment Button */}
               <button
+                type="button"
                 onClick={handlePayment}
-                className="w-full bg-[#800000] text-white py-3 rounded-md text-sm font-medium hover:bg-[#4d0000] transition"
+                disabled={isProcessingPayment}
+                className="w-full bg-[#800000] text-white py-3 rounded-md text-sm font-medium hover:bg-[#4d0000] transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Make payment
+                {isProcessingPayment
+                  ? "Processing..."
+                  : selectedMethod === "wallet" && walletBalance < script.price
+                  ? "Fund Wallet"
+                  : "Make Payment"}
               </button>
 
               {/* NDA Agreement */}

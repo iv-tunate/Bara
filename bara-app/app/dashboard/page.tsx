@@ -58,13 +58,12 @@ export default function DashboardPage() {
           pageSize
         );
       } else {
-
         response = await api.getAllScripts(currentPage, pageSize);
       }
-console.log("API Response:", response);
+      console.log("API Response:", response);
       if (response.success && response.data) {
-        setScripts(response.data.data || []);
-        setTotalPages(response.data.totalPages || 1);
+        setScripts(response.data || []);
+        setTotalPages(response.totalPages || 1);
       } else {
         setError(response.message || "Failed to load scripts");
         setScripts([]);
@@ -84,7 +83,7 @@ console.log("API Response:", response);
 
   const handleGenreChange = (genres: string[]) => {
     setSelectedGenres(genres);
-    setCurrentPage(1); 
+    setCurrentPage(1);
   };
 
   return (
