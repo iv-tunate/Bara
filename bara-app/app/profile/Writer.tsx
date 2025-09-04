@@ -13,50 +13,29 @@ export default function WriterProfilePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("personal");
 
-  // Personal info state
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
-    company: "",
+    portfolioLink: "",
+    bio: "",
     phone: "",
     nin: "",
   });
 
-  // Location state
-  const [locationForm, setLocationForm] = useState({
-    country: "Nigeria",
-    state: "",
-    city: "",
-    houseNumber: "",
-    street: "",
-    zipCode: "",
-  });
-
-  // Identity verification state
-  const [identityForm, setIdentityForm] = useState({
-    documentType: "",
-    file: null as File | null,
-  });
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (activeTab === "personal" && isPersonalInfoComplete) {
+    if (activeTab === "personal" && isPersonalInfoComplete)
       setActiveTab("location");
-      return;
-    }
-
-    if (activeTab === "location" && isLocationInfoComplete) {
+    else if (activeTab === "location" && isLocationInfoComplete)
       setActiveTab("identity");
-      return;
-    }
-
-    if (activeTab === "identity" && isIdentityInfoComplete) {
+    else if (activeTab === "identity" && isIdentityInfoComplete) {
       console.log("Submitted All Data:", {
         personal: formData,
         location: locationForm,
@@ -67,20 +46,30 @@ export default function WriterProfilePage() {
   };
 
   const handleSkip = () => {
-    if (activeTab === "personal") {
-      setActiveTab("location");
-    } else if (activeTab === "location") {
-      setActiveTab("identity");
-    } else {
-      router.push("/dashboard");
-    }
+    if (activeTab === "personal") setActiveTab("location");
+    else if (activeTab === "location") setActiveTab("identity");
+    else router.push("/dashboard");
   };
 
-  // Check completion status
+  const [locationForm, setLocationForm] = useState({
+    country: "Nigeria",
+    state: "",
+    city: "",
+    houseNumber: "",
+    street: "",
+    zipCode: "",
+  });
+
+  const [identityForm, setIdentityForm] = useState({
+    documentType: "",
+    file: null as File | null,
+  });
+
   const isPersonalInfoComplete =
     formData.firstName &&
     formData.lastName &&
-    formData.company &&
+    formData.portfolioLink &&
+    formData.bio &&
     formData.phone &&
     formData.nin;
 
@@ -100,24 +89,25 @@ export default function WriterProfilePage() {
     (activeTab === "identity" && isIdentityInfoComplete);
 
   return (
-    <div className="fixed inset-0 bg-[#1a0000] bg-opacity-80 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-[#1a0000] bg-opacity-80 flex items-center justify-center z-50 p-2 overflow-auto">
       <form
         onSubmit={handleSubmit}
-        className="bg-white rounded-lg shadow-lg p-10 w-full max-w-3xl space-y-2"
+        className="bg-white rounded-lg shadow-lg p-6 md:p-10 w-full max-w-3xl space-y-3"
       >
         <Logo />
 
-        <h1 className="text-xl md:text-2xl font-medium text-[#22242A]">
+        <h1 className="text-xl md:text-2xl font-medium text-[#22242A] mb-4">
           Set up your profile
         </h1>
 
-        <div className="flex border-b border-gray-300 text-sm font-medium text-[#858990] space-x-6">
+        {/* Tabs */}
+        <div className="flex border-b border-gray-300 text-sm font-medium text-[#858990] space-x-6 mb-6">
           {(["personal", "location", "identity"] as TabType[]).map((tab) => (
             <button
               key={tab}
               type="button"
               onClick={() => setActiveTab(tab)}
-              className="relative px-4 pt-2 pb-3 text-sm"
+              className="relative px-3 pt-2 pb-3 text-sm"
             >
               <span
                 className={`${
@@ -137,57 +127,84 @@ export default function WriterProfilePage() {
           ))}
         </div>
 
-        {/* Form Sections */}
+        {/* Personal Info */}
         {activeTab === "personal" && (
           <>
+            {/* First & Last Name */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col">
                 <label className="text-sm font-semibold text-[#22242A] mb-1">
-                  First name
+                  First Name
                 </label>
                 <input
                   type="text"
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleChange}
-                  className="border border-[#ABADB2] p-3 rounded-md"
+                  className="border border-[#ABADB2] p-2 rounded-md"
                 />
               </div>
-
               <div className="flex flex-col">
                 <label className="text-sm font-semibold text-[#22242A] mb-1">
-                  Last name
+                  Last Name
                 </label>
                 <input
                   type="text"
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleChange}
-                  className="border border-[#ABADB2] p-3 rounded-md"
-                />
-              </div>
-
-              <div className="flex flex-col md:col-span-2">
-                <label className="text-sm font-semibold text-[#22242A] mb-1">
-                  Company/Studio
-                </label>
-                <input
-                  type="text"
-                  name="company"
-                  value={formData.company}
-                  onChange={handleChange}
-                  className="border border-[#ABADB2] p-3 rounded-md"
+                  className="border border-[#ABADB2] p-2 rounded-md"
                 />
               </div>
             </div>
 
+            {/* Portfolio Link */}
+            <div className="flex flex-col">
+              <label className="text-sm font-semibold text-[#22242A] mb-1">
+                Portfolio Link
+              </label>
+              <input
+                type="text"
+                name="portfolioLink"
+                value={formData.portfolioLink}
+                onChange={handleChange}
+                className="border border-[#ABADB2] p-2 rounded-md w-full"
+              />
+            </div>
+
+            {/* Bio */}
+            <div className="flex flex-col">
+              <label className="text-sm font-semibold text-[#22242A] mb-1">
+                Bio
+              </label>
+              <textarea
+                name="bio"
+                value={formData.bio}
+                onChange={handleChange}
+                className="border border-[#ABADB2] p-2 rounded-md w-full resize-none"
+              />
+            </div>
+
+            {/* Add Experience (Right Aligned) */}
+            <div className="flex justify-end items-center gap-2 cursor-pointer text-[#810306] font-semibold mb-4">
+              <Image
+                src="/plus-icon.png"
+                alt="Add experience"
+                width={20}
+                height={20}
+              />
+              <span>Add Experience</span>
+            </div>
+
+            {/* Phone & NIN */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Phone */}
               <div className="flex flex-col">
                 <label className="text-sm font-semibold text-[#22242A] mb-1">
-                  Phone number
+                  Phone Number
                 </label>
-                <div className="flex items-center border border-[#ABADB2] rounded-md px-3 py-2">
-                  <div className="flex items-center mr-2 border border-[#ABADB2] py-2 px-2 rounded-md">
+                <div className="flex items-center border border-[#ABADB2] rounded-md px-2 py-1">
+                  <div className="flex items-center mr-2 border border-[#ABADB2] px-1 py-1 rounded-md">
                     <Image
                       src="/Nigerian flag.png"
                       alt="Nigeria flag"
@@ -198,7 +215,7 @@ export default function WriterProfilePage() {
                     <span className="text-sm mr-2">+234</span>
                     <Image
                       src="/dropdown.png"
-                      alt="Dropdown arrow"
+                      alt="Dropdown"
                       width={20}
                       height={12}
                     />
@@ -213,6 +230,7 @@ export default function WriterProfilePage() {
                 </div>
               </div>
 
+              {/* NIN */}
               <div className="flex flex-col">
                 <label className="text-sm font-semibold text-[#22242A] mb-1">
                   NIN
@@ -222,7 +240,7 @@ export default function WriterProfilePage() {
                   name="nin"
                   value={formData.nin}
                   onChange={handleChange}
-                  className="border border-[#ABADB2] p-3 rounded-md"
+                  className="border border-[#ABADB2] py-2 rounded-md"
                 />
               </div>
             </div>
@@ -248,7 +266,6 @@ export default function WriterProfilePage() {
           >
             Skip
           </button>
-
           <button
             type="submit"
             disabled={!isCurrentStepComplete}

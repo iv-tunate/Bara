@@ -52,12 +52,21 @@ function VerifyEmailPageContent() {
           "ngrok-skip-browser-warning": "true",
         },
       });
-    
-      const userType = localStorage.getItem("userType");
+
       if (response.ok) {
         toast.success("Email verified successfully!");
         setVerificationState("success");
-        setTimeout(() => router.push(`/profile/${userType}`), 1000);
+
+        // Get user type and normalize
+        const rawUserType = localStorage.getItem("userType") || "";
+        const userType = rawUserType.toLowerCase();
+
+        // Redirect after 1s
+        if (userType === "writer" || userType === "producer") {
+          setTimeout(() => router.push(`/profile/${userType}`), 1000);
+        } else {
+          setTimeout(() => router.push("/profile"), 1000);
+        }
       } else {
         const res = await response.json();
         const errorMsg = res.message || "Verification failed";
@@ -125,12 +134,10 @@ function VerifyEmailPageContent() {
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-[#1a0000] px-4">
-      {/* White container card */}
       <div className="bg-white rounded-lg shadow-lg flex flex-col md:flex-row w-full max-w-4xl h-[550px] relative">
-        {/* Left: Form Section */}
+        {/* Left: Form */}
         <div className="flex-1 md:p-12 flex flex-col justify-between overflow-y-auto">
           <div>
-            {/* Logo */}
             <div className="mb-8">
               <Image
                 src="/logo.png"
@@ -141,140 +148,111 @@ function VerifyEmailPageContent() {
               />
             </div>
 
-            {verificationState === "success" && (
-              <div className="text-center">
-                <div className="mb-4">
+            <h1 className="text-2xl font-semibold mb-2 text-[#22242A]">
+              Verify your email
+            </h1>
+
+            <p className="text-sm text-[#333740] mb-6 leading-relaxed">
+              An OTP has been sent to{" "}
+              <span className="font-semibold">{email}</span>. Enter the 6-digit
+              code below.
+            </p>
+
+            {verificationState === "failed" && errorMessage && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-sm text-red-600">{errorMessage}</p>
+              </div>
+            )}
+
+            <label className="block text-sm font-medium text-[#22242A] mb-2">
+              Verification Code
+            </label>
+            <input
+              type="text"
+              placeholder="Enter 6-digit code"
+              value={otp}
+              onChange={handleOtpChange}
+              maxLength={6}
+              className={`w-full border rounded-md px-3 py-3 mb-4 bg-white focus:outline-none focus:ring-1 transition-colors ${
+                verificationState === "failed"
+                  ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                  : "border-[#ABADB2] focus:ring-[#800000] focus:border-[#800000]"
+              }`}
+            />
+
+            <button
+              type="button"
+              onClick={handleContinue}
+              disabled={!canContinue}
+              className={`w-full font-medium py-3 rounded-md flex items-center justify-center gap-2 transition-colors ${
+                canContinue
+                  ? "bg-[#800000] text-white hover:bg-[#1a0000]"
+                  : "bg-[#F5F5F5] text-[#858990] cursor-not-allowed"
+              }`}
+            >
+              {isVerifying ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Verifying...
+                </>
+              ) : (
+                <>
+                  Continue
+                  <span className="ml-2 text-lg">→</span>
+                </>
+              )}
+            </button>
+
+            {/* Success / Already Verified message under button */}
+            {(verificationState === "success" ||
+              verificationState === "alreadyVerified") && (
+              <div className="mt-4 text-center">
+                <div className="mb-2">
                   <Image
                     src="/Check_ring.png"
-                    alt="Success"
-                    width={64}
-                    height={64}
+                    alt={
+                      verificationState === "success"
+                        ? "Success"
+                        : "Already Verified"
+                    }
+                    width={48}
+                    height={48}
                     className="mx-auto"
                   />
                 </div>
-                <h1 className="text-2xl font-semibold mb-2 text-[#22242A]">
-                  Email Verified!
-                </h1>
-                <p className="text-sm text-[#333740] mb-4">
-                  Your email has been successfully verified.
+                <p className="text-sm text-[#333740]">
+                  {verificationState === "success"
+                    ? "Email verified successfully! Redirecting..."
+                    : "Email already verified! Redirecting..."}
                 </p>
               </div>
             )}
 
-            {verificationState === "alreadyVerified" && (
-              <div className="text-center">
-                <div className="mb-4">
-                  <Image
-                    src="/Check_ring.png"
-                    alt="Already Verified"
-                    width={64}
-                    height={64}
-                    className="mx-auto"
-                  />
-                </div>
-                <h1 className="text-2xl font-semibold mb-2 text-[#22242A]">
-                  Already Verified!
-                </h1>
-                <p className="text-sm text-[#333740] mb-4">
-                  Your email is already verified.
-                </p>
-              </div>
-            )}
-
-            {(verificationState === "idle" ||
-              verificationState === "failed") && (
-              <>
-                <h1 className="text-2xl font-semibold mb-2 text-[#22242A]">
-                  Verify your email
-                </h1>
-
-                <p className="text-sm text-[#333740] mb-6 leading-relaxed">
-                  An OTP has been sent to{" "}
-                  <span className="font-semibold">{email}</span>. Enter the
-                  6-digit code below.
-                </p>
-
-                {verificationState === "failed" && errorMessage && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                    <p className="text-sm text-red-600">{errorMessage}</p>
-                  </div>
-                )}
-
-                <label className="block text-sm font-medium text-[#22242A] mb-2">
-                  Verification Code
-                </label>
-                <input
-                  type="text"
-                  placeholder="Enter 6-digit code"
-                  value={otp}
-                  onChange={handleOtpChange}
-                  maxLength={6}
-                  className={`w-full border rounded-md px-3 py-3 mb-4 bg-white focus:outline-none focus:ring-1 transition-colors ${
-                    verificationState === "failed"
-                      ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                      : "border-[#ABADB2] focus:ring-[#800000] focus:border-[#800000]"
-                  }`}
-                />
-
-                <button
-                  type="button"
-                  onClick={handleContinue}
-                  disabled={!canContinue}
-                  className={`w-full font-medium py-3 rounded-md flex items-center justify-center gap-2 transition-colors ${
-                    canContinue
-                      ? "bg-[#800000] text-white hover:bg-[#1a0000]"
-                      : "bg-[#F5F5F5] text-[#858990] cursor-not-allowed"
-                  }`}
-                >
-                  {isVerifying ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Verifying...
-                    </>
-                  ) : (
-                    <>
-                      Continue
-                      <span className="ml-2 text-lg">→</span>
-                    </>
-                  )}
-                </button>
-              </>
-            )}
-          </div>
-
-          {(verificationState === "idle" || verificationState === "failed") && (
-            <div className="mt-6 pt-4 border-t border-gray-200">
-              <div className="text-center">
-                <p className="text-sm text-[#333740] mb-3">
-                  Didn&apos;t receive the code?
-                </p>
-                <button
-                  type="button"
-                  onClick={handleResend}
-                  disabled={isResending || resendCooldown > 0}
-                  className={`font-medium py-2 px-4 rounded-md transition-colors ${
-                    isResending || resendCooldown > 0
-                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      : "bg-[#F5F5F5] text-[#800000] hover:bg-[#FFBFBF]"
-                  }`}
-                >
-                  {isResending ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-[#800000] border-t-transparent rounded-full animate-spin inline-block mr-2"></div>
-                      Sending...
-                    </>
-                  ) : resendCooldown > 0 ? (
-                    `Resend in ${resendCooldown}s`
-                  ) : (
-                    "Resend Code"
-                  )}
-                </button>
-              </div>
+            <div className="mt-6 pt-4 border-t border-gray-200 text-center">
+              <p className="text-sm text-[#333740] mb-3">
+                Didn&apos;t receive the code?
+              </p>
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={isResending || resendCooldown > 0}
+                className={`font-medium py-2 px-4 rounded-md transition-colors ${
+                  isResending || resendCooldown > 0
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-[#F5F5F5] text-[#800000] hover:bg-[#FFBFBF]"
+                }`}
+              >
+                {isResending
+                  ? "Sending..."
+                  : resendCooldown > 0
+                  ? `Resend in ${resendCooldown}s`
+                  : "Resend Code"}
+              </button>
             </div>
-          )}
+          </div>
         </div>
 
-        {/* Right: Image Section */}
+        {/* Right: Illustration */}
         <div className="md:w-1/2 relative hidden md:flex items-center justify-center p-8">
           <Image
             src="/Mask group.png"
