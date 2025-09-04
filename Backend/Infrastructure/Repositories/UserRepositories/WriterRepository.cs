@@ -255,7 +255,7 @@ namespace Infrastructure.Repositories.UserRepositories
 
         public Task<ResponseDetail<bool>> DeleteWriter(Guid writerId)
         {
-            //Set as deleted and delete login profile
+            //Set as deleted and delete login profile ... not an actual delete.. i put this here so i don't forget
             throw new NotImplementedException();
         }
 
