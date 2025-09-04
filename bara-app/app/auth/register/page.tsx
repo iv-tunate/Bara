@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import EyeToggle from "@/components/EyeToggle";
+import { Suspense } from "react";
 
 type Role = "Writer" | "Producer" | "Admin";
 
@@ -13,7 +14,7 @@ interface RegisterDTO {
   Type: Role;
 }
 
-export default function RegisterPage() {
+function RegisterPageContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -320,5 +321,13 @@ export default function RegisterPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div>Loading register form…</div>}>
+      <RegisterPageContent />
+    </Suspense>
   );
 }
