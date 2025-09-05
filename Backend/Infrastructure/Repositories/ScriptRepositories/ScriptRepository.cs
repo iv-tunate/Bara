@@ -665,7 +665,6 @@ namespace Infrastructure.Repositories.ScriptRepositories
             {
                 using var transaction = await dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
 
-                // Find the active script transaction
                 var scriptTransaction = await dbContext.ScriptTransactions
                     .FirstOrDefaultAsync(st => st.ProducerId == producerId && st.ScriptId == scriptId &&
                                              st.TransactionStatus == ScriptTransactionStatus.Initiated);
@@ -677,7 +676,6 @@ namespace Infrastructure.Repositories.ScriptRepositories
                     return ResponseDetail<ScriptTransactionResponse>.Failed("No active transaction found for this script", 404);
                 }
 
-                // Check if transaction has expired (cannot cancel expired transactions)
                 if (scriptTransaction.ExpiresAt.HasValue && DateTimeOffset.UtcNow > scriptTransaction.ExpiresAt.Value)
                 {
                     logger.LogWarning("Cannot cancel expired transaction - CorrelationId: {CorrelationId}, TransactionId: {TransactionId}, ExpiresAt: {ExpiresAt}",
@@ -685,7 +683,6 @@ namespace Infrastructure.Repositories.ScriptRepositories
                     return ResponseDetail<ScriptTransactionResponse>.Failed("Cannot cancel expired transaction", 400);
                 }
 
-                // Get payment transaction
                 var paymentTransaction = await dbContext.Transactions
                     .FirstOrDefaultAsync(pt => pt.Id == scriptTransaction.PaymentTransactionId);
 
@@ -696,7 +693,6 @@ namespace Infrastructure.Repositories.ScriptRepositories
                     return ResponseDetail<ScriptTransactionResponse>.Failed("Payment transaction not found or not in escrowed state", 400);
                 }
 
-                // Refund funds using wallet service
                 var fundsRefunded = await walletService.RefundFundsForScriptTransactionAsync(
                     producerId, scriptTransaction.WriterId, scriptTransaction.Amount, scriptTransaction.WriterShare);
 
@@ -706,16 +702,13 @@ namespace Infrastructure.Repositories.ScriptRepositories
                     return ResponseDetail<ScriptTransactionResponse>.Failed("Failed to refund funds", 500);
                 }
 
-                // Update script transaction
                 scriptTransaction.TransactionStatus = ScriptTransactionStatus.Cancelled;
                 scriptTransaction.Status = ScriptDeliveryStatus.Cancelled;
                 scriptTransaction.ModifiedAt = DateTimeOffset.UtcNow;
 
-                // Update payment transaction
                 paymentTransaction.Status = TransactionStatus.Refunded;
                 paymentTransaction.ModifiedAt = DateTimeOffset.UtcNow;
 
-                // Update script status back to available
                 var script = await dbContext.Scripts.FirstOrDefaultAsync(s => s.Id == scriptId);
                 if (script != null)
                 {
@@ -730,7 +723,6 @@ namespace Infrastructure.Repositories.ScriptRepositories
                 await dbContext.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                // Close the chat
                 if (scriptTransaction.ScriptComments != null)
                 {
                     var chatCloseResult = await chatService.CloseChatAsync(scriptTransaction.ScriptComments.Id);
@@ -781,16 +773,12 @@ namespace Infrastructure.Repositories.ScriptRepositories
                         correlationId, scriptTransactionId);
                     return;
                 }
-
-                // Only auto-complete if still in initiated state
                 if (scriptTransaction.TransactionStatus != ScriptTransactionStatus.Initiated)
                 {
                     logger.LogInformation("Script transaction already processed - CorrelationId: {CorrelationId}, TransactionId: {TransactionId}, Status: {Status}",
                         correlationId, scriptTransactionId, scriptTransaction.TransactionStatus);
                     return;
                 }
-
-                // Call the complete method
                 var result = await CompleteScriptTransactionAsync(scriptTransaction.ProducerId, scriptTransaction.ScriptId);
 
                 if (result.IsSuccess)
@@ -1003,7 +991,7 @@ namespace Infrastructure.Repositories.ScriptRepositories
                                     .ToList();
 
                     var cacheOptions = new MemoryCacheEntryOptions()
-                        .SetAbsoluteExpiration(TimeSpan.FromMinutes(5)) // Shorter cache for search results
+                        .SetAbsoluteExpiration(TimeSpan.FromMinutes(5))
                         .SetSlidingExpiration(TimeSpan.FromMinutes(2));
 
                     memoryCache.Set(cacheKey, cachedScripts, cacheOptions);

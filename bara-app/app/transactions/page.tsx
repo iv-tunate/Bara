@@ -5,17 +5,8 @@ import { useRouter } from "next/navigation";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { getUserSession } from "@/utils/tokenManager";
 import { api } from "@/utils/api";
+import { Transaction } from "@/models/transaction";
 
-interface Transaction {
-  id: string;
-  amount: number;
-  currencySymbol: string;
-  status: string;
-  transactionType: string;
-  reference: string;
-  createdAt: string;
-  completedAt?: string;
-}
 
 export default function TransactionsPage() {
   const router = useRouter();

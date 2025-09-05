@@ -7,45 +7,8 @@ import DashboardNavbar from "@/components/DashboardNavbar";
 import { api } from "@/utils/api";
 import { getUserSession } from "@/utils/tokenManager";
 import { Suspense } from "react";
+import { WriterProfile } from "@/models/writer";
 
-interface WriterProfile {
-  id: string;
-  firstName: string;
-  lastName: string;
-  middleName?: string;
-  bio?: string;
-  phoneNumber: string;
-  profilePicture?: string;
-  isPremiumMember: boolean;
-  verificationStatus: string;
-  addressDetail: {
-    street: string;
-    city: string;
-    state: string;
-    country: string;
-  };
-  scripts: Array<{
-    id: string;
-    title: string;
-    genre: string;
-    synopsis: string;
-    price: number;
-    currencySymbol: string;
-    status: string;
-  }>;
-  experiences: Array<{
-    title: string;
-    description: string;
-    organization?: string;
-  }>;
-  services: Array<{
-    name: string;
-    description: string;
-    minPrice: number;
-    maxPrice: number;
-    currency: string;
-  }>;
-}
 
 function ProfilePageContent() {
   const params = useParams();

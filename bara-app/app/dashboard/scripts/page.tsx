@@ -8,21 +8,8 @@ import WriterProfileCard from "@/components/WriterProfileCard";
 import PaymentSuccessModal from "@/components/PaymentSuccessModal";
 import { getUserSession } from "@/utils/tokenManager";
 import { api } from "@/utils/api";
+import { Script, ownershipLabels } from "@/models/script";
 
-interface Script {
-  id: string;
-  title: string;
-  price: number;
-  imageUrl?: string;
-  logline: string;
-  synopsis?: string;
-  genre: string;
-  writerId: string;
-  writerName: string;
-  status: string;
-  currency: string;
-  currencySymbol: string;
-}
 
 export default function ScriptPage() {
   const router = useRouter();
@@ -60,7 +47,7 @@ export default function ScriptPage() {
               id: scriptResponse.data.id,
               title: scriptResponse.data.title,
               price: scriptResponse.data.price,
-              imageUrl: scriptResponse.data.image || "/flowery.png",
+              image: scriptResponse.data.image || "/flowery.png",
               logline: scriptResponse.data.logline,
               synopsis: scriptResponse.data.synopsis,
               genre: scriptResponse.data.genre,
@@ -74,6 +61,14 @@ export default function ScriptPage() {
               status: scriptResponse.data.status,
               currency: scriptResponse.data.currency || "NAIRA",
               currencySymbol: scriptResponse.data.currencySymbol || "₦",
+              ownershipRights: scriptResponse.data.ownershipRights,
+              proofUrl: scriptResponse.data.proofUrl,
+              copyrightNumber: scriptResponse.data.copyrightNumber,
+              isScriptRegistered: scriptResponse.data.isScriptRegistered,
+              registrationBody: scriptResponse.data.registrationBody,
+              url: scriptResponse.data.url,
+              path: scriptResponse.data.path,
+              uploadedOn: scriptResponse.data.uploadedOn,
             });
           } else {
             setError("Script not found");
@@ -90,7 +85,7 @@ export default function ScriptPage() {
               id: firstScript.id,
               title: firstScript.title,
               price: firstScript.price,
-              imageUrl: firstScript.image || "/flowery.png",
+              image: firstScript.image || "/flowery.png",
               logline: firstScript.logline,
               synopsis: firstScript.synopsis,
               genre: firstScript.genre,
@@ -99,13 +94,20 @@ export default function ScriptPage() {
               status: firstScript.status,
               currency: firstScript.currency || "NAIRA",
               currencySymbol: firstScript.currencySymbol || "₦",
+              ownershipRights: firstScript.ownershipRights,
+              proofUrl: firstScript.proofUrl,
+              copyrightNumber: firstScript.copyrightNumber,
+              isScriptRegistered: firstScript.isScriptRegistered,
+              registrationBody: firstScript.registrationBody,
+              url: firstScript.url,
+              path: firstScript.path,
+              uploadedOn: firstScript.uploadedOn,
             });
           } else {
             setError("No scripts available");
           }
         }
 
-        // Load wallet balance
         const walletResponse = await api.getWalletBalance(session.userId);
         if (walletResponse.success && walletResponse.data) {
           setWalletBalance(walletResponse.data.availableBalance || 0);
@@ -193,7 +195,7 @@ export default function ScriptPage() {
           </h1>
 
           <Image
-            src={script.imageUrl}
+            src={script.image}
             alt={script.title}
             width={400}
             height={300}
@@ -240,10 +242,11 @@ export default function ScriptPage() {
         {/* MIDDLE SECTION */}
         <div className="lg:col-span-6 space-y-4">
           <div className="bg-white border border-[#ABADB2] rounded-md p-4 space-y-4">
-            {/* Logline Header */}
-            <div className="flex items-center justify-between">
-              <h2 className="font-semibold text-lg text-[#22242A]">Logline</h2>
-              {script.ipOwnedByProducer && (
+            {/* Script Title */}
+            <div className="p-4 border rounded">
+              <h2 className="font-semibold text-lg">{script.title}</h2>
+
+              {script.ownershipRights && (
                 <span className="flex items-center text-[11px] font-medium text-[#BF4E00] bg-[#FFD9BF] border border-[#BF4E00] px-2 py-1 rounded">
                   <Image
                     src="/info.png"
@@ -252,7 +255,7 @@ export default function ScriptPage() {
                     height={14}
                     className="mr-1"
                   />
-                  IP owned by producer
+                  {ownershipLabels[script.ownershipRights]}
                 </span>
               )}
             </div>

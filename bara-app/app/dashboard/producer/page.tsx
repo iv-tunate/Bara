@@ -8,17 +8,7 @@ import GenreDropdown from "@/components/GenreDropdown";
 import { api } from "@/utils/api";
 import { getUserSession, getUserId } from "@/utils/tokenManager";
 import { useRouter } from "next/navigation";
-
-interface Script {
-  id: string;
-  title: string;
-  genre: string;
-  synopsis: string;
-  price: number;
-  currencySymbol: string;
-  image?: string;
-  writerId: string;
-}
+import { Script } from "@/models/script";
 
 export default function DashboardPage() {
   const [scripts, setScripts] = useState<Script[]>([]);
@@ -60,7 +50,7 @@ export default function DashboardPage() {
       } else {
         response = await api.getAllScripts(currentPage, pageSize);
       }
-      console.log("API Response:", response);
+      //console.log("API Response:", response);
       if (response.success && response.data) {
         setScripts(response.data || []);
         setTotalPages(response.totalPages || 1);
