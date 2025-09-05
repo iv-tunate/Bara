@@ -124,7 +124,7 @@ export default function ProducerProfilePage() {
       const response = await api.createProducer(formDataToSubmit, userId);
 
       if (response.success) {
-        router.push("/dashboard");
+        router.push("/dashboard-producer");
       } else {
         setError(
           response.message ||

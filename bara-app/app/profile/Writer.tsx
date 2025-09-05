@@ -41,7 +41,7 @@ export default function WriterProfilePage() {
         location: locationForm,
         identity: identityForm,
       });
-      router.push("/dashboard");
+      router.push("/writer-dashboard");
     }
   };
 

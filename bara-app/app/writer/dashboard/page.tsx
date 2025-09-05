@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +27,8 @@ export default function HomePage() {
       <header className="flex items-center justify-between px-4 md:px-6 py-4 border-b">
         <div>
           <h1 className="text-xl md:text-2xl font-medium text-[#22242a] mb-1">
-            Hello {userName}! 👋
+            Hello {userName}! 
+              <Image src="/wave.png" alt="Wave" width={20} height={20} />
           </h1>
           <p className="text-sm md:text-base text-[#444955] max-w-md md:max-w-lg">
             Showcase powerful stories, connect with producers, and get your
