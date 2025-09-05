@@ -53,7 +53,7 @@ export default function IdentityVerificationForm({
         </label>
         <div
           className="relative cursor-pointer"
-          onClick={() => setDropdownOpen((prev) => !prev)} // ✅ Toggle dropdown
+          onClick={() => setDropdownOpen((prev) => !prev)} 
         >
           <input
             type="text"

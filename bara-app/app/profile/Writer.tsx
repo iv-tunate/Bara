@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Logo from "@/components/Logo";
 import Image from "next/image";
 import LocationForm from "@/components/LocationForm";
@@ -89,10 +90,10 @@ export default function WriterProfilePage() {
     (activeTab === "identity" && isIdentityInfoComplete);
 
   return (
-    <div className="fixed inset-0 bg-[#1a0000] bg-opacity-80 flex items-center justify-center z-50 p-2 overflow-auto">
+    <div className="fixed inset-0 bg-[#1a0000] bg-opacity-80 flex items-center justify-center z-50 p-2">
       <form
         onSubmit={handleSubmit}
-        className="bg-white rounded-lg shadow-lg p-6 md:p-10 w-full max-w-3xl space-y-3"
+        className="bg-white rounded-lg shadow-lg p-6 md:p-10 w-full max-w-3xl max-h-screen overflow-y-auto flex flex-col space-y-4"
       >
         <Logo />
 
@@ -141,7 +142,7 @@ export default function WriterProfilePage() {
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleChange}
-                  className="border border-[#ABADB2] p-2 rounded-md"
+                  className="border border-[#ABADB2] p-2 rounded-md w-full"
                 />
               </div>
               <div className="flex flex-col">
@@ -153,7 +154,7 @@ export default function WriterProfilePage() {
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleChange}
-                  className="border border-[#ABADB2] p-2 rounded-md"
+                  className="border border-[#ABADB2] p-2 rounded-md w-full"
                 />
               </div>
             </div>
@@ -181,19 +182,25 @@ export default function WriterProfilePage() {
                 name="bio"
                 value={formData.bio}
                 onChange={handleChange}
-                className="border border-[#ABADB2] p-2 rounded-md w-full resize-none"
+                className="border border-[#ABADB2] p-1 rounded-md w-full "
               />
             </div>
 
-            {/* Add Experience (Right Aligned) */}
-            <div className="flex justify-end items-center gap-2 cursor-pointer text-[#810306] font-semibold mb-4">
-              <Image
-                src="/plus-icon.png"
-                alt="Add experience"
-                width={20}
-                height={20}
-              />
-              <span>Add Experience</span>
+            {/* Add Experience */}
+            <div className="flex justify-end items-center gap-1 cursor-pointer text-[#810306] font-semibold mb-4 text-sm">
+              <Link
+                href="/writer/add-experience"
+                className="flex items-center gap-1 cursor-pointer text-[#810306] font-semibold"
+              >
+                {" "}
+                <Image
+                  src="/plus-icon.png"
+                  alt="Add experience"
+                  width={20}
+                  height={20}
+                />
+                <span>Add Experience</span>
+              </Link>
             </div>
 
             {/* Phone & NIN */}
@@ -225,7 +232,7 @@ export default function WriterProfilePage() {
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    className="flex-1 outline-none bg-transparent text-sm"
+                    className="flex-1 outline-none bg-transparent text-sm p-2"
                   />
                 </div>
               </div>
@@ -240,7 +247,7 @@ export default function WriterProfilePage() {
                   name="nin"
                   value={formData.nin}
                   onChange={handleChange}
-                  className="border border-[#ABADB2] py-2 rounded-md"
+                  className="border border-[#ABADB2] p-2 rounded-md w-full"
                 />
               </div>
             </div>
@@ -258,7 +265,7 @@ export default function WriterProfilePage() {
         )}
 
         {/* Action Buttons */}
-        <div className="flex justify-end gap-4 pt-4">
+        <div className="flex justify-end gap-4 pt-4 mt-auto">
           <button
             type="button"
             onClick={handleSkip}
