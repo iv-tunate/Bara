@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Menu, X } from "lucide-react";
+
 import { getUserSession } from "@/utils/tokenManager";
 
 export default function HomePage() {
@@ -21,14 +21,15 @@ export default function HomePage() {
     }
     setUserName(session.name || "Writer");
   }, [router]);
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="flex items-center justify-between px-4 md:px-6 py-4 border-b">
         <div>
-          <h1 className="text-xl md:text-2xl font-medium text-[#22242a] mb-1">
-            Hello {userName}! 
-              <Image src="/wave.png" alt="Wave" width={20} height={20} />
+          <h1 className="text-xl md:text-2xl font-medium text-[#22242a] mb-1 flex items-center gap-2">
+            Hello {userName}!
+            <Image src="/wave.png" alt="Wave" width={20} height={20} />
           </h1>
           <p className="text-sm md:text-base text-[#444955] max-w-md md:max-w-lg">
             Showcase powerful stories, connect with producers, and get your
@@ -39,7 +40,7 @@ export default function HomePage() {
           variant="ghost"
           className="flex items-center gap-2 text-[#22242a]"
         >
-          <Menu className="h-5 w-5" />
+          <Image src="/menu-icon.png" alt="Menu" width={20} height={20} />
           <span className="hidden sm:inline">Categories</span>
         </Button>
       </header>
@@ -52,7 +53,7 @@ export default function HomePage() {
             size="sm"
             className="absolute top-4 right-4 h-8 w-8 p-0 text-[#444955] hover:bg-white/50"
           >
-            <X className="h-4 w-4" />
+            <Image src="/close-icon.png" alt="Close" width={16} height={16} />
           </Button>
 
           <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6 lg:gap-8">
@@ -101,7 +102,12 @@ export default function HomePage() {
                   size="sm"
                   className="absolute top-3 right-3 h-8 w-8 p-0 bg-white/80 hover:bg-white text-gray-600"
                 >
-                  <Heart className="h-4 w-4" />
+                  <Image
+                    src="/heart-icon.png"
+                    alt="Save"
+                    width={16}
+                    height={16}
+                  />
                 </Button>
               </div>
               <CardContent className="p-4">

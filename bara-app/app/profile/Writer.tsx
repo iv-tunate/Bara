@@ -30,28 +30,6 @@ export default function WriterProfilePage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (activeTab === "personal" && isPersonalInfoComplete)
-      setActiveTab("location");
-    else if (activeTab === "location" && isLocationInfoComplete)
-      setActiveTab("identity");
-    else if (activeTab === "identity" && isIdentityInfoComplete) {
-      console.log("Submitted All Data:", {
-        personal: formData,
-        location: locationForm,
-        identity: identityForm,
-      });
-      router.push("/writer-dashboard");
-    }
-  };
-
-  const handleSkip = () => {
-    if (activeTab === "personal") setActiveTab("location");
-    else if (activeTab === "location") setActiveTab("identity");
-    else router.push("/dashboard");
-  };
-
   const [locationForm, setLocationForm] = useState({
     country: "Nigeria",
     state: "",
@@ -66,28 +44,51 @@ export default function WriterProfilePage() {
     file: null as File | null,
   });
 
-  const isPersonalInfoComplete =
+  const isPersonalInfoComplete = Boolean(
     formData.firstName &&
-    formData.lastName &&
-    formData.portfolioLink &&
-    formData.bio &&
-    formData.phone &&
-    formData.nin;
+      formData.lastName &&
+      formData.portfolioLink &&
+      formData.bio &&
+      formData.phone &&
+      formData.nin
+  );
 
-  const isLocationInfoComplete =
+  const isLocationInfoComplete = Boolean(
     locationForm.country &&
-    locationForm.state &&
-    locationForm.city &&
-    locationForm.houseNumber &&
-    locationForm.street &&
-    locationForm.zipCode;
+      locationForm.state &&
+      locationForm.city &&
+      locationForm.houseNumber &&
+      locationForm.street &&
+      locationForm.zipCode
+  );
 
-  const isIdentityInfoComplete = identityForm.documentType && identityForm.file;
+  const isIdentityInfoComplete = Boolean(
+    identityForm.documentType && identityForm.file
+  );
 
   const isCurrentStepComplete =
     (activeTab === "personal" && isPersonalInfoComplete) ||
     (activeTab === "location" && isLocationInfoComplete) ||
     (activeTab === "identity" && isIdentityInfoComplete);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (activeTab === "personal" && isPersonalInfoComplete)
+      setActiveTab("location");
+    else if (activeTab === "location" && isLocationInfoComplete)
+      setActiveTab("identity");
+    else if (activeTab === "identity") {
+      router.push("../writer/dashboard");
+    }
+  };
+
+  const handleSkip = () => {
+    if (activeTab === "personal") setActiveTab("location");
+    else if (activeTab === "location") setActiveTab("identity");
+    else if (activeTab === "identity") {
+      router.push("../writer/dashboard");
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-[#1a0000] bg-opacity-80 flex items-center justify-center z-50 p-2">
@@ -192,7 +193,6 @@ export default function WriterProfilePage() {
                 href="/writer/add-experience"
                 className="flex items-center gap-1 cursor-pointer text-[#810306] font-semibold"
               >
-                {" "}
                 <Image
                   src="/plus-icon.png"
                   alt="Add experience"
@@ -273,6 +273,7 @@ export default function WriterProfilePage() {
           >
             Skip
           </button>
+
           <button
             type="submit"
             disabled={!isCurrentStepComplete}
