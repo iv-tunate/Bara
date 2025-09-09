@@ -1,340 +1,302 @@
 "use client";
-
-import type React from "react";
-
-import { useState } from "react";
-import { ArrowLeft, Upload } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import Link from "next/link";
+import { useRef, useState } from "react";
 import DashboardNavbar from "@/components/DashboardNavbar";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import Image from "next/image";
 
 export default function AddScriptPage() {
-  const [coverImage, setCoverImage] = useState<string>("");
-  const [formData, setFormData] = useState({
-    scriptLink: "",
-    title: "",
-    genre: "",
-    logline: "",
-    synopsis: "",
-    ownership: "",
-    price: "",
-  });
-  const [agreements, setAgreements] = useState({
-    originalWork: true,
-    commission: true,
-  });
+  const [link, setLink] = useState("");
+  const [title, setTitle] = useState("");
+  const [genre, setGenre] = useState("");
+  const [logline, setLogline] = useState("");
+  const [synopsis, setSynopsis] = useState("");
+  const [ownership, setOwnership] = useState("");
+  const [price, setPrice] = useState("");
+  const [isOriginal, setIsOriginal] = useState(false);
+  const [agreeCommission, setAgreeCommission] = useState(false);
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setCoverImage(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+  const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleBrowseClick = () => fileInputRef.current?.click();
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && (file.type === "image/png" || file.type === "image/jpeg")) {
+      setMediaFile(file);
     }
   };
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
       <DashboardNavbar />
-      <div className="border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center gap-3">
-          <ArrowLeft className="h-5 w-5 text-gray-600" />
-          <span className="text-gray-600">Continue exploring scripts</span>
-        </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        <h1 className="text-3xl font-semibold text-gray-900 mb-8">
+      <main className="max-w-3xl mx-auto px-4 py-10">
+        {/* Back link */}
+        <div className="mb-6">
+          <Link
+            href="/writer/dashboard"
+            className="flex items-center text-sm text-[#22242A] font-bold cursor-pointer"
+          >
+            ← Continue exploring scripts
+          </Link>
+        </div>
+
+        {/* Page Title */}
+        <h1 className="text-2xl font-semibold text-[#22242A] mb-6">
           Add script
         </h1>
 
-        <form className="space-y-8">
-          {/* Script Link */}
+        {/* Add link to script */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-[#22242A] mb-1">
+            Add link to script{" "}
+            <span className="text-[#858990] text-xs">
+              (Please include a Google Drive link of your script)
+            </span>
+          </label>
+          <input
+            type="text"
+            value={link}
+            onChange={(e) => setLink(e.target.value)}
+            className="w-full border border-[#ABADB2] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#800000]"
+          />
+        </div>
+
+        {/* Script Title & Genre */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div>
-            <Label
-              htmlFor="script-link"
-              className="text-sm font-medium text-gray-700 mb-2 block"
-            >
-              Add link to script{" "}
-              <span className="text-gray-500">
-                (Please include a Google drive link of your script)
-              </span>
-            </Label>
-            <Input
-              id="script-link"
-              value={formData.scriptLink}
-              onChange={(e) =>
-                setFormData({ ...formData, scriptLink: e.target.value })
-              }
-              className="w-full"
+            <label className="block text-sm font-medium text-[#22242A] mb-1">
+              Script title
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full border border-[#ABADB2] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#800000]"
             />
           </div>
 
-          {/* Title and Genre Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <Label
-                htmlFor="title"
-                className="text-sm font-medium text-gray-700 mb-2 block"
-              >
-                Script title
-              </Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) =>
-                  setFormData({ ...formData, title: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <Label
-                htmlFor="genre"
-                className="text-sm font-medium text-gray-700 mb-2 block"
-              >
-                Genre
-              </Label>
-              <Select
-                value={formData.genre}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, genre: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Romance">Romance</SelectItem>
-                  <SelectItem value="Adventure">Adventure</SelectItem>
-                  <SelectItem value="Drama">Drama</SelectItem>
-                  <SelectItem value="Comedy">Comedy</SelectItem>
-                  <SelectItem value="Thriller">Thriller</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Logline and Synopsis Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <Label
-                htmlFor="logline"
-                className="text-sm font-medium text-gray-700 mb-2 block"
-              >
-                Logline
-              </Label>
-              <Textarea
-                id="logline"
-                value={formData.logline}
-                onChange={(e) =>
-                  setFormData({ ...formData, logline: e.target.value })
-                }
-                rows={6}
-                className="resize-none"
-              />
-            </div>
-            <div>
-              <Label
-                htmlFor="synopsis"
-                className="text-sm font-medium text-gray-700 mb-2 block"
-              >
-                Synopsis
-              </Label>
-              <Textarea
-                id="synopsis"
-                value={formData.synopsis}
-                onChange={(e) =>
-                  setFormData({ ...formData, synopsis: e.target.value })
-                }
-                rows={6}
-                className="resize-none"
-              />
-            </div>
-          </div>
-
-          {/* Ownership and Price Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <Label
-                htmlFor="ownership"
-                className="text-sm font-medium text-gray-700 mb-2 block"
-              >
-                IP ownership terms
-              </Label>
-              <Select
-                value={formData.ownership}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, ownership: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="I retain full rights">
-                    I retain full rights
-                  </SelectItem>
-                  <SelectItem value="Shared ownership">
-                    Shared ownership
-                  </SelectItem>
-                  <SelectItem value="Transfer all rights">
-                    Transfer all rights
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label
-                htmlFor="price"
-                className="text-sm font-medium text-gray-700 mb-2 block"
-              >
-                Set price
-              </Label>
-              <Input
-                id="price"
-                value={formData.price}
-                onChange={(e) =>
-                  setFormData({ ...formData, price: e.target.value })
-                }
-              />
-            </div>
-          </div>
-
-          {/* Cover Image */}
+          {/* Genre Dropdown */}
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <Label className="text-sm font-medium text-gray-700">
-                Add cover image
-              </Label>
-              <button
-                type="button"
-                className="text-sm text-red-600 hover:text-red-700 flex items-center gap-1"
+            <label className="block text-sm font-medium text-[#22242A] mb-1">
+              Genre
+            </label>
+            <div className="relative">
+              <select
+                value={genre}
+                onChange={(e) => setGenre(e.target.value)}
+                // conditional class: placeholder color when value is empty
+                className={`w-full border border-[#ABADB2] rounded-md px-3 py-2 text-sm bg-white appearance-none focus:outline-none focus:ring-1 focus:ring-[#800000] ${
+                  genre === "" ? "text-[#858990]" : "text-[#22242A]"
+                }`}
               >
-                <Upload className="h-4 w-4" />
-                Use AI to generate image
-              </button>
-            </div>
+                {/* Placeholder option — do NOT use `hidden` */}
+                <option value="" disabled>
+                  Select genre
+                </option>
+                <option value="Drama">Drama</option>
+                <option value="Comedy">Comedy</option>
+                <option value="Thriller">Thriller</option>
+                <option value="Romance">Romance</option>
+                <option value="Horror">Horror</option>
+              </select>
 
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-              {coverImage ? (
-                <div className="space-y-4">
-                  <img
-                    src={coverImage || "/placeholder.svg"}
-                    alt="Cover image"
-                    className="mx-auto rounded-lg max-w-sm h-48 object-cover"
-                  />
-                  <div className="flex justify-center gap-4">
-                    <label htmlFor="image-upload">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="bg-red-600 text-white hover:bg-red-700 border-red-600"
-                      >
-                        Change image
-                      </Button>
-                      <input
-                        id="image-upload"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                      />
-                    </label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setCoverImage("")}
-                      className="text-red-600 border-red-600 hover:bg-red-50"
-                    >
-                      Remove image
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <label htmlFor="image-upload" className="cursor-pointer">
-                  <div className="space-y-2">
-                    <Upload className="h-8 w-8 mx-auto text-gray-400" />
-                    <p className="text-gray-600">Click to upload cover image</p>
-                  </div>
-                  <input
-                    id="image-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-                </label>
-              )}
+              <Image
+                src="/dropdown.png"
+                alt="Dropdown Icon"
+                width={20}
+                height={12}
+                className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Logline & Synopsis */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div>
+            <label className="block text-sm font-medium text-[#22242A] mb-1">
+              Logline
+            </label>
+            <textarea
+              value={logline}
+              onChange={(e) => setLogline(e.target.value)}
+              className="w-full border border-[#ABADB2] rounded-md px-3 py-2 text-sm h-24 resize-none focus:outline-none focus:ring-1 focus:ring-[#800000]"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-[#22242A] mb-1">
+              Synopsis
+            </label>
+            <textarea
+              value={synopsis}
+              onChange={(e) => setSynopsis(e.target.value)}
+              className="w-full border border-[#ABADB2] rounded-md px-3 py-2 text-sm h-24 resize-none focus:outline-none focus:ring-1 focus:ring-[#800000]"
+            />
+          </div>
+        </div>
+
+        {/* Ownership & Price */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          {/* Ownership Dropdown */}
+          <div>
+            <label className="block text-sm font-medium text-[#22242A] mb-1">
+              Ownership terms
+            </label>
+            <div className="relative">
+              <select
+                value={ownership}
+                onChange={(e) => setOwnership(e.target.value)}
+                className={`w-full border border-[#ABADB2] rounded-md px-3 py-2 text-sm bg-white appearance-none focus:outline-none focus:ring-1 focus:ring-[#800000] ${
+                  ownership === "" ? "text-[#858990]" : "text-[#22242A]"
+                }`}
+              >
+                <option value="" disabled>
+                  Select ownership
+                </option>
+                <option value="Full">Full ownership</option>
+                <option value="Shared">Shared ownership</option>
+              </select>
+              <Image
+                src="/dropdown.png"
+                alt="Dropdown Icon"
+                width={20}
+                height={12}
+                className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+              />
             </div>
           </div>
 
-          {/* Agreements */}
-          <div className="space-y-4">
-            <div className="flex items-start gap-3">
-              <Checkbox
-                id="original-work"
-                checked={agreements.originalWork}
-                onCheckedChange={(checked) =>
-                  setAgreements({
-                    ...agreements,
-                    originalWork: checked as boolean,
-                  })
-                }
-                className="mt-1"
-              />
-              <Label
-                htmlFor="original-work"
-                className="text-sm text-gray-700 leading-relaxed"
+          {/* Price Dropdown */}
+          <div>
+            <label className="block text-sm font-medium text-[#22242A] mb-1">
+              Set price
+            </label>
+            <div className="relative">
+              <select
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                className={`w-full border border-[#ABADB2] rounded-md px-3 py-2 text-sm bg-white appearance-none focus:outline-none focus:ring-1 focus:ring-[#800000] ${
+                  price === "" ? "text-[#858990]" : "text-[#22242A]"
+                }`}
               >
-                I agree this script is my original work
-              </Label>
-            </div>
-            <div className="flex items-start gap-3">
-              <Checkbox
-                id="commission"
-                checked={agreements.commission}
-                onCheckedChange={(checked) =>
-                  setAgreements({
-                    ...agreements,
-                    commission: checked as boolean,
-                  })
-                }
-                className="mt-1"
+                <option value="" disabled>
+                  Select price
+                </option>
+                <option value="10000">₦10,000</option>
+                <option value="20000">₦20,000</option>
+                <option value="50000">₦50,000</option>
+              </select>
+              <Image
+                src="/dropdown.png"
+                alt="Dropdown Icon"
+                width={20}
+                height={12}
+                className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
               />
-              <Label
-                htmlFor="commission"
-                className="text-sm text-gray-700 leading-relaxed"
-              >
-                I agree to Bara&apos;s 15% commission on successful sales
-              </Label>
             </div>
           </div>
+        </div>
 
-          {/* Submit Button */}
-          <div className="pt-6">
-            <Button
-              type="submit"
-              className="w-full bg-red-600 hover:bg-red-700 text-white py-4 text-lg font-medium"
+        {/* Upload Media */}
+        <div className="mb-6">
+          {/* Label row */}
+          <div className="flex items-center justify-between mb-1">
+            <label className="text-sm font-medium text-[#22242A]">
+              Upload media
+            </label>
+            <span className="flex items-center text-xs font-bold text-[#800000]">
+              Use the prescribed image
+              <Image
+                src="/star.png" 
+                alt="star"
+                width={10}
+                height={10}
+                className="ml-1"
+              />
+            </span>
+          </div>
+
+          {mediaFile ? (
+            <div className="border-2 border-dashed border-[#ABADB2] rounded-md p-4 bg-[#F5F5F5]">
+              <div className="flex flex-col items-center space-y-3">
+                <Image
+                  src="/checkring.png"
+                  alt="Upload complete"
+                  width={32}
+                  height={32}
+                />
+                <span className="text-sm text-[#333740] font-medium">
+                  Upload complete
+                </span>
+                {/* Preview */}
+                <Image
+                  src={URL.createObjectURL(mediaFile)}
+                  alt="Uploaded preview"
+                  width={60}
+                  height={100}
+                  className="rounded-sm border"
+                />
+                <div className="w-full h-1 bg-green-600 rounded" />
+              </div>
+            </div>
+          ) : (
+            <div
+              onClick={handleBrowseClick}
+              className="w-full h-40 border-2 border-dashed border-[#ABADB2] rounded-md bg-[#F5F5F5] flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-100 transition"
             >
-              Add script
-            </Button>
-          </div>
-        </form>
-      </div>
+              <p className="text-sm text-[#333740]">
+                Drag and drop file (png, jpeg) here
+              </p>
+              <p className="text-sm text-[#333740] mt-1">
+                or{" "}
+                <span className="text-[#810306] font-semibold underline">
+                  Browse
+                </span>
+              </p>
+            </div>
+          )}
+
+          <input
+            type="file"
+            accept="image/png, image/jpeg"
+            onChange={handleFileChange}
+            ref={fileInputRef}
+            className="hidden"
+          />
+        </div>
+
+        {/* Agreements */}
+        <div className="space-y-3 mb-6">
+          <label className="flex items-center gap-2 text-sm text-[#22242A] cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isOriginal}
+              onChange={(e) => setIsOriginal(e.target.checked)}
+              className="accent-[#800000]"
+            />
+            I agree this script is my original work
+          </label>
+          <label className="flex items-center gap-2 text-sm text-[#22242A] cursor-pointer">
+            <input
+              type="checkbox"
+              checked={agreeCommission}
+              onChange={(e) => setAgreeCommission(e.target.checked)}
+              className="accent-[#800000]"
+            />
+            I agree to Bara’s 15% commission on successful sales
+          </label>
+        </div>
+
+        {/* Submit */}
+        <button
+          disabled={!isOriginal || !agreeCommission}
+          className="w-full bg-[#DADBDD] text-[#858990] py-3 rounded-md text-sm font-medium disabled:cursor-not-allowed hover:bg-[#800000] hover:text-white transition-colors"
+        >
+          Add script
+        </button>
+      </main>
     </div>
   );
 }

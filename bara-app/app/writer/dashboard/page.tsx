@@ -126,7 +126,10 @@ export default function WriterDashboard() {
 
       {/* Add Script Button */}
       <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
-        <Button className="bg-[#810306] text-white px-20 py-3 rounded-full text-base md:text-lg shadow-lg hover:bg-[#1a0000] transition-colors">
+        <Button
+          onClick={() => router.push("/writer/add-script")}
+          className="bg-[#810306] text-white px-20 py-3 rounded-full text-base md:text-lg shadow-lg hover:bg-[#1a0000] transition-colors"
+        >
           Add script <span className="ml-2 text-xl">+</span>
         </Button>
       </div>
