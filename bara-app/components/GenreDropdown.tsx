@@ -42,7 +42,7 @@ export default function GenreDropdown({ onChange }: GenreDropdownProps) {
     } else {
       setAllSelected(true);
       setSelectedGenres([]);
-      onChange?.([]); // You could still call with all genres if needed
+      onChange?.([]); 
     }
   };
 
@@ -51,7 +51,7 @@ export default function GenreDropdown({ onChange }: GenreDropdownProps) {
       {/* Trigger button */}
       <button
         onClick={() => setOpen((prev) => !prev)}
-        className="flex items-center gap-2 px-3 py-3 rounded-md bg-[#DADBDD] text-sm text-[#22242A] font-medium"
+        className="flex items-center gap-2 px-3 py-3 rounded-md text-sm text-[#22242A] font-medium cursor-pointer"
       >
         <Image src="/menu.png" alt="Menu" width={20} height={20} />
         Genres
@@ -66,9 +66,7 @@ export default function GenreDropdown({ onChange }: GenreDropdownProps) {
           {/* ALL GENRES */}
           <label
             className={`flex items-center gap-2 text-sm px-2 py-2 rounded-md cursor-pointer transition-colors duration-200 ${
-              allSelected
-                ? "bg-[#F5F5F5] text-[#858990]"
-                : "text-[#333740]"
+              allSelected ? "bg-[#F5F5F5] text-[#858990]" : "text-[#333740]"
             }`}
           >
             <input

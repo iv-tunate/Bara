@@ -49,12 +49,13 @@ export default function DashboardNavbar() {
       </div>
 
       {/* Right: Links */}
+      {/* Right: Links */}
       <div className="flex items-center gap-6 text-sm font-semibold text-[#22242A] mr-8">
         <div className="relative">
           <button
             type="button"
             onClick={() => setShowAccountDropdown((prev) => !prev)}
-            className="hover:text-[#800000] flex items-center gap-1 transition-colors"
+            className="hover:text-[#800000] flex items-center gap-1 transition-colors cursor-pointer"
           >
             <Image src="/User_alt.png" alt="Account" width={16} height={16} />
             Account
@@ -65,16 +66,18 @@ export default function DashboardNavbar() {
             </div>
           )}
         </div>
+
         <Link
           href="/dashboard/saved-scripts"
-          className="hover:text-[#800000] flex items-center gap-1"
+          className="hover:text-[#800000] flex items-center gap-1 cursor-pointer"
         >
           <Image src="/Shape.png" alt="Saved Scripts" width={16} height={16} />
           Saved scripts
         </Link>
+
         <Link
           href="/dashboard/projects"
-          className="hover:text-[#800000] flex items-center gap-1"
+          className="hover:text-[#800000] flex items-center gap-1 cursor-pointer"
         >
           <Image
             src="/project-icon.png"
