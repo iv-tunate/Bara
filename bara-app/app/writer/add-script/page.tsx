@@ -3,6 +3,11 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import Image from "next/image";
+import AiImageModal from "@/components/AiImageModal";
+
+const genreOptions = ["Drama", "Comedy", "Thriller", "Romance", "Horror"];
+const ownershipOptions = ["I retain full rights", "I retain Shared rights"];
+const priceOptions = ["₦200,000", "₦300,000", "₦280,000"];
 
 export default function AddScriptPage() {
   const [link, setLink] = useState("");
@@ -18,13 +23,41 @@ export default function AddScriptPage() {
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  const [showAiImageModal, setShowAiImageModal] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+
+  const [genreOpen, setGenreOpen] = useState(false);
+  const [ownershipOpen, setOwnershipOpen] = useState(false);
+  const [priceOpen, setPriceOpen] = useState(false);
+
   const handleBrowseClick = () => fileInputRef.current?.click();
+
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && (file.type === "image/png" || file.type === "image/jpeg")) {
       setMediaFile(file);
+      setShowSuccess(true); 
+      setTimeout(() => setShowSuccess(false), 3000);
     }
+  };
+
+  const isFormComplete =
+    link.trim() &&
+    title.trim() &&
+    genre &&
+    logline.trim() &&
+    synopsis.trim() &&
+    ownership &&
+    price &&
+    mediaFile &&
+    isOriginal &&
+    agreeCommission;
+
+  const handleSubmit = () => {
+    if (!isFormComplete) return;
+    alert("Form submitted successfully!");
   };
 
   return (
@@ -78,30 +111,23 @@ export default function AddScriptPage() {
           </div>
 
           {/* Genre Dropdown */}
-          <div>
+          <div className="relative">
             <label className="block text-sm font-medium text-[#22242A] mb-1">
               Genre
             </label>
-            <div className="relative">
-              <select
+            <div
+              className="relative cursor-pointer"
+              onClick={() => setGenreOpen((prev) => !prev)}
+            >
+              <input
+                type="text"
                 value={genre}
-                onChange={(e) => setGenre(e.target.value)}
-                // conditional class: placeholder color when value is empty
-                className={`w-full border border-[#ABADB2] rounded-md px-3 py-2 text-sm bg-white appearance-none focus:outline-none focus:ring-1 focus:ring-[#800000] ${
+                readOnly
+                placeholder="Select genre"
+                className={`w-full border border-[#ABADB2] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#800000] ${
                   genre === "" ? "text-[#858990]" : "text-[#22242A]"
                 }`}
-              >
-                {/* Placeholder option — do NOT use `hidden` */}
-                <option value="" disabled>
-                  Select genre
-                </option>
-                <option value="Drama">Drama</option>
-                <option value="Comedy">Comedy</option>
-                <option value="Thriller">Thriller</option>
-                <option value="Romance">Romance</option>
-                <option value="Horror">Horror</option>
-              </select>
-
+              />
               <Image
                 src="/dropdown.png"
                 alt="Dropdown Icon"
@@ -110,6 +136,27 @@ export default function AddScriptPage() {
                 className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
               />
             </div>
+            {genreOpen && (
+              <div className="absolute mt-1 w-full bg-white border border-[#ABADB2] rounded-md shadow-lg z-10">
+                {genreOptions.map((opt) => (
+                  <div
+                    key={opt}
+                    onClick={() => {
+                      setGenre(opt);
+                      setGenreOpen(false);
+                    }}
+                    className="flex items-center px-4 py-2 text-sm cursor-pointer hover:bg-[#F5F5F5]"
+                  >
+                    <div className="w-4 h-4 mr-2 rounded-full border border-[#ABADB2] flex items-center justify-center">
+                      {genre === opt && (
+                        <div className="w-2 h-2 bg-[#800000] rounded-full" />
+                      )}
+                    </div>
+                    {opt}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -140,24 +187,23 @@ export default function AddScriptPage() {
         {/* Ownership & Price */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           {/* Ownership Dropdown */}
-          <div>
+          <div className="relative">
             <label className="block text-sm font-medium text-[#22242A] mb-1">
-              Ownership terms
+              IP Ownership terms
             </label>
-            <div className="relative">
-              <select
+            <div
+              className="relative cursor-pointer"
+              onClick={() => setOwnershipOpen((prev) => !prev)}
+            >
+              <input
+                type="text"
                 value={ownership}
-                onChange={(e) => setOwnership(e.target.value)}
-                className={`w-full border border-[#ABADB2] rounded-md px-3 py-2 text-sm bg-white appearance-none focus:outline-none focus:ring-1 focus:ring-[#800000] ${
+                readOnly
+                placeholder="Select ownership"
+                className={`w-full border border-[#ABADB2] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#800000] ${
                   ownership === "" ? "text-[#858990]" : "text-[#22242A]"
                 }`}
-              >
-                <option value="" disabled>
-                  Select ownership
-                </option>
-                <option value="Full">Full ownership</option>
-                <option value="Shared">Shared ownership</option>
-              </select>
+              />
               <Image
                 src="/dropdown.png"
                 alt="Dropdown Icon"
@@ -166,28 +212,47 @@ export default function AddScriptPage() {
                 className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
               />
             </div>
+            {ownershipOpen && (
+              <div className="absolute mt-1 w-full bg-white border border-[#ABADB2] rounded-md shadow-lg z-10">
+                {ownershipOptions.map((opt) => (
+                  <div
+                    key={opt}
+                    onClick={() => {
+                      setOwnership(opt);
+                      setOwnershipOpen(false);
+                    }}
+                    className="flex items-center px-4 py-2 text-sm cursor-pointer hover:bg-[#F5F5F5]"
+                  >
+                    <div className="w-4 h-4 mr-2 rounded-full border border-[#ABADB2] flex items-center justify-center">
+                      {ownership === opt && (
+                        <div className="w-2 h-2 bg-[#800000] rounded-full" />
+                      )}
+                    </div>
+                    {opt}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Price Dropdown */}
-          <div>
+          <div className="relative">
             <label className="block text-sm font-medium text-[#22242A] mb-1">
               Set price
             </label>
-            <div className="relative">
-              <select
+            <div
+              className="relative cursor-pointer"
+              onClick={() => setPriceOpen((prev) => !prev)}
+            >
+              <input
+                type="text"
                 value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                className={`w-full border border-[#ABADB2] rounded-md px-3 py-2 text-sm bg-white appearance-none focus:outline-none focus:ring-1 focus:ring-[#800000] ${
+                readOnly
+                placeholder="Select price"
+                className={`w-full border border-[#ABADB2] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#800000] ${
                   price === "" ? "text-[#858990]" : "text-[#22242A]"
                 }`}
-              >
-                <option value="" disabled>
-                  Select price
-                </option>
-                <option value="10000">₦10,000</option>
-                <option value="20000">₦20,000</option>
-                <option value="50000">₦50,000</option>
-              </select>
+              />
               <Image
                 src="/dropdown.png"
                 alt="Dropdown Icon"
@@ -196,20 +261,43 @@ export default function AddScriptPage() {
                 className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
               />
             </div>
+            {priceOpen && (
+              <div className="absolute mt-1 w-full bg-white border border-[#ABADB2] rounded-md shadow-lg z-10">
+                {priceOptions.map((opt) => (
+                  <div
+                    key={opt}
+                    onClick={() => {
+                      setPrice(opt);
+                      setPriceOpen(false);
+                    }}
+                    className="flex items-center px-4 py-2 text-sm cursor-pointer hover:bg-[#F5F5F5]"
+                  >
+                    <div className="w-4 h-4 mr-2 rounded-full border border-[#ABADB2] flex items-center justify-center">
+                      {price === opt && (
+                        <div className="w-2 h-2 bg-[#800000] rounded-full" />
+                      )}
+                    </div>
+                    {opt}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
         {/* Upload Media */}
         <div className="mb-6">
-          {/* Label row */}
           <div className="flex items-center justify-between mb-1">
             <label className="text-sm font-medium text-[#22242A]">
               Upload media
             </label>
-            <span className="flex items-center text-xs font-bold text-[#800000]">
-              Use the prescribed image
+            <span
+              className="flex items-center text-xs font-bold text-[#800000] cursor-pointer"
+              onClick={() => setShowAiImageModal(true)}
+            >
+              Use AI to generate image
               <Image
-                src="/star.png" 
+                src="/star.png"
                 alt="star"
                 width={10}
                 height={10}
@@ -219,27 +307,17 @@ export default function AddScriptPage() {
           </div>
 
           {mediaFile ? (
-            <div className="border-2 border-dashed border-[#ABADB2] rounded-md p-4 bg-[#F5F5F5]">
-              <div className="flex flex-col items-center space-y-3">
-                <Image
-                  src="/checkring.png"
-                  alt="Upload complete"
-                  width={32}
-                  height={32}
-                />
-                <span className="text-sm text-[#333740] font-medium">
-                  Upload complete
-                </span>
-                {/* Preview */}
-                <Image
-                  src={URL.createObjectURL(mediaFile)}
-                  alt="Uploaded preview"
-                  width={60}
-                  height={100}
-                  className="rounded-sm border"
-                />
-                <div className="w-full h-1 bg-green-600 rounded" />
-              </div>
+            <div
+              onClick={handleBrowseClick}
+              className="w-full h-40 border-2 border-dashed border-[#ABADB2] rounded-md bg-[#F5F5F5] flex items-center justify-center text-center cursor-pointer hover:bg-gray-100 transition"
+            >
+              <Image
+                src={URL.createObjectURL(mediaFile)}
+                alt="Uploaded preview"
+                width={120}
+                height={80}
+                className="rounded-sm border"
+              />
             </div>
           ) : (
             <div
@@ -250,10 +328,7 @@ export default function AddScriptPage() {
                 Drag and drop file (png, jpeg) here
               </p>
               <p className="text-sm text-[#333740] mt-1">
-                or{" "}
-                <span className="text-[#810306] font-semibold underline">
-                  Browse
-                </span>
+                or <span className="text-[#810306] font-semibold">Browse</span>
               </p>
             </div>
           )}
@@ -289,13 +364,52 @@ export default function AddScriptPage() {
           </label>
         </div>
 
-        {/* Submit */}
-        <button
-          disabled={!isOriginal || !agreeCommission}
-          className="w-full bg-[#DADBDD] text-[#858990] py-3 rounded-md text-sm font-medium disabled:cursor-not-allowed hover:bg-[#800000] hover:text-white transition-colors"
-        >
-          Add script
-        </button>
+        {/* Submit + Success */}
+        <div className="flex flex-col items-center">
+          <button
+            onClick={handleSubmit}
+            disabled={!isFormComplete}
+            className={`w-full py-3 rounded-md text-sm font-medium ${
+              !isFormComplete
+                ? "bg-[#DADBDD] text-[#858990] cursor-not-allowed"
+                : "bg-[#800000] text-white hover:bg-[#660000]"
+            }`}
+          >
+            Add script
+          </button>
+
+          {showSuccess && (
+            <div className="mt-8 flex items-center gap-2 border border-[#0DA500] text-[#0DA500] rounded px-3 py-1 text-sm font-medium">
+              <Image
+                src="/checkring.png"
+                alt="success"
+                width={16}
+                height={16}
+              />
+              File uploaded successfully!
+            </div>
+          )}
+        </div>
+
+        {/* AI Image Modal */}
+        {showAiImageModal && (
+          <AiImageModal
+            isOpen={showAiImageModal}
+            onClose={() => setShowAiImageModal(false)}
+            onSelect={(selectedImg: string) => {
+              fetch(selectedImg)
+                .then((res) => res.blob())
+                .then((blob) => {
+                  const file = new File([blob], "ai-generated.png", {
+                    type: blob.type,
+                  });
+                  setMediaFile(file);
+                  setShowSuccess(true); 
+                  setTimeout(() => setShowSuccess(false), 3000);
+                });
+            }}
+          />
+        )}
       </main>
     </div>
   );
