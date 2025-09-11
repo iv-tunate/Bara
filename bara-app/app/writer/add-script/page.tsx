@@ -386,7 +386,7 @@ export default function AddScriptPage() {
                 width={16}
                 height={16}
               />
-              File uploaded successfully!
+              script uploaded successfully!
             </div>
           )}
         </div>
