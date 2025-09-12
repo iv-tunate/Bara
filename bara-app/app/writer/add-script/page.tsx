@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation"; // <-- import useRouter
 import DashboardNavbar from "@/components/DashboardNavbar";
 import Image from "next/image";
 import AiImageModal from "@/components/AiImageModal";
@@ -10,6 +11,7 @@ const ownershipOptions = ["I retain full rights", "I retain Shared rights"];
 const priceOptions = ["₦200,000", "₦300,000", "₦280,000"];
 
 export default function AddScriptPage() {
+  const router = useRouter(); // <-- initialize router
   const [link, setLink] = useState("");
   const [title, setTitle] = useState("");
   const [genre, setGenre] = useState("");
@@ -26,19 +28,17 @@ export default function AddScriptPage() {
   const [showAiImageModal, setShowAiImageModal] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
-
   const [genreOpen, setGenreOpen] = useState(false);
   const [ownershipOpen, setOwnershipOpen] = useState(false);
   const [priceOpen, setPriceOpen] = useState(false);
 
   const handleBrowseClick = () => fileInputRef.current?.click();
 
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && (file.type === "image/png" || file.type === "image/jpeg")) {
       setMediaFile(file);
-      setShowSuccess(true); 
+      setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     }
   };
@@ -57,7 +57,12 @@ export default function AddScriptPage() {
 
   const handleSubmit = () => {
     if (!isFormComplete) return;
-    alert("Form submitted successfully!");
+
+    // Assuming you have the writer's ID (replace '123' with actual id)
+    const writerId = "123";
+
+    // Navigate to writer profile page
+    router.push(`/writer/profile/${writerId}`);
   };
 
   return (
@@ -75,7 +80,6 @@ export default function AddScriptPage() {
           </Link>
         </div>
 
-        {/* Page Title */}
         <h1 className="text-2xl font-semibold text-[#22242A] mb-6">
           Add script
         </h1>
@@ -404,7 +408,7 @@ export default function AddScriptPage() {
                     type: blob.type,
                   });
                   setMediaFile(file);
-                  setShowSuccess(true); 
+                  setShowSuccess(true);
                   setTimeout(() => setShowSuccess(false), 3000);
                 });
             }}
