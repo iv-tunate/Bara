@@ -3,9 +3,26 @@
 import Image from "next/image";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { useState } from "react";
+import EditWriterProfileModal, {
+  FormData,
+} from "@/components/EditWriterProfile";
 
 export default function WriterProfile() {
   const [copied, setCopied] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+
+  // store profile data so edits reflect in UI
+  const [profileData, setProfileData] = useState<FormData>({
+    name: "Timothy Edwards",
+    portfolio: "https://Timothy-eduwards.com/works",
+    bio: "Award-winning writer and motivational speaker. Award-nominated screenwriter focused on supernatural thrillers rooted in Yoruba folklore.",
+    country: "Nigeria",
+    state: "Lagos",
+    city: "Lagos",
+    houseNumber: "12g",
+    street: "Thomas Rollar",
+    zip: "300243",
+  });
 
   const handleCopy = async (text: string) => {
     try {
@@ -17,7 +34,6 @@ export default function WriterProfile() {
     }
   };
 
-  const portfolioLink = "https://Timothy-eduwards.com/works";
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Navbar */}
@@ -28,7 +44,7 @@ export default function WriterProfile() {
           My profile
         </h1>
         {/* Profile Card */}
-        <section className="border-1 border-[#ABADB2] rounded-lg overflow-hidden mb-6  shadow-sm ">
+        <section className="border-1 border-[#ABADB2] rounded-lg overflow-hidden mb-6 shadow-sm">
           {/* Cover */}
           <div className="relative w-full h-32 md:h-40">
             <Image src="/cover.png" alt="Cover" fill className="object-cover" />
@@ -50,21 +66,33 @@ export default function WriterProfile() {
                 {/* Name and Edit icon */}
                 <div className="flex items-center gap-3">
                   <h2 className="text-xl font-semibold text-[#22242A]">
-                    Timothy Edwards
+                    {profileData.name}
                   </h2>
-                  <button className="p-1 rounded-full hover:bg-gray-100">
+
+                  <button
+                    onClick={() => setIsEditOpen(true)}
+                    className="p-1 rounded-full cursor-pointer"
+                  >
                     <Image src="/Edit.png" alt="Edit" width={16} height={16} />
                   </button>
                 </div>
 
+                {/* Edit Modal */}
+                <EditWriterProfileModal
+                  isOpen={isEditOpen}
+                  onClose={() => setIsEditOpen(false)}
+                  onSave={(data) => {
+                    setProfileData(data); // update UI with saved data
+                    console.log("Saved data:", data);
+                  }}
+                  initialData={profileData}
+                />
+
                 {/* Bio */}
-                <div className="text-sm text-[#333740] mt-2 max-w-xl leading-relaxed">
-                  <p>Award-winning writer and motivational speaker.</p>
-                  <p>
-                    Award-nominated screenwriter focused on <br />
-                    supernatural thrillers rooted in Yoruba folklore.
-                  </p>
+                <div className="text-sm text-[#333740] mt-2 max-w-xl leading-relaxed whitespace-pre-line">
+                  {profileData.bio}
                 </div>
+
                 {/* Location */}
                 <p className="flex items-center gap-2 text-xs text-[#858990] mt-3">
                   <Image
@@ -73,7 +101,7 @@ export default function WriterProfile() {
                     width={14}
                     height={14}
                   />
-                  Lagos, Nigeria
+                  {profileData.city}, {profileData.country}
                 </p>
 
                 {/* Portfolio */}
@@ -81,16 +109,16 @@ export default function WriterProfile() {
                   <p className="text-l text-[#333740] font-medium">Portfolio</p>
                   <div className="flex items-center gap-2 mt-1">
                     <a
-                      href={portfolioLink}
+                      href={profileData.portfolio}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-sm text-[#1A0DAB] underline break-words"
                     >
-                      {portfolioLink.replace(/^https?:\/\//, "")}
+                      {profileData.portfolio.replace(/^https?:\/\//, "")}
                     </a>
                     <div className="relative">
                       <button
-                        onClick={() => handleCopy(portfolioLink)}
+                        onClick={() => handleCopy(profileData.portfolio)}
                         className="p-1 rounded cursor-pointer"
                       >
                         <Image
@@ -101,7 +129,7 @@ export default function WriterProfile() {
                         />
                       </button>
 
-                      {/* Copied*/}
+                      {/* Copied */}
                       {copied && (
                         <span className="absolute left-1/2 -translate-x-1/2 top-full mt-1 text-xs text-[#0DA500] whitespace-nowrap">
                           Copied!
@@ -179,6 +207,7 @@ export default function WriterProfile() {
             </div>
           </div>
         </section>
+
         {/* Works */}
         <section>
           <h2 className="text-lg font-semibold text-[#333740] mb-6">Works</h2>
@@ -187,8 +216,7 @@ export default function WriterProfile() {
               <div
                 key={i}
                 tabIndex={0}
-                className="border border-[#ABADB2] rounded-md overflow-hidden bg-white shadow-sm transition-all duration-300 
-                                  "
+                className="border border-[#ABADB2] rounded-md overflow-hidden bg-white shadow-sm transition-all duration-300"
               >
                 <div className="relative">
                   <Image

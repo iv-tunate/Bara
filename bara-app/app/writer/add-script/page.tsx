@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRef, useState } from "react";
-import { useRouter } from "next/navigation"; // <-- import useRouter
+import { useRouter } from "next/navigation"; 
 import DashboardNavbar from "@/components/DashboardNavbar";
 import Image from "next/image";
 import AiImageModal from "@/components/AiImageModal";
@@ -11,7 +11,7 @@ const ownershipOptions = ["I retain full rights", "I retain Shared rights"];
 const priceOptions = ["₦200,000", "₦300,000", "₦280,000"];
 
 export default function AddScriptPage() {
-  const router = useRouter(); // <-- initialize router
+  const router = useRouter(); 
   const [link, setLink] = useState("");
   const [title, setTitle] = useState("");
   const [genre, setGenre] = useState("");
@@ -58,10 +58,8 @@ export default function AddScriptPage() {
   const handleSubmit = () => {
     if (!isFormComplete) return;
 
-    // Assuming you have the writer's ID (replace '123' with actual id)
     const writerId = "123";
 
-    // Navigate to writer profile page
     router.push(`/writer/profile/${writerId}`);
   };
 
@@ -368,7 +366,7 @@ export default function AddScriptPage() {
           </label>
         </div>
 
-        {/* Submit + Success */}
+        {/* Submit and Success */}
         <div className="flex flex-col items-center">
           <button
             onClick={handleSubmit}
