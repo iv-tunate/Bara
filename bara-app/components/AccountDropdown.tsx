@@ -222,7 +222,7 @@ export default function AccountDropdown({ onClose }: Props) {
           <Link
             href={`/writer/profile/${userData.userId}`}
             onClick={onClose}
-            className="flex items-center px-4 py-2 text-sm text-[#22242A] hover:bg-gray-50 transition-colors"
+            className="flex items-center px-4 py-2 text-sm text-[#333740] hover:bg-[#F5F5F5] transition-colors"
           >
             <svg
               className="w-4 h-4 mr-3"
@@ -245,7 +245,7 @@ export default function AccountDropdown({ onClose }: Props) {
         <Link
           href="/transactions"
           onClick={onClose}
-          className="flex items-center px-4 py-2 text-sm text-[#22242A] hover:bg-gray-50 transition-colors"
+          className="flex items-center px-4 py-2 text-sm text-[#333740] hover:bg-[#F5F5F5] transition-colors"
         >
           <svg
             className="w-4 h-4 mr-3"
@@ -268,7 +268,7 @@ export default function AccountDropdown({ onClose }: Props) {
           <Link
             href="/writer/add-script"
             onClick={onClose}
-            className="flex items-center px-4 py-2 text-sm text-[#22242A] hover:bg-gray-50 transition-colors"
+            className="flex items-center px-4 py-2 text-sm text-[#333740] hover:bg-[#F5F5F5] transition-colors"
           >
             <svg
               className="w-4 h-4 mr-3"
@@ -291,7 +291,7 @@ export default function AccountDropdown({ onClose }: Props) {
         <Link
           href="/bank-details"
           onClick={onClose}
-          className="flex items-center px-4 py-2 text-sm text-[#22242A] hover:bg-gray-50 transition-colors"
+          className="flex items-center px-4 py-2 text-sm text-[#333740] hover:bg-[#F5F5F5] transition-colors"
         >
           <svg
             className="w-4 h-4 mr-3"
@@ -308,7 +308,26 @@ export default function AccountDropdown({ onClose }: Props) {
           </svg>
           Bank Details
         </Link>
-
+        <Link
+          href={`/account/id`}
+          onClick={onClose}
+          className="flex items-center px-4 py-2 text-sm text-[#333740] hover:bg-[#F5F5F5] transition-colors"
+        >
+          <svg
+            className="w-4 h-4 mr-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+            />
+          </svg>
+          My Account
+        </Link>
         <hr className="my-2 border-gray-200" />
 
         {/* Logout */}
