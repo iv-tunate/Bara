@@ -27,10 +27,14 @@ interface WalletData {
 }
 
 export default function AccountDropdown({ onClose }: Props) {
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [walletData, setWalletData] = useState<WalletData | null>(null);
+
+  // Use undefined to avoid null typing surprises in some TS configs
+  const [walletData, setWalletData] = useState<WalletData | undefined>(
+    undefined
+  );
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -43,47 +47,54 @@ export default function AccountDropdown({ onClose }: Props) {
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [onClose]);
 
   useEffect(() => {
     const loadUserData = async () => {
+      setIsLoading(true);
       try {
         const session = getUserSession();
-        if (session) {
-          let profileResponse;
-          if (session.userType === "Writer") {
-            profileResponse = await api.getWriterProfile(session.userId);
-          } else if (session.userType === "Producer") {
-            profileResponse = await api.getProducerProfile(session.userId);
-          }
+        if (!session) {
+          // no session — bail
+          setIsLoading(false);
+          return;
+        }
 
-          setUserData({
-            userId: session.userId,
-            name: session.name,
-            email: session.email,
-            userType: session.userType,
-            verificationStatus:
-              profileResponse?.success && profileResponse.data
-                ? profileResponse.data.verificationStatus || "Pending"
-                : "Pending",
-            isVerified:
-              profileResponse?.success && profileResponse.data
-                ? profileResponse.data.isVerified || false
-                : false,
+        // Load profile depending on user type (writer/producer)
+        let profileResponse: any = null;
+        if (session.userType === "Writer") {
+          profileResponse = await api.getWriterProfile(session.userId);
+        } else if (session.userType === "Producer") {
+          profileResponse = await api.getProducerProfile(session.userId);
+        }
+
+        setUserData({
+          userId: session.userId,
+          name: session.name,
+          email: session.email,
+          userType: session.userType,
+          verificationStatus:
+            profileResponse?.success && profileResponse.data
+              ? profileResponse.data.verificationStatus || "Pending"
+              : "Pending",
+          isVerified:
+            profileResponse?.success && profileResponse.data
+              ? !!profileResponse.data.isVerified
+              : false,
+        });
+
+        // Wallet
+        const walletResponse = await api.getWalletBalance(session.userId);
+        if (walletResponse?.success && walletResponse?.data) {
+          setWalletData({
+            totalBalance: walletResponse.data.totalBalance ?? 0,
+            availableBalance: walletResponse.data.availableBalance ?? 0,
+            lockedBalance: walletResponse.data.lockedBalance ?? 0,
+            currencySymbol: walletResponse.data.currencySymbol ?? "₦",
           });
-
-          const walletResponse = await api.getWalletBalance(session.userId);
-          if (walletResponse.success && walletResponse.data) {
-            setWalletData({
-              totalBalance: walletResponse.data.totalBalance || 0,
-              availableBalance: walletResponse.data.availableBalance || 0,
-              lockedBalance: walletResponse.data.lockedBalance || 0,
-              currencySymbol: walletResponse.data.currencySymbol || "₦",
-            });
-          }
+        } else {
+          setWalletData(undefined);
         }
       } catch (error) {
         console.error("Error loading user data:", error);
@@ -101,42 +112,8 @@ export default function AccountDropdown({ onClose }: Props) {
     router.push("/auth/login");
   };
 
-  const getVerificationStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "verified":
-      case "approved":
-        return "bg-green-100 text-green-800";
-      case "pending":
-      case "inprogress":
-        return "bg-yellow-100 text-yellow-800";
-      case "failed":
-      case "rejected":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getVerificationStatusDisplay = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "verified":
-      case "approved":
-        return "Verified";
-      case "pending":
-        return "Pending";
-      case "inprogress":
-        return "In Progress";
-      case "failed":
-      case "rejected":
-        return "Failed";
-      default:
-        return status;
-    }
-  };
-
-  const formatCurrency = (amount: number, symbol: string) => {
-    return `${symbol}${amount.toLocaleString()}`;
-  };
+  const formatCurrency = (amount: number, symbol = "₦") =>
+    `${symbol}${Number(amount).toLocaleString()}`;
 
   if (isLoading) {
     return (
@@ -158,28 +135,19 @@ export default function AccountDropdown({ onClose }: Props) {
       ref={dropdownRef}
       className="w-80 bg-white shadow-lg rounded-md border border-gray-200 z-50 overflow-hidden"
     >
-      {/* User Info Header */}
+      {/* Header */}
       <div className="p-4 border-b border-gray-200 bg-gray-50">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-semibold text-[#22242A] text-sm">
-              {userData?.name}
+              {userData?.name ?? "Anonymous"}
             </h3>
             <p className="text-xs text-[#666] truncate">{userData?.email}</p>
           </div>
-          <span
-            className={`px-2 py-1 rounded-full text-xs font-medium ${getVerificationStatusColor(
-              userData?.verificationStatus || "Pending"
-            )}`}
-          >
-            {getVerificationStatusDisplay(
-              userData?.verificationStatus || "Pending"
-            )}
-          </span>
         </div>
       </div>
 
-      {/* Wallet Section */}
+      {/* Wallet preview (optional) */}
       {walletData && (
         <div className="p-4 border-b border-gray-200">
           <h4 className="font-medium text-[#22242A] text-sm mb-2">Wallet</h4>
@@ -215,9 +183,8 @@ export default function AccountDropdown({ onClose }: Props) {
         </div>
       )}
 
-      {/* Menu Items */}
+      {/* Menu - Writers only (My Profile, My Account, My Wallet) */}
       <div className="py-2">
-        {/* Profile Link - Only for Writers */}
         {userData?.userType === "Writer" && (
           <Link
             href={`/writer/profile/${userData.userId}`}
@@ -237,13 +204,12 @@ export default function AccountDropdown({ onClose }: Props) {
                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
               />
             </svg>
-            Profile
+            My Profile
           </Link>
         )}
 
-        {/* Transactions */}
         <Link
-          href="/transactions"
+          href="/account/id"
           onClick={onClose}
           className="flex items-center px-4 py-2 text-sm text-[#333740] hover:bg-[#F5F5F5] transition-colors"
         >
@@ -257,80 +223,41 @@ export default function AccountDropdown({ onClose }: Props) {
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={2}
-              d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-            />
-          </svg>
-          Transactions
-        </Link>
-
-        {/* Scripts - Only for Writers */}
-        {userData?.userType === "Writer" && (
-          <Link
-            href="/writer/add-script"
-            onClick={onClose}
-            className="flex items-center px-4 py-2 text-sm text-[#333740] hover:bg-[#F5F5F5] transition-colors"
-          >
-            <svg
-              className="w-4 h-4 mr-3"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            My Scripts
-          </Link>
-        )}
-
-        {/* Bank Details */}
-        <Link
-          href="/bank-details"
-          onClick={onClose}
-          className="flex items-center px-4 py-2 text-sm text-[#333740] hover:bg-[#F5F5F5] transition-colors"
-        >
-          <svg
-            className="w-4 h-4 mr-3"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-            />
-          </svg>
-          Bank Details
-        </Link>
-        <Link
-          href={`/account/id`}
-          onClick={onClose}
-          className="flex items-center px-4 py-2 text-sm text-[#333740] hover:bg-[#F5F5F5] transition-colors"
-        >
-          <svg
-            className="w-4 h-4 mr-3"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+              d="M5.121 17.804A13.937 13.937 0 0112 15c2.487 0 4.807.63 6.879 1.804M12 11a3 3 0 100-6 3 3 0 000 6z"
             />
           </svg>
           My Account
         </Link>
+
+        <Link
+          href="/wallet"
+          onClick={onClose}
+          className="flex items-center px-4 py-2 text-sm text-[#333740] hover:bg-[#F5F5F5] transition-colors"
+        >
+          <svg
+            className="w-4 h-4 mr-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-2"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 12a1 1 0 110-2 1 1 0 010 2z"
+            />
+          </svg>
+          My Wallet
+        </Link>
+
         <hr className="my-2 border-gray-200" />
 
-        {/* Logout */}
         <button
           type="button"
           onClick={handleLogout}

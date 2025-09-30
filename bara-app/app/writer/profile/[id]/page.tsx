@@ -6,10 +6,12 @@ import { useState } from "react";
 import EditWriterProfileModal, {
   FormData,
 } from "@/components/EditWriterProfile";
+import ChangePhotoModal from "@/components/ChangeProfileModal"; 
 
 export default function WriterProfile() {
   const [copied, setCopied] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false); 
 
   // store profile data so edits reflect in UI
   const [profileData, setProfileData] = useState<FormData>({
@@ -53,14 +55,26 @@ export default function WriterProfile() {
           {/* Content */}
           <div className="p-6 flex relative">
             {/* Profile Avatar */}
-            <div className="relative -mt-16 md:-mt-20 w-24 h-24 rounded-full overflow-hidden shadow">
-              <Image
-                src="/writer.png"
-                alt="Profile"
-                fill
-                className="object-cover"
-              />
+            <div className="relative -mt-16 md:-mt-20 w-24 h-24">
+              {/* Avatar */}
+              <div className="w-24 h-24 rounded-full overflow-hidden shadow">
+                <Image
+                  src="/writer.png"
+                  alt="Profile"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+
+              {/* Camera*/}
+              <button
+                onClick={() => setIsPhotoModalOpen(true)}
+                className="absolute -bottom-2 -right-2 bg-white rounded-full p-2 shadow-md cursor-pointer"
+              >
+                <Image src="/Camera.png" alt="Camera" width={18} height={18} />
+              </button>
             </div>
+
             <div className="flex-1 flex justify-between items-start -ml-20 mt-8">
               <div className="flex flex-col">
                 {/* Name and Edit icon */}
@@ -244,6 +258,13 @@ export default function WriterProfile() {
             ))}
           </div>
         </section>
+
+        {/*Change Photo Modal */}
+        <ChangePhotoModal
+          isOpen={isPhotoModalOpen}
+          onClose={() => setIsPhotoModalOpen(false)}
+          currentAvatar="/writer.png" // 👈 or profileData.avatar if you add avatar to state
+        />
       </main>
     </div>
   );
