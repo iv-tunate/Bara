@@ -35,7 +35,7 @@ namespace Bara.API.Controllers.UserModuleControllers
                 var response = await authService.Login(loginPayload);
                 if (response.IsSuccess)
                 {
-                    logger.LogInformation("User {email} logged in successfully", loginPayload.Email);
+                    // logger.LogInformation("User {email} logged in successfully", loginPayload.Email);
                     return Ok(response);
                 }
                 else if (response.StatusCode == 500)
@@ -115,16 +115,18 @@ namespace Bara.API.Controllers.UserModuleControllers
         /// Resends a verification token to the user's email address.
         /// </summary>
         /// <param name="email">The email address of the user to resend the verification token to.</param>
+        /// <param name="type">Specifiies the type of verification request... Login or email verification</param>
+        /// <param name="device">The device from which the request is made.</param>
         /// <returns>Returns a success response if token is successfully resent.</returns>
         /// <response code="200">Verification token resent</response>
         /// <response code="404">Email not found or already verified</response>
         /// <response code="500">Internal server error</response>
-        [HttpPost("resend-verification-token/{email}")]
-        public async Task<IActionResult> ResendVerificationToken(string email)
+        [HttpPost("resend-verification-token/{email}/{type}/{device}")]
+        public async Task<IActionResult> ResendVerificationToken(string email, string type, string device)
         {
             try
             {
-                var response = await authService.ResendVerificationToken(email);
+                var response = await authService.ResendVerificationToken(email, type, device);
                 if (response.IsSuccess)
                 {
                     logger.LogInformation("Resend verification token successful for {email}", email);

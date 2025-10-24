@@ -113,6 +113,9 @@ namespace Infrastructure.Repositories.UserRepositories
                         dbContext.AuthProfiles.Update(user);
                         await dbContext.SaveChangesAsync();
                     }
+
+                    logger.LogInformation($"User: {user.FullName} with ID: {user.UserId} was able to login successfully but requires login verification because of" +
+                        $"the difference in device or ip address.");
                     return ResponseDetail<LoginResponseDTO>.Successful(response, "Please verify login attempt");
                 }
                 else
@@ -125,8 +128,11 @@ namespace Infrastructure.Repositories.UserRepositories
                     user.LastLoginAt = DateTimeOffset.UtcNow;
                     user.ModifiedAt = DateTimeOffset.UtcNow;
 
+                    Console.WriteLine($"Access token for this login for user {user.FullName}: {accessToken}");
                     dbContext.AuthProfiles.Update(user);
                     await dbContext.SaveChangesAsync();
+                    Console.WriteLine(user);
+                    logger.LogInformation($"User: {user.FullName} with ID: {user.UserId}has logged in successfully.");
                     return ResponseDetail<LoginResponseDTO>.Successful(response, "Login Successful");
                 }
             }
@@ -183,7 +189,7 @@ namespace Infrastructure.Repositories.UserRepositories
             }
         }
 
-        public async Task<ResponseDetail<string>> ResendVerificationToken(string email)
+        public async Task<ResponseDetail<string>> ResendVerificationToken(string email, string type, string device)
         {
             try
             {
@@ -195,12 +201,18 @@ namespace Infrastructure.Repositories.UserRepositories
                 }
                 else
                 {
-                    cache.Set($"User_Verification_Token_{email}", token.ToString(), absoluteExpiration: DateTimeOffset.UtcNow.AddMinutes(10));
-                    logger.LogInformation($"User_Verification_Token_{user.Email}: {token}");
-                    Console.WriteLine($"User_Verification_Token_{user.Email}: {token}");
-
-                    var verificationMail = MailNotifications.RegistrationConfirmationMailNotification(user.Email, "", token.ToString());
-                    var mailRes = await mailer.SendMail(verificationMail);
+                    var cacheKey = type == "login" ? $"User_Login_Token_{user.UserId}" : $"User_Verification_Token_{email}";
+                    cache.Set(cacheKey, token.ToString(), absoluteExpiration: DateTimeOffset.UtcNow.AddMinutes(10));
+                    logger.LogInformation($"{cacheKey}: {token}");
+                    //Console.WriteLine($"User_Verification_Token_{user.Email}: {token}");
+                    MailRequestDTO mailBody;
+                    if (type == "login")
+                    {
+                        var (Ip, Country) = await externalService.GetIpAndCountryAsync(secrets.IpInfoKey);
+                        mailBody = MailNotifications.LoginNotification(email, user.Email, token.ToString(), device, Ip, Country);
+                    }
+                    mailBody = MailNotifications.RegistrationConfirmationMailNotification(user.Email, "", token.ToString());
+                    var mailRes = await mailer.SendMail(mailBody);
                     if (mailRes.IsSuccess == false)
                     {
                         return ResponseDetail<string>.Failed($"An error occured while resending verification mail", 500, "Unexpected Error");
@@ -234,6 +246,7 @@ namespace Infrastructure.Repositories.UserRepositories
                     cache.TryGetValue(cacheKey, out string verificationToken);
                     if (verificationToken == null || token != verificationToken)
                     {
+                        logger.LogInformation($"Token verification of email {email} for User: {user.FullName} with ID: {user.UserId} failed... Might be due to an invalid token");
                         return ResponseDetail<bool>.Failed("Operation failed... Please try again", 400, "Invalid or Expired Token");
                     }
                     user.IsEmailVerified = true;
@@ -242,6 +255,7 @@ namespace Infrastructure.Repositories.UserRepositories
 
                     dbContext.AuthProfiles.Update(user);
                     await dbContext.SaveChangesAsync();
+                    logger.LogInformation($"Email verification {email} for User: {user.FullName} with ID: {user.UserId} was successful.");
                     return ResponseDetail<bool>.Successful(true, "Email verified successfully");
                 }
             }
@@ -259,6 +273,7 @@ namespace Infrastructure.Repositories.UserRepositories
                 var user = await dbContext.AuthProfiles.FirstOrDefaultAsync(x => x.Email == loginDetails.Email);
                 if (user == null)
                 {
+                    logger.LogInformation($"login for user with email: {loginDetails.Email} failed because email doesn't exist");
                     return ResponseDetail<LoginResponseDTO>.Failed($"{loginDetails.Email} is invalid or doesn't exist", 400, "Bad Request");
                 }
                 var response = new LoginResponseDTO
@@ -275,6 +290,7 @@ namespace Infrastructure.Repositories.UserRepositories
                 cache.TryGetValue(cacheKey, out string verificationToken);
                 if (verificationToken == null || loginDetails.Token != verificationToken)
                 {
+                    logger.LogInformation($"Login verification of email {loginDetails.Email} for User: {user.FullName} with ID: {user.UserId} failed... Might be due to an invalid token");
                     return ResponseDetail<LoginResponseDTO>.Failed("Operation can't be completed at the moment because the token is invalid or expired", 403, "Forbidden");
                 }
                 cache.Remove(cacheKey);
@@ -291,6 +307,7 @@ namespace Infrastructure.Repositories.UserRepositories
 
                 dbContext.AuthProfiles.Update(user);
                 await dbContext.SaveChangesAsync();
+                logger.LogInformation($"User: {user.FullName} with ID: {user.UserId}has logged in successfully.");
                 return ResponseDetail<LoginResponseDTO>.Successful(response, "Login Successful");
             }
             catch (Exception ex)

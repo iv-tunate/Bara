@@ -116,8 +116,8 @@ export const api = {
   }) => {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
     const loginUrl = process.env.NEXT_PUBLIC_LOGIN_USER || "/api/auth/login";
-    console.log("Login URL:", `${baseUrl}${loginUrl}`);
-    return apiRequest(`${baseUrl}${loginUrl}`, {
+    // console.log("Login URL:", `${baseUrl}${loginUrl}`);
+    return await apiRequest(`${baseUrl}${loginUrl}`, {
       method: "POST",
       body: JSON.stringify(data),
     });
@@ -131,7 +131,7 @@ export const api = {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
     const verifyUrl = "/api/auth/verify-login";
 
-    return apiRequest(`${baseUrl}${verifyUrl}`, {
+    return await apiRequest(`${baseUrl}${verifyUrl}`, {
       method: "PUT",
       body: JSON.stringify(data),
     });
@@ -206,10 +206,11 @@ export const api = {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
     const scriptsUrl = `/api/script/scripts/${pageNumber}/${pageSize}`;
 
-    return apiRequest(`${baseUrl}${scriptsUrl}`, {
+    const response = await apiRequest(`${baseUrl}${scriptsUrl}`, {
       method: "GET",
       requireAuth: true,
     });
+    return response.data;
   },
 
   getScriptsByGenre: async (
@@ -222,7 +223,7 @@ export const api = {
       genre
     )}/${pageNumber}/${pageSize}`;
 
-    return apiRequest(`${baseUrl}${scriptsUrl}`, {
+    return await apiRequest(`${baseUrl}${scriptsUrl}`, {
       method: "GET",
       requireAuth: true,
     });

@@ -7,7 +7,7 @@ import EyeToggle from "@/components/EyeToggle";
 import { api } from "@/utils/api";
 import { generateDeviceFingerprint } from "@/utils/deviceDetection";
 import { setUserSession } from "@/utils/tokenManager";
-
+import toast from "react-hot-toast";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,52 +16,62 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [needsVerification, setNeedsVerification] = useState(false);
   const [verificationToken, setVerificationToken] = useState("");
-
+  const [isResending, setIsResending] = useState(false);
+  //  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [loginVerificationState, setLoginVerificationState] =
+    useState<boolean>(true);
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const resendVerificationTokenUrl =
+    process.env.NEXT_PUBLIC_RESEND_VERIFICATION_TOKEN;
   const router = useRouter();
 
   const canLogin = email.trim() !== "" && password.trim() !== "";
 
-  const handleLogin = async () => {
-    if (!canLogin) return;
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
     setError("");
 
     try {
       const deviceFingerprint = generateDeviceFingerprint();
 
-      const response = await api.login({
+      const request = await api.login({
         Email: email,
         Password: password,
         LoginDevice: deviceFingerprint,
       });
 
-      if (response.success && response.data) {
-        if (response.data.accessToken) {
-          setUserSession({
-            userId: response.data.userId,
-            email: response.data.email,
-            name: response.data.name,
-            userType: response.data.role || "Unknown",
-            accessToken: response.data.accessToken,
-            wrongLoginAttempts: response.data.wrongLoginAttempts,
-          });
+      if (request.success && request.data) {
+        //console.log("Login successful, setting session...");
+        const response = request.data.data;
+        debugger;
+        setUserSession({
+          userId: response.userId,
+          email: response.email,
+          name: response.name,
+          userType: response.role,
+          accessToken: response.accessToken,
+          wrongLoginAttempts: response.wrongLoginAttempts,
+        });
 
-          if (!response.data.isProfileSetupComplete) {
-            if (response.data.role === "Producer") {
-              router.push("/profile/producer");
-            } else if (response.data.role === "Writer") {
-              router.push("/profile/writer");
-            } else {
-              router.push("/dashboard");
-            }
-          } else {
-            router.push("/dashboard");
+        console.log("Session set, checking profile status...");
+        if (!response.isProfileSetupComplete) {
+          console.log("Profile not complete, redirecting to setup...");
+          if (response.role === "Producer") {
+            router.push("/profile/producer");
+          } else if (response.role === "Writer") {
+            router.push("/profile/writer");
           }
         } else {
-          setNeedsVerification(true);
+          if (response.role === "Producer") {
+            router.push("/dashboard/producer");
+          } else if (response.role === "Writer") {
+            router.push("/dashboard/writer");
+          }
         }
       } else {
-        setError(response.message || "Login failed. Please try again.");
+        setError(request.message || "Login failed. Please try again.");
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -74,6 +84,7 @@ export default function LoginPage() {
   const handleVerifyLogin = async () => {
     if (!verificationToken.trim()) {
       setError("Please enter the verification token.");
+      setLoginVerificationState(false);
       return;
     }
 
@@ -83,50 +94,96 @@ export default function LoginPage() {
     try {
       const deviceFingerprint = generateDeviceFingerprint();
 
-      const response = await api.verifyLogin({
+      const request = await api.verifyLogin({
         Email: email,
         Token: verificationToken,
         Device: deviceFingerprint,
       });
 
-      if (response.success && response.data) {
+      if (request.success && request.data) {
+        const response = request.data.data;
+       
         setUserSession({
-          userId: response.data.userId,
-          email: response.data.email,
-          name: response.data.name,
-          userType: response.data.role || "Unknown",
-          accessToken: response.data.accessToken,
-          wrongLoginAttempts: response.data.wrongLoginAttempts,
+          userId: response.userId,
+          email: response.email,
+          name: response.name,
+          userType: response.role || "Unknown",
+          accessToken: response.accessToken,
+          wrongLoginAttempts: response.wrongLoginAttempts,
         });
 
-        if (!response.data.isProfileSetupComplete) {
-          if (response.data.role === "Producer") {
+        if (!response.isProfileSetupComplete) {
+          if (response.role === "Producer") {
             router.push("/profile/producer");
-          } else if (response.data.role === "Writer") {
+          } else if (response.role === "Writer") {
             router.push("/profile/writer");
-          } else {
-            router.push("/dashboard");
-          }
+          } //else {
+          //router.push(`/dashboard`);
+          //}
         } else {
-          if (response.data.role === "Producer") {
-            router.push("/dashboard");
-          } else if (response.data.role === "Writer") {
-            router.push("/writer/dashboard");
-          } else {
-            router.push("/dashboard");
-          }
+          if (response.role === "Producer") {
+            router.push("/dashboard/producer");
+          } else if (response.role === "Writer") {
+            router.push("/dashboard/writer");
+          } //else {
+          //   router.push("/dashboard");
+          // }
         }
       } else {
-        setError(response.message || "Verification failed. Please try again.");
+        setError(request.message || "Verification failed. Please try again.");
+        setLoginVerificationState(false);
       }
     } catch (error) {
       console.error("Verification error:", error);
       setError("An unexpected error occurred. Please try again.");
+      setLoginVerificationState(false);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleResend = async () => {
+    if (isResending || resendCooldown > 0) return;
+
+    setIsResending(true);
+    const deviceFingerprint = generateDeviceFingerprint();
+
+    try {
+      const response = await fetch(
+        `${baseUrl}${resendVerificationTokenUrl}/${email}/login/${deviceFingerprint}`,
+        {
+          method: "POST",
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+
+      const res = await response.json();
+
+      if (response.ok) {
+        toast.success(
+          "Verification token has been resent successfully! Please check your inbox."
+        );
+        setResendCooldown(60);
+        const timer = setInterval(() => {
+          setResendCooldown((prev) => {
+            if (prev <= 1) {
+              clearInterval(timer);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      } else {
+        toast.error(res.message || "Could not resend verification email.");
+      }
+    } catch {
+      toast.error("Something went wrong while resending.");
+    } finally {
+      setIsResending(false);
+    }
+  };
   return (
     <main className="min-h-screen flex items-center justify-center bg-[#1a0000] px-4">
       {/* White container card */}
@@ -219,22 +276,46 @@ export default function LoginPage() {
                   {!isLoading && <span className="ml-2 text-lg">→</span>}
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setNeedsVerification(false);
-                    setVerificationToken("");
-                    setError("");
-                  }}
-                  className="w-full mt-3 text-sm text-[#333740] hover:text-[#800000] transition-colors"
-                >
-                  ← Back to login
-                </button>
+                <div className="mt-2 pt-2 border-t border-gray-200 flex">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNeedsVerification(false);
+                      setVerificationToken("");
+                      setError("");
+                    }}
+                    className="w-full mt-3 text-sm text-[#333740] text-left hover:text-[#800000] transition-colors cursor-pointer"
+                  >
+                    ← Back to login
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleResend}
+                    disabled={
+                      !loginVerificationState ||
+                      isResending ||
+                      resendCooldown > 0
+                    }
+                    className={`w-full mt-3 text-sm rounded-md text-right transition-colors ${
+                      !loginVerificationState ||
+                      isResending ||
+                      resendCooldown > 0
+                        ? "text-gray-400 cursor-not-allowed"
+                        : "text-[#333740] hover:text-[#800000] cursor-pointer"
+                    }`}
+                  >
+                    {isResending
+                      ? "Sending..."
+                      : resendCooldown > 0
+                      ? `Resend in ${resendCooldown}s`
+                      : "Resend Code"}
+                  </button>
+                </div>
               </>
             ) : (
               <>
                 {/* Google Login */}
-                <button
+                {/* <button
                   type="button"
                   className="w-full bg-[#800000] text-white font-medium py-3 rounded-md hover:bg-[#1a0000] flex items-center justify-center gap-4 mb-6"
                 >
@@ -245,10 +326,10 @@ export default function LoginPage() {
                     height={20}
                   />
                   Log in with Google
-                </button>
-                <div className="flex items-center justify-center my-4">
+                </button> */}
+                {/* <div className="flex items-center justify-center my-4">
                   <span className="text-sm text-[#333740]">or</span>
-                </div>
+                </div> */}
                 {/* Email */}
                 <label className="block text-sm font-medium text-[#22242A] mb-2">
                   Email
@@ -324,6 +405,7 @@ export default function LoginPage() {
                   {!isLoading && <span className="ml-2 text-lg">→</span>}
                 </button>
                 {/* Create Account */}
+
                 <p className="text-sm text-center mt-6 text-[#333740] font-medium text-medium">
                   Don’t have an account?{" "}
                   <a

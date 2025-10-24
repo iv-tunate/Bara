@@ -50,9 +50,9 @@ export default function DashboardPage() {
       } else {
         response = await api.getAllScripts(currentPage, pageSize);
       }
-      //console.log("API Response:", response);
+      console.log("API Response:", response.data);
       if (response.success && response.data) {
-        setScripts(response.data || []);
+        setScripts(response.data.data || []);
         setTotalPages(response.totalPages || 1);
       } else {
         setError(response.message || "Failed to load scripts");

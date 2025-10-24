@@ -130,7 +130,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowRegisteredOrigins",
         builder => builder.WithOrigins(allowedOrigins)
                 .AllowAnyHeader()
-                .AllowAnyMethod());
+                .AllowAnyMethod()
+                .SetPreflightMaxAge(TimeSpan.FromMinutes(10)));
 });
 
 builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));

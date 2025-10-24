@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { Suspense } from "react";
-
+import { generateDeviceFingerprint } from "@/utils/deviceDetection";
 function VerifyEmailPageContent() {
   const [otp, setOtp] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
@@ -57,11 +57,9 @@ function VerifyEmailPageContent() {
         toast.success("Email verified successfully!");
         setVerificationState("success");
 
-        // Get user type and normalize
         const rawUserType = localStorage.getItem("userType") || "";
         const userType = rawUserType.toLowerCase();
 
-        // Redirect after 1s
         if (userType === "writer" || userType === "producer") {
           setTimeout(() => router.push(`/profile/${userType}`), 1000);
         } else {
@@ -96,10 +94,11 @@ function VerifyEmailPageContent() {
     if (isResending || resendCooldown > 0) return;
 
     setIsResending(true);
-
+    const deviceFingerprint = generateDeviceFingerprint();
+    
     try {
       const response = await fetch(
-        `${baseUrl}${resendVerificationTokenUrl}/${email}`,
+        `${baseUrl}${resendVerificationTokenUrl}/${email}/register/${deviceFingerprint}`,
         {
           method: "POST",
           headers: {

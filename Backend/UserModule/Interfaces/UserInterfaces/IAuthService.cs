@@ -55,8 +55,10 @@ namespace UserModule.Interfaces.UserInterfaces
         /// Resends a verification token to the specified user's email address.
         /// </summary>
         /// <param name="email">The email address to resend the verification token to.</param>
+        /// <param name="type">The type of verification (e.g., "registration", or "login", etc).</param>
+        /// <param name="device">The device from which the attempt is being made.</param>
         /// <returns>A response containing the new verification token or an error message.</returns>
-        Task<ResponseDetail<string>> ResendVerificationToken(string email);
+        Task<ResponseDetail<string>> ResendVerificationToken(string email, string type, string device);
 
         /// <summary>
         /// Initiates a password reset process by sending a reset token to the user's email.
@@ -79,6 +81,7 @@ namespace UserModule.Interfaces.UserInterfaces
         /// <param name="userId"></param>
         /// <returns></returns>
         string GenerateJwtToken(string role, string verificationStatus, Guid userId);
+
     }
 }
 
