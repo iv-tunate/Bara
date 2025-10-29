@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Services.YouVerifyIntegration
+namespace Bara.API.Services.YouVerifyIntegration
 {
     /// <summary>
     /// Represents the successful response structure from YouVerify after a verification request.

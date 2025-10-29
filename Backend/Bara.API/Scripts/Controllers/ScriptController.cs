@@ -1,8 +1,8 @@
 ﻿using Bara.API.Scripts.DTOs;
 using Bara.API.Scripts.Interfaces;
+using Bara.API.Utilities.ToolKit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SharedModule.Utils;
 
 namespace Bara.API.Scripts.Controllers
 {
@@ -209,16 +209,16 @@ namespace Bara.API.Scripts.Controllers
         /// <summary>
         /// Retrieves scripts filtered by genre with pagination.
         /// </summary>
-        /// <param name="genre">The genre to filter by</param>
+        /// <param name="genreId">The genre to filter by</param>
         /// <param name="pageNumber">The page number for pagination</param>
         /// <param name="pageSize">The number of items per page</param>
         /// <returns>A paginated list of scripts in the specified genre</returns>
-        [HttpGet("scripts/genre/{genre}/{pageNumber}/{pageSize}")]
-        public async Task<IActionResult> GetScriptsByGenre(string genre, int pageNumber, int pageSize)
+        [HttpGet("scripts/genre/{genreId}/{pageNumber}/{pageSize}")]
+        public async Task<IActionResult> GetScriptsByGenre(Guid genreId, int pageNumber, int pageSize)
         {
             try
             {
-                var response = await scriptService.GetScriptsByGenre(genre, pageNumber, pageSize);
+                var response = await scriptService.GetScriptsByGenre(genreId, pageNumber, pageSize);
                 if (response.IsSuccess is false)
                 {
                     return BadRequest(response);
@@ -227,7 +227,7 @@ namespace Bara.API.Scripts.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError($"An exception: {ex.GetType().Name} was thrown at {ex.Source} while fetching scripts by genre {genre}...\nBase Exception: {ex.GetBaseException().GetType().Name}", $"Exception Code: {ex.HResult}");
+                logger.LogError($"An exception: {ex.GetType().Name} was thrown at {ex.Source} while fetching scripts by genre...\nBase Exception: {ex.GetBaseException().GetType().Name}", $"Exception Code: {ex.HResult}");
                 return StatusCode(500, ResponseDetail<string>.Failed("Your request failed...", 500, "Error"));
             }
         }

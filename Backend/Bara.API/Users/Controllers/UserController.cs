@@ -2,9 +2,9 @@
 using Bara.API.Users.DTOs.UserDTO;
 using Bara.API.Users.Enums;
 using Bara.API.Users.Interfaces.UserInterfaces;
+using Bara.API.Utilities.ToolKit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SharedModule.Utils;
 
 namespace Bara.API.Users.Controllers
 {

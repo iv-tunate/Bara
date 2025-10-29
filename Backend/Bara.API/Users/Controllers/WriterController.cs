@@ -1,8 +1,8 @@
 ﻿using Bara.API.Users.DTOs.WriterDTOs;
 using Bara.API.Users.Interfaces.UserInterfaces;
+using Bara.API.Utilities.ToolKit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SharedModule.Utils;
 
 namespace Bara.API.Users.Controllers
 {

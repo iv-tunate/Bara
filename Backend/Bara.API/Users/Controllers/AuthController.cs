@@ -1,7 +1,7 @@
 ﻿using Bara.API.Users.DTOs.AuthDTOs;
 using Bara.API.Users.Interfaces.UserInterfaces;
+using Bara.API.Utilities.ToolKit;
 using Microsoft.AspNetCore.Mvc;
-using SharedModule.Utils;
 
 namespace Bara.API.Users.Controllers
 {

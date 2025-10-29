@@ -1,15 +1,14 @@
-﻿using Bara.API.Transactions.Interfaces;
+﻿using Bara.API.Services;
+using Bara.API.Services.Paystack;
+using Bara.API.Services.YouVerifyIntegration;
+using Bara.API.Transactions.Interfaces;
 using Bara.API.Users.Interfaces.UserInterfaces;
+using Bara.API.Utilities.Settings;
+using Bara.API.Utilities.ToolKit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using Services;
-using Services.Paystack;
-using Services.YouVerifyIntegration;
-using SharedModule.Settings;
-using SharedModule.Utils;
 using System.Text;
-using UserModule.Interfaces.UserInterfaces;
 
 namespace Bara.API.Controllers
 {

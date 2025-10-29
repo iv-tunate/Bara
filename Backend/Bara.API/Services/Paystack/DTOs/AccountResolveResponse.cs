@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Services.Paystack.DTOs
+namespace Bara.API.Services.Paystack.DTOs
 {
     public class AccountResolveResponse
     {

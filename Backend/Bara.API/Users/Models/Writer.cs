@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Bara.API.Scripts.Models;
+using System.ComponentModel.DataAnnotations;
 
 
 namespace Bara.API.Users.Models

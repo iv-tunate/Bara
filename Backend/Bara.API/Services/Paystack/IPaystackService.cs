@@ -1,6 +1,6 @@
-﻿using Services.Paystack.DTOs;
+﻿using Bara.API.Services.Paystack.DTOs;
 
-namespace Services.Paystack
+namespace Bara.API.Services.Paystack
 {
     /// <summary>
     /// Interface for Paystack service operations.

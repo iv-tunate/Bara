@@ -1,4 +1,4 @@
-﻿namespace UserModule.Utilities
+﻿namespace Bara.API.Utilities.ToolKit
 {
     public static class TokenGenerator
     {

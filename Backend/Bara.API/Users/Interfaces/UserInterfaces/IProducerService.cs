@@ -1,5 +1,6 @@
 ﻿using Bara.API.Users.DTOs.ProducerDTOs;
-using SharedModule.Utils;
+using Bara.API.Utilities.ToolKit;
+
 namespace Bara.API.Users.Interfaces.UserInterfaces
 {
     /// <summary>

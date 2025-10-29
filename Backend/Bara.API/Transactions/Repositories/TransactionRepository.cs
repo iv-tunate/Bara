@@ -1,20 +1,20 @@
 ﻿using Bara.API.DataContext;
+using Bara.API.Services.Paystack;
+using Bara.API.Services.Paystack.DTOs;
+using Bara.API.Services.SignalR;
 using Bara.API.Transactions.DTOs.TransactionDTOs;
 using Bara.API.Transactions.Enums;
 using Bara.API.Transactions.Interfaces;
 using Bara.API.Transactions.Models;
+using Bara.API.Utilities.Models;
+using Bara.API.Utilities.Settings;
+using Bara.API.Utilities.ToolKit;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Services.ExternalAPI_Integration;
 using Services.MailingService;
-using Services.Paystack;
-using Services.Paystack.DTOs;
-using Services.SignalR;
-using SharedModule.Models;
-using SharedModule.Settings;
-using SharedModule.Utils;
 using System.Security.Cryptography;
 
 namespace Bara.API.Transactions.Repositories

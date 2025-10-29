@@ -1,4 +1,5 @@
-﻿using SharedModule.Models;
+﻿using Bara.API.Scripts.Enums;
+using Bara.API.Utilities.Models;
 
 namespace Bara.API.Users.DTOs.ServiceDTOs
 {

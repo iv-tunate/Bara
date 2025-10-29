@@ -1,11 +1,11 @@
 using Bara.API.Scripts.DTOs;
 using Bara.API.Scripts.Interfaces;
+using Bara.API.Utilities.ToolKit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SharedModule.Utils;
 using System.Security.Claims;
 
-namespace Bara.API.Scripts.ScriptControllers
+namespace Bara.API.Scripts.Controllers
 {
     /// <summary>
     /// Controller for managing script transactions between producers and writers.

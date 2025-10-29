@@ -1,9 +1,9 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Bara.API.Utilities.Settings;
+using Bara.API.Utilities.ToolKit;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SendGrid;
 using SendGrid.Helpers.Mail;
-using SharedModule.Settings;
-using SharedModule.Utils;
 using System.Text.RegularExpressions;
 
 namespace Services.MailingService.SendGrid

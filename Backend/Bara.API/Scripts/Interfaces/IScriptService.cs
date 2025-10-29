@@ -1,6 +1,7 @@
-﻿using Bara.API.Scripts.Enums;
+﻿using Bara.API.Scripts.DTOs;
+using Bara.API.Scripts.Enums;
 using Bara.API.Scripts.Models;
-using SharedModule.Utils;
+using Bara.API.Utilities.ToolKit;
 
 namespace Bara.API.Scripts.Interfaces
 {

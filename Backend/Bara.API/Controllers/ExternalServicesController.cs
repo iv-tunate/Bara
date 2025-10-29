@@ -1,9 +1,8 @@
 ﻿using Bara.API.DataContext;
-using Infrastructure.DataContext;
+using Bara.API.Services.YouVerifyIntegration;
+using Bara.API.Utilities.ToolKit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Services.YouVerifyIntegration;
-using SharedModule.Utils;
 
 namespace Bara.API.Controllers
 {

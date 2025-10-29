@@ -1,4 +1,4 @@
-﻿namespace Services
+﻿namespace Bara.API.Services
 {
     /// <summary>
     /// Represents the response model returned from an external IP geolocation service.

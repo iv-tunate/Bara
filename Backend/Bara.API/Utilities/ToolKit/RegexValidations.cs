@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace Bara.API.Users.Utilities
+namespace Bara.API.Utilities.ToolKit
 {
     /// <summary>
     /// Contains static methods for validating user input using regular expressions.

@@ -1,8 +1,8 @@
 using Bara.API.Scripts.DTOs.ChatDTOs;
 using Bara.API.Scripts.Interfaces;
+using Bara.API.Utilities.ToolKit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SharedModule.Utils;
 using System.Security.Claims;
 
 namespace Bara.API.Scripts.Controllers

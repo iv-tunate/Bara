@@ -1,11 +1,13 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Bara.API.DataContext;
+using Bara.API.Services.BackgroudServices;
+using Bara.API.Users.DTOs.DocumentDTOs;
+using Bara.API.Users.Models;
+using Bara.API.Utilities.Settings;
+using Bara.API.Utilities.ToolKit;
 using Microsoft.Extensions.Options;
-using Services.BackgroudServices;
 using Services.FileStorageServices.Interfaces;
-using SharedModule.Settings;
-using SharedModule.Utils;
 
-namespace Infrastructure.Repositories.FileRepositories
+namespace Bara.API.Services.FileStorageServices.FileRepositories
 {
     /// <summary>
     /// Service class for handling file operations and saving them to the database

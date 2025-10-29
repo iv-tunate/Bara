@@ -1,8 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace Services
+namespace Bara.API.Services
 {
     public static class YouVerifyWebhookVerifier
     {

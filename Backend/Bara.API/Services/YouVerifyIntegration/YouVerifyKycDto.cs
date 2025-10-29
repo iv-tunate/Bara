@@ -1,4 +1,4 @@
-﻿namespace Services.YouVerifyIntegration
+﻿namespace Bara.API.Services.YouVerifyIntegration
 {
     /// <summary>
     /// Represents the KYC data required for a YouVerify verification request.

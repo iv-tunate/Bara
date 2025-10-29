@@ -1,5 +1,5 @@
 ﻿using Newtonsoft.Json;
-namespace Services.Paystack
+namespace Bara.API.Services.Paystack
 {
     public class PaystackWebhookPayload
     {

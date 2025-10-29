@@ -1,4 +1,5 @@
-using SharedModule.Utils;
+using Bara.API.Scripts.DTOs.ChatDTOs;
+using Bara.API.Utilities.ToolKit;
 
 namespace Bara.API.Scripts.Interfaces
 {

@@ -1,7 +1,7 @@
 ﻿using Bara.API.Users.DTOs;
 using Bara.API.Users.DTOs.UserDTO;
 using Bara.API.Users.Models;
-using SharedModule.Utils;
+using Bara.API.Utilities.ToolKit;
 
 namespace Bara.API.Users.Interfaces.UserInterfaces
 {

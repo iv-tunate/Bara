@@ -1,5 +1,5 @@
 ﻿using Bara.API.Transactions.DTOs.TransactionDTOs;
-using SharedModule.Utils;
+using Bara.API.Utilities.ToolKit;
 
 namespace Bara.API.Transactions.Interfaces
 {

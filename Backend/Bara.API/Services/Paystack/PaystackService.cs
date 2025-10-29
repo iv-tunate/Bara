@@ -1,15 +1,13 @@
-﻿using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+﻿using Bara.API.Services.Paystack.DTOs;
+using Bara.API.Utilities.Settings;
+using Bara.API.Utilities.ToolKit;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using PayStack.Net;
-using Services.Paystack.DTOs;
-using SharedModule.Settings;
-using SharedModule.Utils;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
-namespace Services.Paystack
+namespace Bara.API.Services.Paystack
 {
     public class PaystackService : IPaystackService
     {

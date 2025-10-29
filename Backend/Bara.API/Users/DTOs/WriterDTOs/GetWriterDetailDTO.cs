@@ -1,4 +1,5 @@
-﻿using Bara.API.Users.DTOs.AddressDTOs;
+﻿using Bara.API.Transactions.DTOs;
+using Bara.API.Users.DTOs.AddressDTOs;
 using Bara.API.Users.DTOs.ServiceDTOs;
 using Bara.API.Users.Models;
 

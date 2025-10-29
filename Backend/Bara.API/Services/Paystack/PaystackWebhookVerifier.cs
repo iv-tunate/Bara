@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace Services.Paystack
+namespace Bara.API.Services.Paystack
 {
     public class PaystackWebhookVerifier
     {

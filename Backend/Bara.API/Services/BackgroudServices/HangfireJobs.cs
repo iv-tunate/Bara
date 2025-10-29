@@ -1,13 +1,10 @@
-﻿using Hangfire;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
+﻿using Bara.API.Services.YouVerifyIntegration;
+using Bara.API.Utilities.ToolKit;
+using Hangfire;
 using Services.FileStorageServices.Interfaces;
 using Services.MailingService;
-using Services.YouVerifyIntegration;
-using SharedModule.Utils;
-using IMailService = Services.MailingService.IMailService;
 
-namespace Services.BackgroudServices
+namespace Bara.API.Services.BackgroudServices
 {
     /// <summary>
     /// This class is responsible for managing background jobs using Hangfire.
@@ -26,7 +23,7 @@ namespace Services.BackgroudServices
             this.logger = logger;
             this.youVerify = youVerify;
             this.logHelper = logHelper;
-            this.fileStorage = fileStorageService;
+            fileStorage = fileStorageService;
         }
 
         [AutomaticRetry(Attempts = 3, DelaysInSeconds = [10, 30, 60])]

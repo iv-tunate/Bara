@@ -1,4 +1,4 @@
-﻿namespace Services.Paystack.DTOs
+﻿namespace Bara.API.Services.Paystack.DTOs
 {
     public class PaymentData
     {

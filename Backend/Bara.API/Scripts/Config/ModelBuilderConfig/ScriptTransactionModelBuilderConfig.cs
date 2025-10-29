@@ -3,7 +3,7 @@ using Bara.API.Scripts.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace ScriptModule.Config.ModelBuilderConfig
+namespace Bara.API.Scripts.Config.ModelBuilderConfig
 {
     internal class ScriptTransactionModelBuilderConfig : IEntityTypeConfiguration<ScriptTransaction>
     {

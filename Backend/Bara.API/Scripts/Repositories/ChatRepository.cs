@@ -1,9 +1,8 @@
 using Bara.API.DataContext;
 using Bara.API.Scripts.Interfaces;
 using Bara.API.Scripts.Models.ScriptRelatedChats;
-using Infrastructure.DataContext;
+using Bara.API.Utilities.ToolKit;
 using Microsoft.EntityFrameworkCore;
-using SharedModule.Utils;
 
 namespace Bara.API.Scripts.Repositories
 {

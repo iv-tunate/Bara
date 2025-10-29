@@ -1,25 +1,22 @@
 ﻿using Bara.API.DataContext;
+using Bara.API.Services.BackgroudServices;
+using Bara.API.Users.DTOs.AuthDTOs;
+using Bara.API.Users.Interfaces.UserInterfaces;
+using Bara.API.Utilities.Settings;
+using Bara.API.Utilities.ToolKit;
 using Hangfire;
-using Infrastructure.DataContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Services.BackgroudServices;
 using Services.ExternalAPI_Integration;
 using Services.MailingService;
-using SharedModule.Settings;
-using SharedModule.Utils;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq.Expressions;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using UserModule.DTOs.AuthDTOs;
-using UserModule.Interfaces.UserInterfaces;
-
-namespace Infrastructure.Repositories.UserRepositories
+namespace Bara.API.Users.Repositories
 {
     public class AuthRepository : IAuthService
     {

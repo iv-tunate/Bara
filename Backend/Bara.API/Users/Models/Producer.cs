@@ -1,4 +1,6 @@
-﻿namespace Bara.API.Users.Models
+﻿using Bara.API.Scripts.Models;
+
+namespace Bara.API.Users.Models
 {
     /// <summary>
     /// Defines the producer entity which is also a type of User

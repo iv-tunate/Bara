@@ -1,6 +1,6 @@
-﻿using SharedModule.Utils;
-using UserModule.DTOs.DocumentDTOs;
-using UserModule.Models;
+﻿using Bara.API.Users.DTOs.DocumentDTOs;
+using Bara.API.Users.Models;
+using Bara.API.Utilities.ToolKit;
 
 namespace Services.FileStorageServices.Interfaces
 {

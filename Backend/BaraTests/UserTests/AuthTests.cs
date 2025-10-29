@@ -1,5 +1,5 @@
-﻿using BaraTests.Utils;
-using UserModule.DTOs.AuthDTOs;
+﻿using Bara.API.Users.DTOs.AuthDTOs;
+using BaraTests.Utils;
 
 namespace BaraTests.UserTests
 {

@@ -1,24 +1,21 @@
 ﻿using Bara.API.DataContext;
+using Bara.API.Scripts.DTOs;
+using Bara.API.Scripts.Enums;
+using Bara.API.Scripts.Interfaces;
+using Bara.API.Scripts.Models;
+using Bara.API.Services.SignalR;
 using Bara.API.Transactions.Enums;
 using Bara.API.Transactions.Interfaces;
+using Bara.API.Transactions.Models;
+using Bara.API.Utilities.Settings;
+using Bara.API.Utilities.ToolKit;
 using Hangfire;
-using Infrastructure.DataContext;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using ScriptModule.DTOs;
-using ScriptModule.Enums;
-using ScriptModule.Interfaces;
-using ScriptModule.Models;
 using Services.FileStorageServices.Interfaces;
 using Services.MailingService;
-using Services.SignalR;
-using SharedModule.Settings;
-using SharedModule.Utils;
-using TransactionModule.Models;
 
 namespace Infrastructure.Repositories.ScriptRepositories
 {

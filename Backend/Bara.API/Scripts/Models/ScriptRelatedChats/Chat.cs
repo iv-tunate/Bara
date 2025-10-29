@@ -1,4 +1,4 @@
-﻿using SharedModule.Models;
+﻿using Bara.API.Utilities.Models;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Bara.API.Scripts.Models.ScriptRelatedChats

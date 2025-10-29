@@ -1,5 +1,6 @@
-﻿using Bara.API.Users.Enums;
-using SharedModule.Models;
+﻿using Bara.API.Transactions.Models;
+using Bara.API.Users.Enums;
+using Bara.API.Utilities.Models;
 using System.ComponentModel.DataAnnotations;
 
 namespace Bara.API.Users.Models

@@ -11,5 +11,4 @@ namespace SharedModule.Utils
                 v => (T)Enum.Parse(typeof(T), v))
         { }
     }
-
 }

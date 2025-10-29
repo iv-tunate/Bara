@@ -1,4 +1,5 @@
-﻿using CloudinaryDotNet;
+﻿using Bara.API.Utilities.Settings;
+using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.StaticFiles;
@@ -6,7 +7,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Services.ExternalAPI_Integration;
 using Services.FileStorageServices.Interfaces;
-using SharedModule.Settings;
 using System.Net;
 
 namespace Services.FileStorageServices.CloudinaryStorage

@@ -1,9 +1,8 @@
-﻿using Bara.API.Services.BackgroudServices.RabbitMQ;
+﻿using Bara.API.Utilities.Settings;
+using Bara.API.Utilities.ToolKit;
 using Microsoft.Extensions.Options;
-using SharedModule.Settings;
-using SharedModule.Utils;
 
-namespace Services.BackgroudServices.RabbitMQ
+namespace Bara.API.Services.BackgroudServices.RabbitMQ
 {
     public class RabbitMQ_Publisher<T> : IRabbitMqPublisher<T>
     {

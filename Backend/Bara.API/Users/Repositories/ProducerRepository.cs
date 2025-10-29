@@ -1,22 +1,19 @@
 ﻿using Bara.API.DataContext;
+using Bara.API.Services.BackgroudServices;
+using Bara.API.Services.YouVerifyIntegration;
+using Bara.API.Transactions.DTOs;
+using Bara.API.Users.DTOs.AddressDTOs;
+using Bara.API.Users.DTOs.ProducerDTOs;
+using Bara.API.Users.Enums;
+using Bara.API.Users.Interfaces.UserInterfaces;
+using Bara.API.Users.Models;
+using Bara.API.Utilities.ToolKit;
 using Hangfire;
-using Infrastructure.DataContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging;
-using Services.BackgroudServices;
 using Services.FileStorageServices.Interfaces;
-using Services.YouVerifyIntegration;
-using SharedModule.Utils;
-using TransactionModule.DTOs;
-using UserModule.DTOs.AddressDTOs;
-using UserModule.DTOs.ProducerDTOs;
-using UserModule.Enums;
-using UserModule.Interfaces.UserInterfaces;
-using UserModule.Models;
-using UserModule.Utilities;
 
-namespace Infrastructure.Repositories.UserRepositories
+namespace Bara.API.Users.Repositories
 {
     public class ProducerRepository : IProducerService
     {

@@ -1,4 +1,4 @@
-﻿namespace Services.YouVerifyIntegration
+﻿namespace Bara.API.Services.YouVerifyIntegration
 {
     /// <summary>
     /// Represents the contract for verifying user documents via YouVerify.

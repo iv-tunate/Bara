@@ -1,5 +1,5 @@
 ﻿using Bara.API.Transactions.Enums;
-using SharedModule.Models;
+using Bara.API.Utilities.Models;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Bara.API.Transactions.Models

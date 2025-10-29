@@ -1,13 +1,11 @@
 using Bara.API.DataContext;
-using Infrastructure.DataContext;
+using Bara.API.Scripts.DTOs.ChatDTOs;
+using Bara.API.Scripts.Interfaces;
+using Bara.API.Scripts.Models.ScriptRelatedChats;
+using Bara.API.Services.SignalR;
+using Bara.API.Utilities.ToolKit;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using ScriptModule.DTOs.ChatDTOs;
-using ScriptModule.Interfaces;
-using ScriptModule.Models.ScriptRelatedChats;
-using Services.SignalR;
-using SharedModule.Utils;
 
 namespace Infrastructure.Repositories.ScriptRepositories
 {
@@ -46,14 +44,14 @@ namespace Infrastructure.Repositories.ScriptRepositories
         public async Task<ResponseDetail<ChatMessageResponse>> SendMessageAsync(Guid userId, Guid chatId, SendMessageRequest request)
         {
             var correlationId = Guid.NewGuid();
-            
+
             try
             {
                 // Validate user has access to this chat
                 var hasAccess = await chatRepository.UserHasAccessToChatAsync(chatId, userId);
                 if (!hasAccess)
                 {
-                    logger.LogWarning("User {UserId} attempted to send message to chat {ChatId} without access - CorrelationId: {CorrelationId}", 
+                    logger.LogWarning("User {UserId} attempted to send message to chat {ChatId} without access - CorrelationId: {CorrelationId}",
                         userId, chatId, correlationId);
                     return ResponseDetail<ChatMessageResponse>.Failed("Access denied to this chat", 403);
                 }
@@ -68,7 +66,7 @@ namespace Infrastructure.Repositories.ScriptRepositories
 
                 if (chat.IsClosed)
                 {
-                    logger.LogWarning("User {UserId} attempted to send message to closed chat {ChatId} - CorrelationId: {CorrelationId}", 
+                    logger.LogWarning("User {UserId} attempted to send message to closed chat {ChatId} - CorrelationId: {CorrelationId}",
                         userId, chatId, correlationId);
                     return ResponseDetail<ChatMessageResponse>.Failed("Cannot send messages to a closed chat", 400);
                 }
@@ -122,14 +120,14 @@ namespace Infrastructure.Repositories.ScriptRepositories
                         ScriptTitle = chat.ScriptTitle
                     });
 
-                logger.LogInformation("Message sent successfully - CorrelationId: {CorrelationId}, ChatId: {ChatId}, SenderId: {SenderId}", 
+                logger.LogInformation("Message sent successfully - CorrelationId: {CorrelationId}, ChatId: {ChatId}, SenderId: {SenderId}",
                     correlationId, chatId, userId);
 
                 return ResponseDetail<ChatMessageResponse>.Successful(response, "Message sent successfully");
             }
             catch (Exception ex)
             {
-                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, 
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name,
                     $"While sending message - CorrelationId: {correlationId}, ChatId: {chatId}, UserId: {userId}");
                 return ResponseDetail<ChatMessageResponse>.Failed("Failed to send message", 500);
             }
@@ -144,14 +142,14 @@ namespace Infrastructure.Repositories.ScriptRepositories
         public async Task<ResponseDetail<ChatHistoryResponse>> GetChatHistoryAsync(Guid userId, Guid chatId)
         {
             var correlationId = Guid.NewGuid();
-            
+
             try
             {
                 // Validate user has access to this chat
                 var hasAccess = await chatRepository.UserHasAccessToChatAsync(chatId, userId);
                 if (!hasAccess)
                 {
-                    logger.LogWarning("User {UserId} attempted to access chat {ChatId} without permission - CorrelationId: {CorrelationId}", 
+                    logger.LogWarning("User {UserId} attempted to access chat {ChatId} without permission - CorrelationId: {CorrelationId}",
                         userId, chatId, correlationId);
                     return ResponseDetail<ChatHistoryResponse>.Failed("Access denied to this chat", 403);
                 }
@@ -205,14 +203,14 @@ namespace Infrastructure.Repositories.ScriptRepositories
                         ReadByUserId = userId
                     });
 
-                logger.LogInformation("Chat history retrieved successfully - CorrelationId: {CorrelationId}, ChatId: {ChatId}, UserId: {UserId}", 
+                logger.LogInformation("Chat history retrieved successfully - CorrelationId: {CorrelationId}, ChatId: {ChatId}, UserId: {UserId}",
                     correlationId, chatId, userId);
 
                 return ResponseDetail<ChatHistoryResponse>.Successful(response, "Chat history retrieved successfully");
             }
             catch (Exception ex)
             {
-                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, 
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name,
                     $"While retrieving chat history - CorrelationId: {correlationId}, ChatId: {chatId}, UserId: {userId}");
                 return ResponseDetail<ChatHistoryResponse>.Failed("Failed to retrieve chat history", 500);
             }

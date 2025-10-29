@@ -1,5 +1,6 @@
 ﻿using Bara.API.Transactions.DTOs.TransactionDTOs;
 using Bara.API.Transactions.Interfaces;
+using Bara.API.Utilities.ToolKit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

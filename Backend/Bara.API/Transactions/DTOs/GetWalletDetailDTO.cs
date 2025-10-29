@@ -1,4 +1,4 @@
-﻿using SharedModule.Models;
+﻿using Bara.API.Utilities.Models;
 
 namespace Bara.API.Transactions.DTOs
 {

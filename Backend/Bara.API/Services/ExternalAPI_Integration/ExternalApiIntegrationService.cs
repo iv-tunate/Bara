@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Bara.API.Services;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Net.Http.Json;
 using System.Text;

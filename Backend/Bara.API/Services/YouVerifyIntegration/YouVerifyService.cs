@@ -1,14 +1,13 @@
-﻿using Hangfire;
+﻿using Bara.API.Services.SignalR;
+using Bara.API.Utilities.Settings;
+using Bara.API.Utilities.ToolKit;
+using Hangfire;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Services.ExternalAPI_Integration;
-using Services.SignalR;
-using SharedModule.Settings;
-using SharedModule.Utils;
 
-namespace Services.YouVerifyIntegration
+namespace Bara.API.Services.YouVerifyIntegration
 {
     public class YouVerifyService : IYouVerifyService
     {

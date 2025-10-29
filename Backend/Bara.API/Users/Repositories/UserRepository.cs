@@ -1,25 +1,22 @@
 ﻿using Bara.API.DataContext;
+using Bara.API.Services.BackgroudServices;
+using Bara.API.Services.Paystack;
+using Bara.API.Services.Paystack.DTOs;
+using Bara.API.Services.SignalR;
+using Bara.API.Users.DTOs;
+using Bara.API.Users.DTOs.UserDTO;
+using Bara.API.Users.Enums;
+using Bara.API.Users.Interfaces.UserInterfaces;
+using Bara.API.Users.Models;
+using Bara.API.Utilities.ToolKit;
 using Hangfire;
-using Infrastructure.DataContext;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging;
-using Services.BackgroudServices;
 using Services.MailingService;
-using Services.Paystack;
-using Services.Paystack.DTOs;
-using Services.SignalR;
-using SharedModule.Utils;
 using System.Security.Cryptography;
-using UserModule.DTOs;
-using UserModule.DTOs.UserDTO;
-using UserModule.Enums;
-using UserModule.Interfaces.UserInterfaces;
-using UserModule.Models;
-using UserModule.Utilities;
 
-namespace Infrastructure.Repositories.UserRepositories
+namespace Bara.API.Users.Repositories
 {
     public class UserRepository : IUserService
     {

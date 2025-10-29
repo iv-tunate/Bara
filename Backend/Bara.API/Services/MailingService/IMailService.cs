@@ -1,4 +1,4 @@
-﻿using SharedModule.Utils;
+﻿using Bara.API.Utilities.ToolKit;
 
 namespace Services.MailingService
 {
