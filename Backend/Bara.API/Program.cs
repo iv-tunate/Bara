@@ -1,4 +1,10 @@
 using AspNetCoreRateLimit;
+using Bara.API.DataContext;
+using Bara.API.Scripts.Interfaces;
+using Bara.API.Scripts.Repositories;
+using Bara.API.Transactions.Interfaces;
+using Bara.API.Transactions.Repositories;
+using Bara.API.Users.Interfaces.UserInterfaces;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Infrastructure.DataContext;
@@ -25,7 +31,6 @@ using SharedModule.Settings;
 using SharedModule.Utils;
 using System.Text;
 using System.Text.Json.Serialization;
-using TransactionModule.Interfaces;
 using UserModule.Interfaces.UserInterfaces;
 
 var builder = WebApplication.CreateBuilder(args);

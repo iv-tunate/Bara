@@ -1,4 +1,5 @@
-﻿using Infrastructure.DataContext;
+﻿using Bara.API.DataContext;
+using Infrastructure.DataContext;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services.YouVerifyIntegration;

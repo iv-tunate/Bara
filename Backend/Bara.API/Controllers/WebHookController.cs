@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Bara.API.Transactions.Interfaces;
+using Bara.API.Users.Interfaces.UserInterfaces;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Services;
@@ -7,7 +9,6 @@ using Services.YouVerifyIntegration;
 using SharedModule.Settings;
 using SharedModule.Utils;
 using System.Text;
-using TransactionModule.Interfaces;
 using UserModule.Interfaces.UserInterfaces;
 
 namespace Bara.API.Controllers

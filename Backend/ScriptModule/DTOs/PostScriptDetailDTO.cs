@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using ScriptModule.Enums;
+using ScriptModule.Models;
 
 namespace ScriptModule.DTOs
 {
@@ -16,7 +17,7 @@ namespace ScriptModule.DTOs
         /// <summary>
         /// The genre of the script (e.g., drama, thriller, comedy).
         /// </summary>
-        public required string Genre { get; set; }
+        public required List<Genre> Genre { get; set; }
 
         /// <summary>
         /// A one-sentence summary or hook of the script.

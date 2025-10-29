@@ -10,12 +10,9 @@ namespace ScriptModule.Config.ModelBuilderConfig
         {
             //builder.HasKey(x => x.Id);
             builder.HasIndex(s => s.Title);
-            builder.HasIndex(s => s.Genre);
             //builder.HasIndex(s => s.WriterId);
             builder.Property(s => s.Title)
                 .HasMaxLength(200);
-            builder.Property(s => s.Genre)
-                .HasMaxLength(100);
             builder.HasIndex(s => s.Status);
             builder.Property(s => s.Status)
                 .HasConversion<string>()

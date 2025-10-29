@@ -27,10 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ScriptModule\ScriptModule.csproj" />
     <ProjectReference Include="..\Services\Services.csproj" />
-    <ProjectReference Include="..\TransactionModule\TransactionModule.csproj" />
-    <ProjectReference Include="..\UserModule\UserModule.csproj" />
   </ItemGroup>
 
 </Project>

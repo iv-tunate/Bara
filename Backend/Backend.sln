@@ -5,17 +5,7 @@ VisualStudioVersion = 17.12.35521.163
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bara.API", "Bara.API\Bara.API.csproj", "{C54ECAC7-7EBB-4A74-92E4-3553C4E9F1E4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransactionModule", "TransactionModule\TransactionModule.csproj", "{81AE7028-6E0B-4EFB-8280-E46296B9A53E}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptModule", "ScriptModule\ScriptModule.csproj", "{318D5DA9-3EA1-40F6-A9E6-103CFCF6F8FE}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedModule", "SharedModule\SharedModule.csproj", "{C1F335CE-B3AE-4664-ADB6-639D721CC40F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UserModule", "UserModule\UserModule.csproj", "{4D64B2E8-3CDF-493C-8520-49B272105147}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure", "Infrastructure\Infrastructure.csproj", "{66C8C1D3-90A8-431B-BDD2-015C4CBAA3D0}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Services", "Services\Services.csproj", "{837D9239-05F4-4DB0-933C-05028672047E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BaraTests", "BaraTests\BaraTests.csproj", "{6E90678D-820F-4C63-B178-078D26E48D4B}"
 EndProject
@@ -34,30 +24,10 @@ Global
 		{C54ECAC7-7EBB-4A74-92E4-3553C4E9F1E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C54ECAC7-7EBB-4A74-92E4-3553C4E9F1E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C54ECAC7-7EBB-4A74-92E4-3553C4E9F1E4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{81AE7028-6E0B-4EFB-8280-E46296B9A53E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{81AE7028-6E0B-4EFB-8280-E46296B9A53E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{81AE7028-6E0B-4EFB-8280-E46296B9A53E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{81AE7028-6E0B-4EFB-8280-E46296B9A53E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{318D5DA9-3EA1-40F6-A9E6-103CFCF6F8FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{318D5DA9-3EA1-40F6-A9E6-103CFCF6F8FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{318D5DA9-3EA1-40F6-A9E6-103CFCF6F8FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{318D5DA9-3EA1-40F6-A9E6-103CFCF6F8FE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C1F335CE-B3AE-4664-ADB6-639D721CC40F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C1F335CE-B3AE-4664-ADB6-639D721CC40F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C1F335CE-B3AE-4664-ADB6-639D721CC40F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C1F335CE-B3AE-4664-ADB6-639D721CC40F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4D64B2E8-3CDF-493C-8520-49B272105147}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4D64B2E8-3CDF-493C-8520-49B272105147}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4D64B2E8-3CDF-493C-8520-49B272105147}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4D64B2E8-3CDF-493C-8520-49B272105147}.Release|Any CPU.Build.0 = Release|Any CPU
-		{66C8C1D3-90A8-431B-BDD2-015C4CBAA3D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{66C8C1D3-90A8-431B-BDD2-015C4CBAA3D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{66C8C1D3-90A8-431B-BDD2-015C4CBAA3D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{66C8C1D3-90A8-431B-BDD2-015C4CBAA3D0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{837D9239-05F4-4DB0-933C-05028672047E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{837D9239-05F4-4DB0-933C-05028672047E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{837D9239-05F4-4DB0-933C-05028672047E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{837D9239-05F4-4DB0-933C-05028672047E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{6E90678D-820F-4C63-B178-078D26E48D4B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{6E90678D-820F-4C63-B178-078D26E48D4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6E90678D-820F-4C63-B178-078D26E48D4B}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -65,5 +35,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BBB69506-734D-4127-9DFB-705103F612EE}
 	EndGlobalSection
 EndGlobal

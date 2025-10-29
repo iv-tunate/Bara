@@ -45,7 +45,7 @@ export default function LoginPage() {
       if (request.success && request.data) {
         //console.log("Login successful, setting session...");
         const response = request.data.data;
-        debugger;
+        //debugger;
         setUserSession({
           userId: response.userId,
           email: response.email,
@@ -55,9 +55,9 @@ export default function LoginPage() {
           wrongLoginAttempts: response.wrongLoginAttempts,
         });
 
-        console.log("Session set, checking profile status...");
+        //console.log("Session set, checking profile status...");
         if (!response.isProfileSetupComplete) {
-          console.log("Profile not complete, redirecting to setup...");
+          //console.log("Profile not complete, redirecting to setup...");
           if (response.role === "Producer") {
             router.push("/profile/producer");
           } else if (response.role === "Writer") {
@@ -71,11 +71,15 @@ export default function LoginPage() {
           }
         }
       } else {
-        setError(request.message || "Login failed. Please try again.");
+        const errorMessage = request.message || "Login failed. Please try again.";
+        setError(errorMessage);
+        toast.error(errorMessage);
       }
     } catch (error) {
       console.error("Login error:", error);
-      setError("An unexpected error occurred. Please try again.");
+       const errorMessage = "An unexpected error occurred. Please try again.";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -130,12 +134,16 @@ export default function LoginPage() {
           // }
         }
       } else {
-        setError(request.message || "Verification failed. Please try again.");
+        const errorMessage = request.message || "Verification failed. Please try again.";
+        setError(errorMessage);
+        toast.error(errorMessage);
         setLoginVerificationState(false);
       }
     } catch (error) {
       console.error("Verification error:", error);
-      setError("An unexpected error occurred. Please try again.");
+       const errorMessage = "An unexpected error occurred. Please try again.";
+      setError(errorMessage);
+      toast.error(errorMessage);
       setLoginVerificationState(false);
     } finally {
       setIsLoading(false);
@@ -163,7 +171,7 @@ export default function LoginPage() {
 
       if (response.ok) {
         toast.success(
-          "Verification token has been resent successfully! Please check your inbox."
+          "Verification token has been resent successfully! Please check your mail box."
         );
         setResendCooldown(60);
         const timer = setInterval(() => {
@@ -176,10 +184,14 @@ export default function LoginPage() {
           });
         }, 1000);
       } else {
-        toast.error(res.message || "Could not resend verification email.");
+        const errorMessage = res.message || "Could not resend verification email.";
+        setError(errorMessage);
+        toast.error(errorMessage);
       }
     } catch {
-      toast.error("Something went wrong while resending.");
+      const errorMessage = "Something went wrong while resending.";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsResending(false);
     }

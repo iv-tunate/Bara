@@ -50,7 +50,7 @@ namespace BaraTests.UserTests
         [Fact]
         public async Task ResendVerificationToken_WithNonExistentEmail_ShouldReturnNotFoundResponse()
         {
-            var result = await authService.ResendVerificationToken("nonexistent@example.com");
+            var result = await authService.ResendVerificationToken("nonexistent@example.com", "register", "unknown");
 
             Assert.NotNull(result);
             Assert.False(result.IsSuccess);

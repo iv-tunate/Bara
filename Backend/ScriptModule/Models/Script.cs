@@ -16,11 +16,11 @@ namespace ScriptModule.Models
         [MaxLength(200)]
         public required string Title { get; set; }
 
-        /// <summary>
-        /// The genre of the script (e.g., Drama, Thriller, Comedy).
-        /// </summary>
-        [MaxLength(30)]
-        public required string Genre { get; set; }
+        ///// <summary>
+        ///// The genre of the script (e.g., Drama, Thriller, Comedy).
+        ///// </summary>
+        //[MaxLength(30)]
+        //public required string Genre { get; set; }
 
         /// <summary>
         /// A compelling one-liner that pitches the story.
@@ -126,5 +126,9 @@ namespace ScriptModule.Models
         /// The current availability status of the script.
         /// </summary>
         public ScriptStatus Status { get; set; } = ScriptStatus.Available;
+        /// <summary>
+        /// 
+        /// </summary>
+        public List<Genre> Genres { get; set; }
     }
 }
