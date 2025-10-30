@@ -15,7 +15,6 @@ using Bara.API.Utilities.Settings;
 using Bara.API.Utilities.ToolKit;
 using Hangfire;
 using Hangfire.PostgreSql;
-using Infrastructure.Repositories.ScriptRepositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;

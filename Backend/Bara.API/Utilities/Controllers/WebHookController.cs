@@ -10,7 +10,7 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System.Text;
 
-namespace Bara.API.Controllers
+namespace Bara.API.Utilities.Controllers
 {
     [Route("api/webhooks")]
     [ApiController]

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Reflection;
 
-namespace Bara.API.Controllers
+namespace Bara.API.Utilities.Controllers
 {
     [ApiController]
     [Route("health")]
@@ -37,9 +37,9 @@ namespace Bara.API.Controllers
                 Service = "Bara.API",
                 Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString(),
                 Environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
-                MachineName = Environment.MachineName,
-                ProcessId = Environment.ProcessId,
-                WorkingSet = Environment.WorkingSet,
+                Environment.MachineName,
+                Environment.ProcessId,
+                Environment.WorkingSet,
                 Uptime = Environment.TickCount64
             };
 

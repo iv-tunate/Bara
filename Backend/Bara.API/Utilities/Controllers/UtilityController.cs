@@ -3,7 +3,7 @@ using Bara.API.Utilities.ToolKit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Bara.API.Controllers
+namespace Bara.API.Utilities.Controllers
 {
     [Route("api/utilities")]
     [ApiController]

@@ -7,7 +7,7 @@ using Bara.API.Utilities.ToolKit;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Repositories.ScriptRepositories
+namespace Bara.API.Scripts.Repositories
 {
     /// <summary>
     /// Service implementation for managing chat functionality between producers and writers during script transactions.
@@ -117,7 +117,7 @@ namespace Infrastructure.Repositories.ScriptRepositories
                     {
                         ChatId = chatId,
                         Message = response,
-                        ScriptTitle = chat.ScriptTitle
+                        chat.ScriptTitle
                     });
 
                 logger.LogInformation("Message sent successfully - CorrelationId: {CorrelationId}, ChatId: {ChatId}, SenderId: {SenderId}",
@@ -355,7 +355,7 @@ namespace Infrastructure.Repositories.ScriptRepositories
                     .SendAsync("ChatClosed", new
                     {
                         ChatId = chatId,
-                        ScriptTitle = chat.ScriptTitle,
+                        chat.ScriptTitle,
                         ClosedAt = DateTimeOffset.UtcNow
                     });
 
@@ -363,7 +363,7 @@ namespace Infrastructure.Repositories.ScriptRepositories
                     .SendAsync("ChatClosed", new
                     {
                         ChatId = chatId,
-                        ScriptTitle = chat.ScriptTitle,
+                        chat.ScriptTitle,
                         ClosedAt = DateTimeOffset.UtcNow
                     });
 

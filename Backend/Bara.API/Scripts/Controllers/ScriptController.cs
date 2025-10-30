@@ -257,5 +257,20 @@ namespace Bara.API.Scripts.Controllers
                 return StatusCode(500, ResponseDetail<string>.Failed("Your request failed...", 500, "Error"));
             }
         }
+
+        [HttpGet("scripts/genre")]
+        public async Task<IActionResult> GetGenres()
+        {
+            try
+            {
+                var response = await scriptService.GetGenres();
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"An exception: {ex.GetType().Name} was thrown at {ex.Source} while fetching genres...\nBase Exception: {ex.GetBaseException().GetType().Name}", $"Exception Code: {ex.HResult}");
+                return StatusCode(500, ResponseDetail<string>.Failed("Your request failed...", 500, "Error"));
+            }
+        }
     }
 }

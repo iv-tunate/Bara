@@ -1,10 +1,11 @@
 ﻿using Bara.API.DataContext;
 using Bara.API.Services.YouVerifyIntegration;
+using Bara.API.Utilities.Controllers;
 using Bara.API.Utilities.ToolKit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Bara.API.Controllers
+namespace Bara.API.Services.Controllers
 {
     [Route("api/external_services")]
     [ApiController]

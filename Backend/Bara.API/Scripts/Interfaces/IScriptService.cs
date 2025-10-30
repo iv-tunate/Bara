@@ -108,5 +108,11 @@ namespace Bara.API.Scripts.Interfaces
         /// <param name="pageSize">The number of items per page</param>
         /// <returns>A paginated list of scripts matching the search criteria</returns>
         Task<ResponseDetail<List<Script>>> SearchScripts(string searchTerm, int pageNumber, int pageSize);
+
+        /// <summary>
+        /// Fetches all available genres.
+        /// </summary>
+        /// <returns>A list of genres</returns>
+        Task<ResponseDetail<List<Genre>>> GetGenres();
     }
 }

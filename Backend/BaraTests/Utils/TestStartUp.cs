@@ -1,5 +1,6 @@
 ﻿using Bara.API.DataContext;
 using Bara.API.Scripts.Interfaces;
+using Bara.API.Scripts.Repositories;
 using Bara.API.Services.BackgroudServices;
 using Bara.API.Services.FileStorageServices.FileRepositories;
 using Bara.API.Services.YouVerifyIntegration;
@@ -8,7 +9,6 @@ using Bara.API.Users.Repositories;
 using Bara.API.Utilities.Settings;
 using Bara.API.Utilities.ToolKit;
 using Hangfire;
-using Infrastructure.Repositories.ScriptRepositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;

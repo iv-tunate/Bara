@@ -17,7 +17,7 @@ using Microsoft.Extensions.Options;
 using Services.FileStorageServices.Interfaces;
 using Services.MailingService;
 
-namespace Infrastructure.Repositories.ScriptRepositories
+namespace Bara.API.Scripts.Repositories
 {
     public class ScriptRepository : IScriptService
     {
@@ -40,7 +40,7 @@ namespace Infrastructure.Repositories.ScriptRepositories
             this.logger = logger;
             dbContext = baraContext;
             this.secrets = secrets.Value;
-            this.settings = appSettings.Value;
+            settings = appSettings.Value;
             this.memoryCache = memoryCache;
             this.walletService = walletService;
             this.mailService = mailService;
@@ -1028,7 +1028,19 @@ namespace Infrastructure.Repositories.ScriptRepositories
             }
         }
 
-
+        public async Task<ResponseDetail<List<Genre>>> GetGenres()
+        {
+            try
+            {
+                var genres = await dbContext.Genres.OrderBy(x => x.Name).ToListAsync();
+                return ResponseDetail<List<Genre>>.Successful(genres);
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, "fetching genres");
+                return ResponseDetail<List<Genre>>.Failed("Your request failed", 500, "Unexpected error");
+            }
+        }
     }
 
     /// <summary>
