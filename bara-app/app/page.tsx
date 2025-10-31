@@ -2,6 +2,7 @@
 
 import Navbar from "@/components/Navbar";
 import Image from "next/image";
+import HeroImage from "../public/hero.png"
 // import CreateAccountDropdown from "@/components/CreateAccountDropdown";
 // import { useState } from "react";
 
@@ -62,7 +63,7 @@ export default function HomePage() {
         {/* Right Image */}
         <div className="md:w-1/2 flex justify-center md:justify-end mt-8 md:mt-0">
           <Image
-            src="/"
+            src={HeroImage}
             alt="Bara App Hero"
             width={500}
             height={400}
