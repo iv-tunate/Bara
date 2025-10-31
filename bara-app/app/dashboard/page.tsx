@@ -199,7 +199,7 @@ export default function DashboardPage() {
                     .replace(/, ([^,]*)$/, " and $1")} genre${
                     selectedGenres.length > 1 ? "s" : ""
                   }`
-                : "No scripts are available at the moment"}
+                : "No available scripts at the moment"}
             </p>
           </div>
         ) : (
