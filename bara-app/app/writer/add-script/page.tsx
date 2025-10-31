@@ -379,7 +379,7 @@ export default function AddScriptPage() {
               onChange={(e) => setIsRegistered(e.target.checked)}
               className="accent-[#800000]"
             />
-            Script is registered
+            Is this a registered script?
           </label>
         </div>
 
