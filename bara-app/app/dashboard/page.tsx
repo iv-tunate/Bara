@@ -3,20 +3,24 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import GenreDropdown from "@/components/GenreDropdown";
+import CreateAccountDropdown from "@/components/CreateAccountDropdown";
 import { api } from "@/utils/api";
-import { getUserSession, getUserId } from "@/utils/tokenManager";
-import { useRouter } from "next/navigation";
+import { getUserSession } from "@/utils/tokenManager";
 import { Script, Genre } from "@/models/script";
+import Navbar from "@/components/Navbar";
 
 export default function DashboardPage() {
   const [scripts, setScripts] = useState<Script[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [userName, setUserName] = useState("User");
-  const [searchTerm, setSearchTerm] = useState("");
   const [selectedGenres, setSelectedGenres] = useState<Genre[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [userName, setUserName] = useState("Guest");
+  const [role, setRole] = useState<string>("Guest");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -25,12 +29,16 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const session = getUserSession();
-    if (session) {
-      setUserName(session.name || "User");
-    } else {
-      router.push("/auth/login");
+
+    if (!session) {
+      setUserName("Guest");
+      setRole("Guest");
+      return;
     }
-  }, [router]);
+
+    setUserName(session.name);
+    setRole(session.userType);
+  }, []);
 
   const fetchScripts = async () => {
     setIsLoading(true);
@@ -50,7 +58,7 @@ export default function DashboardPage() {
       } else {
         response = await api.getAllScripts(currentPage, pageSize);
       }
-      console.log("API Response:", response.data);
+
       if (response.success && response.data) {
         setScripts(response.data.data || []);
         setTotalPages(response.totalPages || 1);
@@ -78,28 +86,31 @@ export default function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-white">
-      <DashboardNavbar />
+      {role === "Guest" ? <Navbar /> : <DashboardNavbar />}
 
       <div className="max-w-7xl mx-auto px-4 py-4">
-        {/* Greeting */}
-        <div className="flex items-center gap-2 mt-4">
-          <h2 className="text-lg font-bold text-[#22242A]">
-            Hello {userName}!
-          </h2>
-          <Image src="/wave.png" alt="Wave" width={20} height={20} />
-        </div>
+        {/* Header */}
+        <div className="flex items-center justify-between mt-4">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-bold text-[#22242A]">
+              Hello {userName}!
+            </h2>
+            <Image src="/wave.png" alt="Wave" width={20} height={20} />
+          </div>
 
-        {/* Top row with dropdown */}
-        <div className="flex items-center justify-between relative">
-          <p className="text-sm text-[#22242A]">
-            Explore powerful scripts, connect with talented writers.
-          </p>
+          {/* Right side controls */}
 
-          {/* Genre Dropdown Component */}
           <GenreDropdown onChange={handleGenreChange} />
         </div>
 
-        {/* Error Message */}
+        {/* Subtitle */}
+        <div className="flex items-center justify-between mt-2">
+          <p className="text-sm text-[#22242A]">
+            Explore powerful scripts, connect with talented writers.
+          </p>
+        </div>
+
+        {/* Error */}
         {error && (
           <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
             <p className="text-sm text-red-600">{error}</p>
@@ -107,8 +118,8 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* Grid section */}
-      <section className="max-w-7xl mx-auto px-4 py-6 pb-25">
+      {/* Scripts Grid */}
+      <section className="max-w-7xl mx-auto px-4 py-6 pb-24">
         {isLoading ? (
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#800000]"></div>
@@ -130,15 +141,15 @@ export default function DashboardPage() {
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            {/* <h3 className="text-lg font-medium text-gray-900 mb-2">
               No scripts found
-            </h3>
+            </h3> */}
             <p className="text-gray-500">
               {searchTerm
                 ? `No scripts match "${searchTerm}"`
                 : selectedGenres.length > 0
                 ? `No scripts found in ${selectedGenres[0].name} genre`
-                : "No scripts are currently available"}
+                : "No scripts are available at the moment"}
             </p>
           </div>
         ) : (
@@ -146,21 +157,8 @@ export default function DashboardPage() {
             {scripts.map((script) => (
               <div
                 key={script.id}
-                className={`
-                group
-                relative
-                border border-[#ABADB2]
-                rounded-md
-                bg-white
-                shadow-sm
-                transition-all duration-300
-                overflow-hidden
-                h-[360px]
-                hover:h-[430px]
-                hover:shadow-md hover:bg-[#f9f9f9]
-              `}
+                className={`group relative border border-[#ABADB2] rounded-md bg-white shadow-sm transition-all duration-300 overflow-hidden h-[360px] hover:h-[430px] hover:shadow-md hover:bg-[#f9f9f9]`}
               >
-                {/* Image */}
                 <div className="relative">
                   <Image
                     src={script.image || "/flowery.png"}
@@ -181,7 +179,6 @@ export default function DashboardPage() {
                   </button>
                 </div>
 
-                {/* Content */}
                 <div className="p-4 flex flex-col gap-2">
                   <h3 className="text-base font-bold text-[#22242A]">
                     {script.title}
@@ -194,16 +191,11 @@ export default function DashboardPage() {
                     {script.price.toLocaleString()}
                   </p>
 
-                  {/* See More Button */}
+                  {/* See More always available */}
                   <Link href={`/dashboard/scripts/${script.id}`}>
                     <button
                       type="button"
-                      className={`
-                      mt-2 w-full bg-[#800000] text-white py-2 rounded
-                      opacity-0
-                      group-hover:opacity-100
-                      transition-opacity duration-300
-                    `}
+                      className="mt-2 w-full bg-[#800000] text-white py-2 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                     >
                       See more
                     </button>

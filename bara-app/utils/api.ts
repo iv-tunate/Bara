@@ -213,6 +213,15 @@ export const api = {
     return response.data;
   },
 
+  getGenres: async () => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    const genresUrl = "/api/script/scripts/genres";
+
+    return await apiRequest(`${baseUrl}${genresUrl}`, {
+      method: "GET",
+      requireAuth: true,
+    });
+  },
   getScriptsByGenre: async (
     genre: string,
     pageNumber: number,

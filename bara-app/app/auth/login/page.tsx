@@ -28,62 +28,64 @@ export default function LoginPage() {
 
   const canLogin = email.trim() !== "" && password.trim() !== "";
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
+ const handleLogin = async (e: React.FormEvent) => {
+   e.preventDefault();
+   setIsLoading(true);
+   setError("");
 
-    try {
-      const deviceFingerprint = generateDeviceFingerprint();
+   try {
+     const deviceFingerprint = generateDeviceFingerprint();
 
-      const request = await api.login({
-        Email: email,
-        Password: password,
-        LoginDevice: deviceFingerprint,
-      });
+     const request = await api.login({
+       Email: email,
+       Password: password,
+       LoginDevice: deviceFingerprint,
+     });
 
-      if (request.success && request.data) {
-        //console.log("Login successful, setting session...");
-        const response = request.data.data;
-        //debugger;
-        setUserSession({
-          userId: response.userId,
-          email: response.email,
-          name: response.name,
-          userType: response.role,
-          accessToken: response.accessToken,
-          wrongLoginAttempts: response.wrongLoginAttempts,
-        });
+     const response = request.data?.data;
 
-        //console.log("Session set, checking profile status...");
-        if (!response.isProfileSetupComplete) {
-          //console.log("Profile not complete, redirecting to setup...");
-          if (response.role === "Producer") {
-            router.push("/profile/producer");
-          } else if (response.role === "Writer") {
-            router.push("/profile/writer");
-          }
-        } else {
-          if (response.role === "Producer") {
-            router.push("/dashboard/producer");
-          } else if (response.role === "Writer") {
-            router.push("/dashboard/writer");
-          }
-        }
-      } else {
-        const errorMessage = request.message || "Login failed. Please try again.";
-        setError(errorMessage);
-        toast.error(errorMessage);
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-       const errorMessage = "An unexpected error occurred. Please try again.";
-      setError(errorMessage);
-      toast.error(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+     if (request.success && response) {
+       if (!response.accessToken) {
+         setNeedsVerification(true);
+         toast.success(
+           "Please verify your login. A code has been sent to your email."
+         );
+         return; 
+       }
+       setUserSession({
+         userId: response.userId,
+         email: response.email,
+         name: response.name,
+         userType: response.role,
+         accessToken: response.accessToken,
+         wrongLoginAttempts: response.wrongLoginAttempts,
+       });
+
+       if (!response.isProfileSetupComplete) {
+         if (response.role === "Producer") {
+           router.push("/profile/producer");
+         } else if (response.role === "Writer") {
+           router.push("/profile/writer");
+         }
+       } else {
+         router.push("/dashboard");
+       }
+     } else {
+       const errorMessage =
+         request.message || "Login failed. Please try again.";
+       setError(errorMessage);
+       toast.error(errorMessage);
+     }
+   } catch (error) {
+     console.error("Login error:", error);
+     const errorMessage = "An unexpected error occurred. Please try again.";
+     setError(errorMessage);
+     toast.error(errorMessage);
+   } finally {
+     setIsLoading(false);
+   }
+ };
+
 
   const handleVerifyLogin = async () => {
     if (!verificationToken.trim()) {
@@ -106,7 +108,7 @@ export default function LoginPage() {
 
       if (request.success && request.data) {
         const response = request.data.data;
-       
+
         setUserSession({
           userId: response.userId,
           email: response.email,
@@ -125,23 +127,18 @@ export default function LoginPage() {
           //router.push(`/dashboard`);
           //}
         } else {
-          if (response.role === "Producer") {
-            router.push("/dashboard/producer");
-          } else if (response.role === "Writer") {
-            router.push("/dashboard/writer");
-          } //else {
-          //   router.push("/dashboard");
-          // }
+          router.push("/dashboard");
         }
       } else {
-        const errorMessage = request.message || "Verification failed. Please try again.";
+        const errorMessage =
+          request.message || "Verification failed. Please try again.";
         setError(errorMessage);
         toast.error(errorMessage);
         setLoginVerificationState(false);
       }
     } catch (error) {
       console.error("Verification error:", error);
-       const errorMessage = "An unexpected error occurred. Please try again.";
+      const errorMessage = "An unexpected error occurred. Please try again.";
       setError(errorMessage);
       toast.error(errorMessage);
       setLoginVerificationState(false);
@@ -184,7 +181,8 @@ export default function LoginPage() {
           });
         }, 1000);
       } else {
-        const errorMessage = res.message || "Could not resend verification email.";
+        const errorMessage =
+          res.message || "Could not resend verification email.";
         setError(errorMessage);
         toast.error(errorMessage);
       }

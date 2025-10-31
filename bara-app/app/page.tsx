@@ -49,7 +49,7 @@ export default function HomePage() {
 
             {/* Explore for free link*/}
             <a
-              href="/auth/login"
+              href="/dashboard"
               className="border border-[#800000] text-[#800000] font-medium px-12 py-3 rounded-sm text-center 
              transition-all duration-300 ease-in-out 
               hover:scale-105"

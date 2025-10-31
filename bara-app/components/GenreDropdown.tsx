@@ -1,33 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
+import { api } from "@/utils/api";
+import { Genre } from "@/models/script";
 
 interface GenreDropdownProps {
-  onChange?: (selected: string[]) => void;
+  onChange?: (selected: Genre[]) => void;
 }
 
 export default function GenreDropdown({ onChange }: GenreDropdownProps) {
-  const genres = [
-    "Drama",
-    "Comedy",
-    "Thriller",
-    "Romance",
-    "Horror",
-    "Supernatural/folklore",
-  ];
-
-  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [genres, setGenres] = useState<Genre[]>([]);
+  const [selectedGenres, setSelectedGenres] = useState<Genre[]>([]);
   const [allSelected, setAllSelected] = useState(false);
   const [open, setOpen] = useState(false);
 
-  const toggleGenre = (genre: string) => {
-    // Turn off "All genres" if you start selecting individually
-    setAllSelected(false);
+  useEffect(() => {
+    async function fetchGenres() {
+      try {
+        const response = await api.getGenres();
+        console.log(response);
+        setGenres(response.data.data || []);
+      } catch (error) {
+        console.error("Failed to load genres:", error);
+      }
+    }
+    fetchGenres();
+  }, []);
 
+  const toggleGenre = (genre: Genre) => {
+    setAllSelected(false);
     setSelectedGenres((prev) => {
-      const newSelection = prev.includes(genre)
-        ? prev.filter((g) => g !== genre)
+      const exists = prev.some((g) => g.id === genre.id);
+      const newSelection = exists
+        ? prev.filter((g) => g.id !== genre.id)
         : [...prev, genre];
       onChange?.(newSelection);
       return newSelection;
@@ -42,13 +48,12 @@ export default function GenreDropdown({ onChange }: GenreDropdownProps) {
     } else {
       setAllSelected(true);
       setSelectedGenres([]);
-      onChange?.([]); 
+      onChange?.([]);
     }
   };
 
   return (
     <div className="relative">
-      {/* Trigger button */}
       <button
         onClick={() => setOpen((prev) => !prev)}
         className="flex items-center gap-2 px-3 py-3 rounded-md text-sm text-[#22242A] font-medium cursor-pointer"
@@ -57,13 +62,11 @@ export default function GenreDropdown({ onChange }: GenreDropdownProps) {
         Genres
       </button>
 
-      {/* Dropdown menu */}
       {open && (
         <div
           className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-md p-2 z-50 space-y-1"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* ALL GENRES */}
           <label
             className={`flex items-center gap-2 text-sm px-2 py-2 rounded-md cursor-pointer transition-colors duration-200 ${
               allSelected ? "bg-[#F5F5F5] text-[#858990]" : "text-[#333740]"
@@ -78,14 +81,13 @@ export default function GenreDropdown({ onChange }: GenreDropdownProps) {
             All genres
           </label>
 
-          {/* INDIVIDUAL GENRES */}
           {genres.map((g) => {
-            const isSelected = selectedGenres.includes(g);
+            const isSelected = selectedGenres.some((sg) => sg.id === g.id);
             return (
               <label
-                key={g}
+                key={g.id}
                 className={`flex items-center gap-2 text-sm px-2 py-2 rounded-md cursor-pointer transition-colors duration-200 ${
-                  isSelected ? "bg-[#F5F5F5] text-[#858990]" : "text-[#333740] "
+                  isSelected ? "bg-[#F5F5F5] text-[#858990]" : "text-[#333740]"
                 }`}
               >
                 <input
@@ -94,7 +96,7 @@ export default function GenreDropdown({ onChange }: GenreDropdownProps) {
                   checked={isSelected}
                   onChange={() => toggleGenre(g)}
                 />
-                {g}
+                {g.name}
               </label>
             );
           })}

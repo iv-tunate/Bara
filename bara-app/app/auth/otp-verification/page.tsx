@@ -11,12 +11,11 @@ export default function OtpVerificationPage() {
   const router = useRouter();
 
   const handleChange = (value: string, index: number) => {
-    if (!/^[0-9]?$/.test(value)) return; // allow only numbers
+    if (!/^[0-9]?$/.test(value)) return; 
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
 
-    // auto move to next input
     if (value && index < otp.length - 1) {
       const nextInput = document.getElementById(`otp-${index + 1}`);
       nextInput?.focus();

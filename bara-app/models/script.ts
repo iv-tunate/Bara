@@ -3,6 +3,12 @@ export type IPDealType =
   | "ProducerRetainsRights"
   | "SharedRights";
 
+
+  export interface Genre {
+    id: string;
+    name: string;
+  }
+
 export interface Script {
   id: string;
   title: string;
