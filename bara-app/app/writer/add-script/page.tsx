@@ -195,13 +195,15 @@ export default function AddScriptPage() {
     <div className="min-h-screen bg-white">
       <DashboardNavbar />
       <main className="max-w-3xl mx-auto px-4 py-10 relative">
-        <div className="absolute top-4 left-4 mb">
+        <div className="absolute top-3 left-4 mb">
           <BackButton label="Back" href="/dashboard" />
         </div>
 
-        <h1 className="text-2xl font-semibold text-[#22242A] mb-6">
-          Add script
-        </h1>
+        <div className="flex justify-center items-center">
+          <h1 className="text-2xl font-semibold text-[#22242A] mb-6">
+            Add Script
+          </h1>
+        </div>
 
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">

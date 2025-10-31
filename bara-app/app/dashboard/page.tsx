@@ -193,7 +193,12 @@ export default function DashboardPage() {
               {searchTerm
                 ? `No scripts match "${searchTerm}"`
                 : selectedGenres.length > 0
-                ? `No scripts found in ${selectedGenres[0].name} genre`
+                ? `No scripts found in ${selectedGenres
+                    .map((g) => g.name)
+                    .join(", ")
+                    .replace(/, ([^,]*)$/, " and $1")} genre${
+                    selectedGenres.length > 1 ? "s" : ""
+                  }`
                 : "No scripts are available at the moment"}
             </p>
           </div>
