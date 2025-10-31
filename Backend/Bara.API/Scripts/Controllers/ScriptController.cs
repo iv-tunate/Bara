@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Bara.API.Scripts.Controllers
 {
-    [Route("api/script")]
+    [Route("api/")]
     [ApiController]
     public class ScriptController : ControllerBase
     {
@@ -34,7 +34,7 @@ namespace Bara.API.Scripts.Controllers
         /// </returns>
 
         [Authorize(Roles = "Writer", Policy = "VerifiedOnly")]
-        [HttpPost("{writerId}")]
+        [HttpPost("script/{writerId}")]
         public async Task<IActionResult> AddScript([FromForm] PostScriptDetailDTO scriptDetail, Guid writerId)
         {
             try
@@ -150,7 +150,7 @@ namespace Bara.API.Scripts.Controllers
         /// </returns>
 
         [Authorize(Roles = "Writer, Admin", Policy = "VerifiedOnly")]
-        [HttpDelete("delete/{scriptId}/{writerId}")]
+        [HttpDelete("script/delete/{scriptId}/{writerId}")]
         public async Task<IActionResult> DeleteScript(Guid scriptId, Guid writerId)
         {
             try
@@ -185,7 +185,7 @@ namespace Bara.API.Scripts.Controllers
         /// </returns>
 
         [Authorize(Roles = "Writer, Admin, Producer", Policy = "VerifiedOnly")]
-        [HttpGet("{scriptId}")]
+        [HttpGet("script/download/{scriptId}")]
         public async Task<IActionResult> Download(Guid scriptId)
         {
             try
@@ -258,7 +258,7 @@ namespace Bara.API.Scripts.Controllers
             }
         }
 
-        [HttpGet("scripts/genre")]
+        [HttpGet("genres")]
         public async Task<IActionResult> GetGenres()
         {
             try

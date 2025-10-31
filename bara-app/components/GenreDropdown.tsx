@@ -19,7 +19,7 @@ export default function GenreDropdown({ onChange }: GenreDropdownProps) {
     async function fetchGenres() {
       try {
         const response = await api.getGenres();
-        console.log(response);
+       console.log(response);
         setGenres(response.data.data || []);
       } catch (error) {
         console.error("Failed to load genres:", error);
@@ -64,7 +64,7 @@ export default function GenreDropdown({ onChange }: GenreDropdownProps) {
 
       {open && (
         <div
-          className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-md p-2 z-50 space-y-1"
+          className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-md p-2 z-50 space-y-1 max-h-96 overflow-auto"
           onClick={(e) => e.stopPropagation()}
         >
           <label

@@ -8,6 +8,7 @@ import { api } from "@/utils/api";
 import { generateDeviceFingerprint } from "@/utils/deviceDetection";
 import { setUserSession } from "@/utils/tokenManager";
 import toast from "react-hot-toast";
+import BackButton from "@/components/BackButton";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -196,7 +197,6 @@ export default function LoginPage() {
   };
   return (
     <main className="min-h-screen flex items-center justify-center bg-[#1a0000] px-4">
-      {/* White container card */}
       <div className="bg-white rounded-lg shadow-lg flex flex-col md:flex-row w-full max-w-5xl h-[600px] overflow-hidden">
         {/* Left: 40% width full-bleed image */}
         <div className="hidden md:block md:w-2/5 relative">
@@ -210,11 +210,12 @@ export default function LoginPage() {
         </div>
 
         {/* Right: Form Section (60%) */}
-        <div className="flex-1 md:w-3/5 flex flex-col justify-center items-center px-6 md:px-12 overflow-y-auto">
-          <div className="w-full max-w-sm">
+        <div className="flex-1 md:w-3/5 relative flex flex-col justify-center items-center px-6 md:px-12 overflow-y-auto">
+          <div className="w-full max-w-sm ">
             {" "}
-            {/* Logo */}
-            {/* Logo (left-aligned) */}
+            <div className="absolute top-6 left-4">
+              <BackButton label="Back" href="/" />
+            </div>
             <div className="mb-4 self-start">
               <Image src="/logo.png" alt="Bara Logo" width={70} height={40} />
             </div>

@@ -89,7 +89,6 @@ export default function DashboardPage() {
       {role === "Guest" ? <Navbar /> : <DashboardNavbar />}
 
       <div className="max-w-7xl mx-auto px-4 py-4">
-        {/* Header */}
         <div className="flex items-center justify-between mt-4">
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-bold text-[#22242A]">
@@ -98,27 +97,76 @@ export default function DashboardPage() {
             <Image src="/wave.png" alt="Wave" width={20} height={20} />
           </div>
 
-          {/* Right side controls */}
+          <div className="flex items-center gap-3">
+            {role === "Writer" && (
+              <Link href="/dashboard/scripts/create">
+                <button
+                  type="button"
+                  className="bg-[#800000] text-white font-medium px-6 py-2 rounded-md hover:bg-[#1a0000] transition-colors"
+                >
+                  + Add Script
+                </button>
+              </Link>
+            )}
 
-          <GenreDropdown onChange={handleGenreChange} />
+            {/* Guest sees create account dropdown */}
+            {/* {role === "Guest" && (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowDropdown((prev) => !prev)}
+                  className="bg-[#800000] text-white font-medium px-6 py-2 rounded-md hover:bg-[#1a0000] transition-colors"
+                >
+                  Create account
+                </button>
+
+                {showDropdown && (
+                  <div className="absolute top-full right-0 mt-2">
+                    <CreateAccountDropdown
+                      onClose={() => setShowDropdown(false)}
+                    />
+                  </div>
+                )}
+              </div>
+            )} */}
+
+            <GenreDropdown onChange={handleGenreChange} />
+          </div>
         </div>
-
-        {/* Subtitle */}
         <div className="flex items-center justify-between mt-2">
           <p className="text-sm text-[#22242A]">
-            Explore powerful scripts, connect with talented writers.
+            {role === "Writer"
+              ? "Share your creativity, upload your scripts, and inspire the world."
+              : "Explore powerful scripts, connect with talented writers."}
           </p>
-        </div>
 
-        {/* Error */}
+          {role === "Writer" && (
+            <div className="flex items-center gap-2">
+              <Image src="/menu.png" alt="Menu" width={20} height={20} />
+              <span className="text-sm font-medium text-[#22242A]">
+                Categories
+              </span>
+            </div>
+          )}
+        </div>
+        {role === "Writer" && (
+          <div className="mt-4 rounded-lg overflow-hidden">
+            <Image
+              src="/writer-banner.png"
+              alt="Writer Dashboard Banner"
+              width={1200}
+              height={400}
+              className="w-full h-56 object-cover rounded-md"
+            />
+          </div>
+        )}
+
         {error && (
           <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
             <p className="text-sm text-red-600">{error}</p>
           </div>
         )}
       </div>
-
-      {/* Scripts Grid */}
       <section className="max-w-7xl mx-auto px-4 py-6 pb-24">
         {isLoading ? (
           <div className="flex justify-center items-center py-12">
@@ -141,9 +189,6 @@ export default function DashboardPage() {
                 />
               </svg>
             </div>
-            {/* <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No scripts found
-            </h3> */}
             <p className="text-gray-500">
               {searchTerm
                 ? `No scripts match "${searchTerm}"`
@@ -191,7 +236,6 @@ export default function DashboardPage() {
                     {script.price.toLocaleString()}
                   </p>
 
-                  {/* See More always available */}
                   <Link href={`/dashboard/scripts/${script.id}`}>
                     <button
                       type="button"

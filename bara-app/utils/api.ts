@@ -204,7 +204,7 @@ export const api = {
   // Dashboard API methods
   getAllScripts: async (pageNumber: number, pageSize: number) => {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-    const scriptsUrl = `/api/script/scripts/${pageNumber}/${pageSize}`;
+    const scriptsUrl = `/api/scripts/${pageNumber}/${pageSize}`;
 
     const response = await apiRequest(`${baseUrl}${scriptsUrl}`, {
       method: "GET",
@@ -215,7 +215,7 @@ export const api = {
 
   getGenres: async () => {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-    const genresUrl = "/api/script/scripts/genres";
+    const genresUrl = "/api/genres";
 
     return await apiRequest(`${baseUrl}${genresUrl}`, {
       method: "GET",
@@ -228,7 +228,7 @@ export const api = {
     pageSize: number
   ) => {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-    const scriptsUrl = `/api/script/scripts/genre/${encodeURIComponent(
+    const scriptsUrl = `/api/scripts/genre/${encodeURIComponent(
       genre
     )}/${pageNumber}/${pageSize}`;
 
@@ -244,7 +244,7 @@ export const api = {
     pageSize: number
   ) => {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-    const searchUrl = `/api/script/scripts/search/${encodeURIComponent(
+    const searchUrl = `/api/scripts/search/${encodeURIComponent(
       searchTerm
     )}/${pageNumber}/${pageSize}`;
 
@@ -390,7 +390,7 @@ export const api = {
   async getAllScripts(pageNumber: number = 1, pageSize: number = 10) {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
     return apiRequest(
-      `${baseUrl}/api/script/scripts/${pageNumber}/${pageSize}`,
+      `${baseUrl}/api/scripts/${pageNumber}/${pageSize}`,
       {
         method: "GET",
         requireAuth: false,
