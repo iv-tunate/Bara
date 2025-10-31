@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Bara.API.DataContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Bara.API.DataContext.Migrations
 {
     [DbContext(typeof(BaraContext))]
-    partial class BaraContextModelSnapshot : ModelSnapshot
+    [Migration("20251031133538_Add ScriptGenres")]
+    partial class AddScriptGenres
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -40,206 +43,6 @@ namespace Bara.API.DataContext.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Genres");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("50b1f500-b822-4795-a647-237071570506"),
-                            Description = "Character-driven stories exploring emotion, conflict, and realism.",
-                            Name = "Drama"
-                        },
-                        new
-                        {
-                            Id = new Guid("9b2bc460-a66f-4b33-a64e-d4da38019ca7"),
-                            Description = "Light-hearted stories that aim to entertain and amuse audiences.",
-                            Name = "Comedy"
-                        },
-                        new
-                        {
-                            Id = new Guid("50cf5b26-8b03-46d1-8afe-2c279290f2df"),
-                            Description = "High-paced stories with physical feats, chases, and intense conflict.",
-                            Name = "Action"
-                        },
-                        new
-                        {
-                            Id = new Guid("fbe411b8-aafd-4143-a6be-3c6dea52a340"),
-                            Description = "Suspenseful stories that build tension and keep viewers on edge.",
-                            Name = "Thriller"
-                        },
-                        new
-                        {
-                            Id = new Guid("29064b32-69a1-4faa-9747-bd2752f62f86"),
-                            Description = "Stories designed to scare, shock, or unsettle through fear or tension.",
-                            Name = "Horror"
-                        },
-                        new
-                        {
-                            Id = new Guid("810c36ef-a745-4814-ad35-6fe2d37ff016"),
-                            Description = "Stories focusing on love, relationships, and emotional intimacy.",
-                            Name = "Romance"
-                        },
-                        new
-                        {
-                            Id = new Guid("fe63fe82-dac2-4025-8f03-89555063d605"),
-                            Description = "Stories exploring futuristic technology, space, and speculative ideas.",
-                            Name = "Science Fiction"
-                        },
-                        new
-                        {
-                            Id = new Guid("3f6e08e0-f550-4815-b173-5dbb8b4fb04b"),
-                            Description = "Stories set in imaginary worlds with magic, myths, or supernatural elements.",
-                            Name = "Fantasy"
-                        },
-                        new
-                        {
-                            Id = new Guid("d48502d1-5352-48bc-8c31-b5d871b08616"),
-                            Description = "Stories centered on solving puzzles, crimes, or hidden truths.",
-                            Name = "Mystery"
-                        },
-                        new
-                        {
-                            Id = new Guid("34ce6848-edd4-49ab-a3b9-e2f1308bb089"),
-                            Description = "Stories featuring journeys, exploration, and daring experiences.",
-                            Name = "Adventure"
-                        },
-                        new
-                        {
-                            Id = new Guid("28b37360-0191-438f-a1b9-5d5d96fdaee0"),
-                            Description = "Stories focused on criminal activity, law enforcement, and justice.",
-                            Name = "Crime"
-                        },
-                        new
-                        {
-                            Id = new Guid("849e7722-9601-4500-8c46-eb6a46c5bef9"),
-                            Description = "Stories exploring the mind, identity, or emotional instability.",
-                            Name = "Psychological"
-                        },
-                        new
-                        {
-                            Id = new Guid("0933c41c-9096-40ff-8cd6-79208ce9cb0d"),
-                            Description = "Stories set in or inspired by real historical periods and events.",
-                            Name = "Historical"
-                        },
-                        new
-                        {
-                            Id = new Guid("0a03d8ad-5f25-4aa3-a0ef-07c9a3aca523"),
-                            Description = "Stories depicting conflict, survival, and humanity in wartime.",
-                            Name = "War"
-                        },
-                        new
-                        {
-                            Id = new Guid("3ffdb743-ab8e-423b-a367-07540912483a"),
-                            Description = "Dramatized portrayals of real-life people and their experiences.",
-                            Name = "Biopic"
-                        },
-                        new
-                        {
-                            Id = new Guid("62750cca-0e00-4a08-9dd3-5315cde679f6"),
-                            Description = "Stories about extraordinary individuals balancing power and morality.",
-                            Name = "Superhero"
-                        },
-                        new
-                        {
-                            Id = new Guid("92f3dad1-cd8a-4a8f-ae7a-102622f45c09"),
-                            Description = "Stories revolving around governance, ideology, and corruption.",
-                            Name = "Political"
-                        },
-                        new
-                        {
-                            Id = new Guid("da3e94e0-1616-4243-b2a1-e639c4b8a453"),
-                            Description = "Humor that emerges from tragedy, irony, or moral ambiguity.",
-                            Name = "Dark Comedy"
-                        },
-                        new
-                        {
-                            Id = new Guid("497e4746-cea3-40b5-8edb-0924f9518790"),
-                            Description = "Love stories blended with humor and lighthearted tension.",
-                            Name = "Romantic Comedy"
-                        },
-                        new
-                        {
-                            Id = new Guid("c606dd88-4247-4269-9173-febb324fe009"),
-                            Description = "Stories set after civilization’s fall, exploring survival and renewal.",
-                            Name = "Post-Apocalyptic"
-                        },
-                        new
-                        {
-                            Id = new Guid("bc9c314b-f722-470f-9c8a-ae4734c2db13"),
-                            Description = "Futuristic dystopias mixing tech, rebellion, and moral decay.",
-                            Name = "Cyberpunk"
-                        },
-                        new
-                        {
-                            Id = new Guid("071122f9-bab6-4539-999c-02ca377a0c39"),
-                            Description = "Epic tales combining magic, myth, and heroic journeys.",
-                            Name = "Fantasy Adventure"
-                        },
-                        new
-                        {
-                            Id = new Guid("5a627f27-2a5f-4960-a413-38ca10d755f4"),
-                            Description = "Stories suitable for all ages, often with heartwarming or moral themes.",
-                            Name = "Family"
-                        },
-                        new
-                        {
-                            Id = new Guid("35508755-0754-4e11-b67e-b6bff6945225"),
-                            Description = "Stories told through stylized or artistic animation.",
-                            Name = "Animation"
-                        },
-                        new
-                        {
-                            Id = new Guid("3a8b3f68-d659-4e02-8f85-446d55acf787"),
-                            Description = "Narratives where song and performance drive the story.",
-                            Name = "Musical"
-                        },
-                        new
-                        {
-                            Id = new Guid("77dbde66-5fa7-4d98-af36-228b2786ad7e"),
-                            Description = "Non-fictional storytelling capturing real-life events or people.",
-                            Name = "Documentary"
-                        },
-                        new
-                        {
-                            Id = new Guid("fc8073ac-220c-42c1-8c06-5e81674e41ff"),
-                            Description = "Non-traditional or avant-garde narratives pushing boundaries.",
-                            Name = "Experimental"
-                        },
-                        new
-                        {
-                            Id = new Guid("57ffa4c7-cd13-43db-b5e1-05e54a75b546"),
-                            Description = "Stylized stories featuring cynicism, fatalism, and moral ambiguity.",
-                            Name = "Noir"
-                        },
-                        new
-                        {
-                            Id = new Guid("c9728af9-1af2-4c13-9d52-c6aa2a9e9615"),
-                            Description = "Stories inspired by spiritual, moral, or religious themes.",
-                            Name = "Faith-Based"
-                        },
-                        new
-                        {
-                            Id = new Guid("d65a27f8-7f63-4cfb-81d0-43c1fa5324ce"),
-                            Description = "Stories addressing social issues, justice, and cultural reflection.",
-                            Name = "Social Commentary"
-                        },
-                        new
-                        {
-                            Id = new Guid("ba9ec5ac-6687-4d78-942b-5ee5decf57d2"),
-                            Description = "Stories centered on athletes, competition, and perseverance.",
-                            Name = "Sports"
-                        },
-                        new
-                        {
-                            Id = new Guid("554c737c-904d-4393-8dfe-f90dd16a0259"),
-                            Description = "Stories about growth, identity, and the transition into adulthood.",
-                            Name = "Coming-of-Age"
-                        },
-                        new
-                        {
-                            Id = new Guid("8f06f94d-93e7-4b7f-994c-69dd21598daa"),
-                            Description = "Real-world settings infused with subtle magical or surreal elements.",
-                            Name = "Mystical Realism"
-                        });
                 });
 
             modelBuilder.Entity("Bara.API.Scripts.Models.Script", b =>

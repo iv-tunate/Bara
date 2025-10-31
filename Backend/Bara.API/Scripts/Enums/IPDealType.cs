@@ -17,6 +17,5 @@
         /// Rights are shared between writer and producer
         /// </summary>
         SharedRights,
-
     }
 }

@@ -1,5 +1,5 @@
 ﻿using Bara.API.Scripts.Enums;
-using Bara.API.Scripts.Models;
+using Bara.API.Utilities.Models;
 
 namespace Bara.API.Scripts.DTOs
 {
@@ -16,7 +16,7 @@ namespace Bara.API.Scripts.DTOs
         /// <summary>
         /// The genre of the script (e.g., drama, thriller, comedy).
         /// </summary>
-        public required List<Genre> Genre { get; set; }
+        public required List<Guid> GenreId { get; set; }
 
         /// <summary>
         /// A one-sentence summary or hook of the script.
@@ -32,7 +32,7 @@ namespace Bara.API.Scripts.DTOs
         /// The selling price of the script.
         /// </summary>
         public required decimal Price { get; set; }
-
+        public Currency Currency { get; set; }
         /// <summary>
         /// Indicates whether the script has been officially registered (e.g., with WGA or a copyright office).
         /// </summary>

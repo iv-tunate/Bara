@@ -97,9 +97,16 @@ namespace Bara.API.Scripts.Repositories
                     return ResponseDetail<Script>.Failed($"An error occured while uploading the script", 500, "Umexpected Error");
                 }
 
+                var genres = await dbContext.Genres
+                        .Where(g => scriptDetails.GenreId.Contains(g.Id))
+                        .ToListAsync();
+                if (!genres.Any())
+                {
+                    return ResponseDetail<Script>.Failed("Invalid genres selected.");
+                }
                 var newScriptDetail = new Script
                 {
-                    Genres = scriptDetails.Genre,
+                    Genres = genres,
                     Logline = scriptDetails.Logline,
                     OwnershipRights = scriptDetails.OwnershipRights,
                     Image = scriptDetails.Image,
