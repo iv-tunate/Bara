@@ -11,7 +11,7 @@ import { api } from "@/utils/api";
 import { getUserSession } from "@/utils/tokenManager";
 import { Script, Genre } from "@/models/script";
 import Navbar from "@/components/Navbar";
-
+import CompleteProfileNav from "@/components/CompleteProfileNav";
 export default function DashboardPage() {
   const [scripts, setScripts] = useState<Script[]>([]);
   const [selectedGenres, setSelectedGenres] = useState<Genre[]>([]);
@@ -23,21 +23,26 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-
+  const [profileState, setProfileState] = useState(false);
   const router = useRouter();
   const pageSize = 8;
 
   useEffect(() => {
     const session = getUserSession();
 
-    if (!session) {
+    if (session && !session.profileComplete) {
+      setUserName(session.name);
+      setRole(session.userType);
+      setProfileState(false);
+      return;
+    } else if (!session) {
       setUserName("Guest");
       setRole("Guest");
       return;
     }
-
     setUserName(session.name);
     setRole(session.userType);
+    setProfileState(true);
   }, []);
 
   const fetchScripts = async () => {
@@ -85,10 +90,16 @@ export default function DashboardPage() {
   };
 
   return (
-    <main className="min-h-screen bg-white">
-      {role === "Guest" ? <Navbar /> : <DashboardNavbar />}
+    <main className="min-h-screen bg-white ">
+      {role === "Guest" ? (
+        <Navbar />
+      ) : profileState === false ? (
+        <CompleteProfileNav />
+      ) : (
+        <DashboardNavbar />
+      )}
 
-      <div className="max-w-7xl mx-auto px-4 py-4">
+      <div className="max-w-7xl mx-auto px-4 md:px-10 lg:px-10 py-4">
         <div className="flex items-center justify-between mt-4">
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-bold text-[#22242A]">
@@ -98,8 +109,8 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            {role === "Writer" && (
-              <Link href="/dashboard/scripts/create">
+            {role === "Writer" && profileState === true && (
+              <Link href="/dashboard/scripts">
                 <button
                   type="button"
                   className="bg-[#800000] text-white font-medium px-6 py-2 rounded-md hover:bg-[#1a0000] transition-colors"
@@ -108,27 +119,6 @@ export default function DashboardPage() {
                 </button>
               </Link>
             )}
-
-            {/* Guest sees create account dropdown */}
-            {/* {role === "Guest" && (
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setShowDropdown((prev) => !prev)}
-                  className="bg-[#800000] text-white font-medium px-6 py-2 rounded-md hover:bg-[#1a0000] transition-colors"
-                >
-                  Create account
-                </button>
-
-                {showDropdown && (
-                  <div className="absolute top-full right-0 mt-2">
-                    <CreateAccountDropdown
-                      onClose={() => setShowDropdown(false)}
-                    />
-                  </div>
-                )}
-              </div>
-            )} */}
 
             <GenreDropdown onChange={handleGenreChange} />
           </div>
@@ -140,14 +130,14 @@ export default function DashboardPage() {
               : "Explore powerful scripts, connect with talented writers."}
           </p>
 
-          {role === "Writer" && (
+          {/* {role === "Writer" && (
             <div className="flex items-center gap-2">
               <Image src="/menu.png" alt="Menu" width={20} height={20} />
               <span className="text-sm font-medium text-[#22242A]">
                 Categories
               </span>
             </div>
-          )}
+          )} */}
         </div>
         {role === "Writer" && (
           <div className="mt-4 rounded-lg overflow-hidden">

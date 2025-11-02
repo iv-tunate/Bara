@@ -5,6 +5,7 @@ export interface UserSession {
   userType: string;
   accessToken: string;
   wrongLoginAttempts?: number;
+  profileComplete: boolean;
 }
 
 const TOKEN_KEY = "bara_session";
@@ -17,7 +18,7 @@ export function setUserSession(session: UserSession): void {
 
     localStorage.setItem(USER_ID_KEY, session.userId);
     localStorage.setItem(USER_TYPE_KEY, session.userType);
-
+    
     const sessionDetails = sessionStorage.getItem(TOKEN_KEY);
     console.log("User Session Details", sessionDetails);
   } catch (error) {

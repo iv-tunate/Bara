@@ -60,6 +60,7 @@ export default function LoginPage() {
          userType: response.role,
          accessToken: response.accessToken,
          wrongLoginAttempts: response.wrongLoginAttempts,
+         profileComplete: response.isProfileSetupComplete,  
        });
 
        if (!response.isProfileSetupComplete) {
