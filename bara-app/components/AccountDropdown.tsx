@@ -56,12 +56,9 @@ export default function AccountDropdown({ onClose }: Props) {
       try {
         const session = getUserSession();
         if (!session) {
-          // no session — bail
           setIsLoading(false);
           return;
         }
-
-        // Load profile depending on user type (writer/producer)
         let profileResponse: any = null;
         if (session.userType === "Writer") {
           profileResponse = await api.getWriterProfile(session.userId);

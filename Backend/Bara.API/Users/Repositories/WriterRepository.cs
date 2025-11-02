@@ -79,7 +79,7 @@ namespace Bara.API.Users.Repositories
                     Project = x.Project?.ToUpperInvariant() ?? "",
                     StartDate = x.StartDate,
                     EndDate = x.EndDate,
-                    Description = x.Description?.ToUpperInvariant() ?? ""
+                    Description = x.Description?.ToUpperInvariant() ?? writerDetailDTO.Bio ?? ""
                 }).ToList();
                 writerProfile.Gender = writerDetailDTO.Gender;
                 writerProfile.DateOfBirth = writerDetailDTO.DateOfBirth;

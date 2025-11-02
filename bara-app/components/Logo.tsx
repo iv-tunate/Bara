@@ -12,8 +12,8 @@ export default function Logo() {
       <Image
         src="/logo.png"
         alt="Bara App Logo"
-        width={79}
-        height={79}
+        width={69}
+        height={69}
         priority
       />
     </div>
