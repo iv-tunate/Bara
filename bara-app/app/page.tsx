@@ -31,7 +31,6 @@ const [role, setRole] = useState<string>("Guest");
 
   return (
     <main className="min-h-screen bg-white flex flex-col relative">
-      c{" "}
       {role === "Guest" ? (
         <Navbar />
       ) : profileState === false ? (
@@ -39,7 +38,7 @@ const [role, setRole] = useState<string>("Guest");
       ) : (
         <DashboardNavbar />
       )}
-      <section className="flex flex-col-reverse md:flex-row items-center justify-between px-6 md:px-16 py-12 md:py-20 flex-1 max-w-7xl mx-auto w-full">
+      <section className="flex flex-col-reverse md:flex-row items-center justify-between px-6 md:px-16 py-9 md:py-12 flex-1 max-w-7xl mx-auto w-full">
         <div className="md:w-1/2 max-w-xl mt-10 md:mt-0 relative">
           <h1 className="[font-family:var(--font-lato)] text-3xl md:text-5xl font-semibold leading-tight text-barRedMain">
             Where <span className="italic text-[#810306]">Writers </span>

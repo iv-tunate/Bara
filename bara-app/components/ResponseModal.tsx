@@ -34,7 +34,7 @@ export function ProcessingModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
+    <div className="fixed inset-0 bg-[#810306] bg-opacity-50 flex items-center justify-center z-[100]">
       <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4 flex flex-col items-center space-y-6">
         {/* Loading State */}
         {status === "loading" && (

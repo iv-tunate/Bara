@@ -49,7 +49,7 @@ namespace Bara.API.Users.Interfaces.UserInterfaces
         /// <param name="token">The verification token sent to the user's email.</param>
         /// <param name="email">The email address to verify.</param>
         /// <returns>A response indicating whether the email verification was successful.</returns>
-        Task<ResponseDetail<bool>> VerifyEmail(string token, string email);
+        Task<ResponseDetail<LoginResponseDTO>> VerifyEmail(string token, string email);
 
         /// <summary>
         /// Resends a verification token to the specified user's email address.

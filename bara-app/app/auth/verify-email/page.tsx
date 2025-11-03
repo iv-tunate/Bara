@@ -6,6 +6,7 @@ import Image from "next/image";
 import toast from "react-hot-toast";
 import { Suspense } from "react";
 import { generateDeviceFingerprint } from "@/utils/deviceDetection";
+import { setUserSession } from "@/utils/tokenManager";
 function VerifyEmailPageContent() {
   const [otp, setOtp] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
@@ -54,17 +55,28 @@ function VerifyEmailPageContent() {
       });
 
       if (response.ok) {
+        const data = await response.json();
         toast.success("Email verified successfully!");
         setVerificationState("success");
 
         const rawUserType = localStorage.getItem("userType") || "";
-        const userType = rawUserType.toLowerCase();
+        const userType =
+          rawUserType !== "" ? rawUserType.toLowerCase() : (data.role || "unknown").toLowerCase();
+
+        setUserSession({
+          userId: data.data.userId,
+          email: data.data.email,
+          name: data.data.name,
+          userType: userType,
+          accessToken: data.data.accessToken,
+          wrongLoginAttempts: data.data.wrongLoginAttempts,
+          profileComplete: data.data.isProfileSetupComplete,
+          createdAt: Date.now() - 2 * 60 * 1000,
+        });
 
         if (userType === "writer" || userType === "producer") {
           setTimeout(() => router.push(`/profile/setup/${userType}`), 1000);
-        }// else {
-        //   setTimeout(() => router.push("/profile"), 1000);
-        // }
+        }
       } else {
         const res = await response.json();
         const errorMsg = res.message || "Verification failed";
@@ -72,7 +84,7 @@ function VerifyEmailPageContent() {
         if (res.statusCode === 409) {
           toast.success(res.message || "Email already verified!");
           setVerificationState("alreadyVerified");
-          setTimeout(() => router.push("/profile"), 1000);
+          setTimeout(() => router.push("/auth/login"), 1000);
         } else {
           setErrorMessage(errorMsg);
           setVerificationState("failed");

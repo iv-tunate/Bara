@@ -10,7 +10,7 @@ export default function Navbar() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   return (
-    <nav className="w-full flex justify-between items-center py-4 px-6 sm:px-8 bg-white relative shadow-sm">
+    <nav className="w-full flex justify-between items-center py-2 px-6 sm:px-8 bg-white relative shadow-sm">
       <Logo />
 
       <div className="hidden md:flex items-center space-x-10">

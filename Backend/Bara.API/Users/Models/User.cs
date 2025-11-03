@@ -101,15 +101,15 @@ namespace Bara.API.Users.Models
         /// <summary>
         /// 
         /// </summary>
-        public string PortfolioUrl { get; set; }
+        public string PortfolioUrl { get; set; } = string.Empty;
         /// <summary>
         /// 
         /// </summary>
-        public string ProfileImagePublicId { get; set; }
+        public string ProfileImagePublicId { get; set; } = string.Empty;
         /// <summary>
         /// Represents the URL to a User's image
         /// </summary>
-        public string ProfileImageUrl { get; set; }
+        public string ProfileImageUrl { get; set; } = string.Empty;
         /// <summary>
         /// Defines the bank detail(s) of a user. Useful during withdrawal operations
         /// </summary>

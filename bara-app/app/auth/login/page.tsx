@@ -118,7 +118,6 @@ export default function LoginPage() {
           wrongLoginAttempts: response.wrongLoginAttempts,
           profileComplete: response.isProfileSetupComplete,
           createdAt: Date.now() - 2 * 60 * 1000,
-
         });
 
         if (!response.isProfileSetupComplete) {

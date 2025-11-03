@@ -110,6 +110,8 @@ export function isTokenExpired(token: string): boolean {
 
 export function getAuthHeader(): Record<string, string> {
   const token = getAccessToken();
+
+  console.log("Token", token);
   if (!token) return {};
 
   return {

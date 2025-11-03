@@ -109,11 +109,9 @@ const handleProfileImageChange = async (
     };
 
     const uploadResult = await uploadImage(file, "Writer", user);
-    setFormData((prev) => ({
-      ...prev,
-      profileImageUrl: uploadResult.url,
-      profileImagePublicId: uploadResult.publicId,
-    }));
+
+    setProfileImageUrl(uploadResult.url);
+    setProfileImagePublicId(uploadResult.publicId || "");
 
     toast.success("Profile image uploaded successfully!");
   } catch (err) {
@@ -175,7 +173,7 @@ const handleProfileImageChange = async (
 
         form.append("FirstName", formData.firstName);
         form.append("LastName", formData.lastName);
-        form.append("MiddleName", formData.middleName || "");
+        form.append("MiddleName", formData.middleName || "none");
         form.append("PhoneNumber", formData.phone);
         form.append("Gender", formData.gender);
         form.append("Bio", formData.bio || "");
@@ -235,23 +233,33 @@ const handleProfileImageChange = async (
         // }
 
         const userId = localStorage.getItem("userId");
+        debugger;
         const res = await api.createWriter(form, userId as string);
 
         console.log(res);
 
-        if (!res.data.isSucess) {
-          setRequestStatus("failed");
-          toast.error(res.data.message || "Failed to create writer profile");
+        if (res.data.isSucess && res.data.statusCode ===201) {
+           toast.success("Writer profile created!");
+        setRequestStatus("success");
+        //localStorage.setItem(`WriterProfile-${userId}`, res.data.data);
+         setTimeout(() => {
+           router.push(`/writer/profile/${userId}`);
+         }, 1500);
+     
           return;
         } else if (res.data.statusCode === 409) {
           setRequestStatus("conflict");
           toast.error(res.data.message);
-          router.push(`/writer/profile/${userId}`);
+           setTimeout(() => {
+             router.push(`/writer/profile/${userId}`);
+           }, 1500);
+          return;
         }
-        toast.success("Writer profile created!");
-        setRequestStatus("success");
-        localStorage.setItem(`WriterProfile-${userId}`, res.data.data);
-        router.push(`/writer/profile/${userId}`);
+       else{
+             setRequestStatus("failed");
+             toast.error(res.data.message || "Failed to create writer profile");
+             return
+       }
       } catch (err: any) {
         setRequestStatus("error");
         console.error(err);

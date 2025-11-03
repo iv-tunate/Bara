@@ -126,10 +126,10 @@ namespace Bara.API.Users.Repositories
                     user.LastLoginAt = DateTimeOffset.UtcNow;
                     user.ModifiedAt = DateTimeOffset.UtcNow;
 
-                    Console.WriteLine($"Access token for this login for user {user.FullName}: {accessToken}");
+                    //Console.WriteLine($"Access token for this login for user {user.FullName}: {accessToken}");
                     dbContext.AuthProfiles.Update(user);
                     await dbContext.SaveChangesAsync();
-                    Console.WriteLine(user);
+                    //Console.WriteLine(user);
                     logger.LogInformation($"User: {user.FullName} with ID: {user.UserId}has logged in successfully.");
                     return ResponseDetail<LoginResponseDTO>.Successful(response, "Login Successful");
                 }
@@ -225,18 +225,27 @@ namespace Bara.API.Users.Repositories
             }
         }
 
-        public async Task<ResponseDetail<bool>> VerifyEmail(string token, string email)
+        public async Task<ResponseDetail<LoginResponseDTO>> VerifyEmail(string token, string email)
         {
             try
             {
                 var user = await dbContext.AuthProfiles.FirstOrDefaultAsync(x => x.Email == email);
+
                 if (user == null)
                 {
-                    return ResponseDetail<bool>.Failed($"Operation can not be completed because user does not exist", 404);
+                    return ResponseDetail<LoginResponseDTO>.Failed($"Operation can not be completed because user does not exist", 404);
                 }
-                else if (user.IsEmailVerified)
+                var response = new LoginResponseDTO
                 {
-                    return ResponseDetail<bool>.Failed("User email is already verified.", 409, "Conflict");
+                    Email = email,
+                    Name = user.FullName,
+                    UserId = user.UserId,
+                    IsProfileSetupComplete = user.IsProfileSetupComplete,
+                    Role = user.Role
+                };
+                if (user.IsEmailVerified)
+                {
+                    return ResponseDetail<LoginResponseDTO>.Failed("User email is already verified.", 409, "Conflict");
                 }
                 else
                 {
@@ -245,8 +254,16 @@ namespace Bara.API.Users.Repositories
                     if (verificationToken == null || token != verificationToken)
                     {
                         logger.LogInformation($"Token verification of email {email} for User: {user.FullName} with ID: {user.UserId} failed... Might be due to an invalid token");
-                        return ResponseDetail<bool>.Failed("Operation failed... Please try again", 400, "Invalid or Expired Token");
+                        return ResponseDetail<LoginResponseDTO>.Failed("Operation failed... Please try again", 400, "Invalid or Expired Token");
                     }
+                    var (Ip, Country) = await externalService.GetIpAndCountryAsync(secrets.IpInfoKey);
+                    var accessToken = GenerateJwtToken(user.Role, user.IsVerified ? "Verified" : "Unverified", user.UserId);
+
+                    response.AccessToken = accessToken;
+                    response.WrongLoginAttempts = user.LoginAttempts;
+                    user.LoginAttempts = 0;
+                    user.LastLoginAt = DateTimeOffset.UtcNow;
+                    user.ModifiedAt = DateTimeOffset.UtcNow;
                     user.IsEmailVerified = true;
                     user.ModifiedAt = DateTimeOffset.UtcNow;
                     cache.Remove(cacheKey);
@@ -254,13 +271,14 @@ namespace Bara.API.Users.Repositories
                     dbContext.AuthProfiles.Update(user);
                     await dbContext.SaveChangesAsync();
                     logger.LogInformation($"Email verification {email} for User: {user.FullName} with ID: {user.UserId} was successful.");
-                    return ResponseDetail<bool>.Successful(true, "Email verified successfully");
+                    return ResponseDetail<LoginResponseDTO>.Successful(response, "Email Verification Successful");
+
                 }
             }
             catch (Exception ex)
             {
                 logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"Verifying Email for {email}", ex.Message);
-                return ResponseDetail<bool>.Failed("Your request cannot be completed at this time... Please try again later", 500, "Unexpected error");
+                return ResponseDetail<LoginResponseDTO>.Failed("Your request cannot be completed at this time... Please try again later", 500, "Unexpected error");
             }
         }
 
