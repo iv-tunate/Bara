@@ -20,7 +20,7 @@ export default function ProfileNavbar() {
 
   const handleProfileSetup = () => {
     if (role) {
-      router.push(`/profile/${role.toLowerCase()}`);
+      router.push(`/profile/setup/${role.toLowerCase()}`);
     }
   };
 

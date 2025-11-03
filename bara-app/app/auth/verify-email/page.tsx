@@ -61,10 +61,10 @@ function VerifyEmailPageContent() {
         const userType = rawUserType.toLowerCase();
 
         if (userType === "writer" || userType === "producer") {
-          setTimeout(() => router.push(`/profile/${userType}`), 1000);
-        } else {
-          setTimeout(() => router.push("/profile"), 1000);
-        }
+          setTimeout(() => router.push(`/profile/setup/${userType}`), 1000);
+        }// else {
+        //   setTimeout(() => router.push("/profile"), 1000);
+        // }
       } else {
         const res = await response.json();
         const errorMsg = res.message || "Verification failed";

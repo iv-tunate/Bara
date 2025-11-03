@@ -20,9 +20,9 @@ namespace Bara.API.Utilities.ToolKit
         private static partial Regex EmailRegex();
 
         /// <summary>
-        /// Regular expression for validating Nigerian phone numbers (11 digits).
+        /// Regular expression for validating phone numbers (E.164 format).
         /// </summary>
-        [GeneratedRegex(@"^\+(?:[1-9]\d{0,2})\d{6,14}$")]
+        [GeneratedRegex(@"^\+?[1-9]\d{1,14}$")]
         private static partial Regex PhoneRegex();
 
         /// <summary>

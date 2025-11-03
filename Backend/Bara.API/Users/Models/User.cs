@@ -37,10 +37,11 @@ namespace Bara.API.Users.Models
         public string Email { get; set; }
 
         /// <summary>
-        /// The user's phone number.
-        /// Must be a valid international or local number (10 to 15 digits)..With country code.
+        /// The user's phone number in international format (E.164).
+        /// Example: +2348012345678, +14155551234
         /// </summary>
-        [RegularExpression("^(?!0+$)(\\+\\d{1,3}[- ]?)?(?!0+$)\\d{10,15}$", ErrorMessage = "Please enter valid phone no."), DataType(DataType.PhoneNumber)]
+        [RegularExpression(@"^\+?[1-9]\d{1,14}$", ErrorMessage = "Please enter a valid phone number with country code.")]
+        [DataType(DataType.PhoneNumber)]
         public string PhoneNumber { get; set; } = string.Empty;
         /// <summary>
         /// A brief biography or description provided by the user.
@@ -97,6 +98,18 @@ namespace Bara.API.Users.Models
         /// </summary>
         public Role Type { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public string PortfolioUrl { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public string ProfileImagePublicId { get; set; }
+        /// <summary>
+        /// Represents the URL to a User's image
+        /// </summary>
+        public string ProfileImageUrl { get; set; }
         /// <summary>
         /// Defines the bank detail(s) of a user. Useful during withdrawal operations
         /// </summary>

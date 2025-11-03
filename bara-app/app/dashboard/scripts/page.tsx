@@ -145,7 +145,7 @@ export default function ScriptPage() {
         const response = await api.initiateScriptTransaction(
           session.userId,
           script.id,
-          script.writerId
+          session.userId
         );
 
         if (response.success) {

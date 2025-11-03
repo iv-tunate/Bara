@@ -33,7 +33,7 @@ namespace Bara.API.Users.Controllers
         /// or 500 Internal Server Error if something goes wrong on the server.
         /// </returns>
 
-        [HttpPost]
+        [HttpPost("create-profile/{userId}")]
         public async Task<IActionResult> AddWriter([FromForm] PostWriterDetailDTO writerDetail, Guid userId)
         {
             try

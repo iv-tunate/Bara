@@ -64,14 +64,11 @@ export default function LoginPage() {
        });
 
        if (!response.isProfileSetupComplete) {
-         if (response.role === "Producer") {
-           router.push("/profile/producer");
-         } else if (response.role === "Writer") {
-           router.push("/profile/writer");
-         }
+         router.push(`/profile/setup/${response.role.toLowerCase()}`);
        } else {
          router.push("/dashboard");
        }
+       
      } else {
        const errorMessage =
          request.message || "Login failed. Please try again.";
@@ -118,13 +115,14 @@ export default function LoginPage() {
           userType: response.role || "Unknown",
           accessToken: response.accessToken,
           wrongLoginAttempts: response.wrongLoginAttempts,
+          profileComplete: response.isProfileSetupComplete,  
         });
 
         if (!response.isProfileSetupComplete) {
           if (response.role === "Producer") {
-            router.push("/profile/producer");
+            router.push("/profile/setup/producer");
           } else if (response.role === "Writer") {
-            router.push("/profile/writer");
+            router.push("/profile/setup/writer");
           } //else {
           //router.push(`/dashboard`);
           //}

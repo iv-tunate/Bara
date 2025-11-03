@@ -45,44 +45,42 @@ export default function LocationForm({ form, setForm }: LocationFormProps) {
     };
     loadCountries();
   }, []);
+useEffect(() => {
+  if (!form.country) return;
 
-  useEffect(() => {
-    if (!form.country) {
-      setStates([]);
-      setForm((prev) => ({ ...prev, state: "", city: "" }));
-      return;
-    }
-
-    const loadStates = async () => {
-      try {
-        const data = await getStates(form.country);
-        setStates(data);
-      } catch (e) {
-        console.error("Failed to fetch states", e);
+  const loadStates = async () => {
+    try {
+      const data = await getStates(form.country);
+      setStates(data);
+      if (!data.includes(form.state)) {
+        setForm((prev) => ({ ...prev, state: "", city: "" }));
       }
-    };
-    loadStates();
-    setForm((prev) => ({ ...prev, state: "", city: "" }));
-    setCities([]);
-  }, [form.country]);
-
-  useEffect(() => {
-    if (!form.state || !form.country) {
-      setCities([]);
-      return;
+    } catch (e) {
+      console.error("Failed to fetch states", e);
     }
+  };
 
-    const loadCities = async () => {
-      try {
-        const data = await getCities(form.country, form.state);
-        setCities(data);
-      } catch (e) {
-        console.error("Failed to fetch cities", e);
+  loadStates();
+}, [form.country]);
+
+useEffect(() => {
+  if (!form.state || !form.country) return;
+
+  const loadCities = async () => {
+    try {
+      const data = await getCities(form.country, form.state);
+      setCities(data);
+      if (!data.includes(form.city)) {
+        setForm((prev) => ({ ...prev, city: "" }));
       }
-    };
-    loadCities();
-    setForm((prev) => ({ ...prev, city: "" }));
-  }, [form.state]);
+    } catch (e) {
+      console.error("Failed to fetch cities", e);
+    }
+  };
+
+  loadCities();
+}, [form.state]);
+
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>

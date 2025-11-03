@@ -67,6 +67,9 @@ namespace Bara.API.Users.Repositories
                 producer.Bio = producerDetailDTO.Bio;
                 producer.Gender = producerDetailDTO.Gender;
                 producer.DateOfBirth = producerDetailDTO.DateOfBirth;
+                producer.ProfileImageUrl = producerDetailDTO.ProfileImageUrl ?? "";
+                producer.ProfileImagePublicId = producerDetailDTO.ProfileImagePublicId ?? "";
+                producer.PortfolioUrl = producerDetailDTO.PortfolioUrl ?? "";
                 producer.Type = Role.Producer;
                 producer.AuthProfile.FullName = $"{producerDetailDTO.FirstName} {producerDetailDTO.LastName}".ToUpperInvariant();
                 producer.AuthProfile.IsProfileSetupComplete = true;
@@ -140,7 +143,10 @@ namespace Bara.API.Users.Repositories
                     IsVerified = producer.AuthProfile.IsVerified,
                     PhoneNumber = producer.PhoneNumber,
                     VerificationStatus = producer.VerificationStatus,
-                    DateOfBirth = producer.DateOfBirth
+                    DateOfBirth = producer.DateOfBirth,
+                    ProfileImagePublicId = producer.ProfileImagePublicId,
+                    ProfileImageUrl = producer.ProfileImageUrl,
+                    PortfolioUrl = producer.PortfolioUrl,
                 };
 
                 // --------------------  COMMIT TRANSACTION --------------------
@@ -214,6 +220,9 @@ namespace Bara.API.Users.Repositories
                                         IsBlacklisted = x.IsBlacklisted,
                                         CreatedAt = x.CreatedAt,
                                         DateCreated = x.DateCreated,
+                                        PortfolioUrl = x.PortfolioUrl,
+                                        ProfileImageUrl = x.ProfileImageUrl,
+                                        ProfileImagePublicId = x.ProfileImagePublicId,
                                         TimeCreated = x.TimeCreated,
                                         DateModified = x.DateModified,
                                         ModifiedAt = x.ModifiedAt,

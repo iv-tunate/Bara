@@ -79,7 +79,7 @@ export default function AddExperienceModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-opacity-60 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-opacity-60 flex items-center justify-center z-50 p-4 h-full">
       <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-3xl relative max-h-[90vh] overflow-auto">
         <button onClick={onClose} className="absolute top-4 right-4">
           <Image src="/cancel-icon.png" alt="Close" width={20} height={20} />

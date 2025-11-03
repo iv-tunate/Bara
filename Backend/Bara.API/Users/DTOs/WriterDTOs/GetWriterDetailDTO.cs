@@ -49,7 +49,7 @@ namespace Bara.API.Users.DTOs.WriterDTOs
         /// <summary>
         /// Represents the past or current project experiences of a writer.
         /// </summary>
-        public List<BioExperience> Experiences { get; init; }
+        public List<BioExperience>? Experiences { get; init; }
 
         /// <summary>
         /// A brief biography or description provided by the user.
@@ -130,5 +130,9 @@ namespace Bara.API.Users.DTOs.WriterDTOs
         /// The time component of the writer's last modification timestamp.
         /// </summary>
         public TimeOnly? TimeModified { get; init; }
+
+        public string ProfileImageUrl { get; init; }
+        public string ProfileImagePublicId { get; init; }
+        public string PortfolioUrl { get; set; }
     }
 }

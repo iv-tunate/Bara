@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Logo from "@/components/Logo";
@@ -12,6 +12,8 @@ import { api } from "@/utils/api";
 import toast from "react-hot-toast";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+import { uploadImage } from "@/utils/upload";
+import { ProcessingModal, ProcessingStatus } from "@/components/ResponseModal";
 
 type TabType = "personal" | "location" | "identity";
 type Experience = {
@@ -26,6 +28,19 @@ type Experience = {
 export default function WriterProfilePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("personal");
+  const [showModal, setShowModal] = useState(false);
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [profileImageUrl, setProfileImageUrl] = useState("");
+  const [profileImagePublicId, setProfileImagePublicId] = useState("");
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(
+   null
+ );
+ const [uploading, setUploading] = useState(false);
+
+
+  const [requestStatus, setRequestStatus] =
+    useState<ProcessingStatus>("loading");
+  const [responseModal, setResponseModal] = useState(false);
   const [experiences, setExperiences] = useState<Experience[]>([
     {
       org: "",
@@ -36,12 +51,6 @@ export default function WriterProfilePage() {
       ongoing: false,
     },
   ]);
-  const [showModal, setShowModal] = useState(false);
-
-  const handleAddExperience = (exp: Experience) => {
-    setExperiences((prev) => [...prev, exp]);
-  };
-
   const [formData, setFormData] = useState({
     firstName: "",
     middleName: "",
@@ -50,8 +59,26 @@ export default function WriterProfilePage() {
     bio: "",
     phone: "",
     dateOfBirth: "",
-    gender: "", 
+    gender: "",
   });
+  const [locationForm, setLocationForm] = useState({
+    country: "Nigeria",
+    state: "",
+    city: "",
+    additionalDetails: "",
+    street: "",
+    zipCode: "",
+  });
+
+  const [identityForm, setIdentityForm] = useState({
+    documentType: "",
+    verificationNumber: "",
+    file: null as File | null,
+  });
+
+  const handleAddExperience = (exp: Experience) => {
+    setExperiences((prev) => [...prev, exp]);
+  };
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -62,21 +89,40 @@ export default function WriterProfilePage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const [locationForm, setLocationForm] = useState({
-    country: "Nigeria",
-    state: "",
-    city: "",
-    houseNumber: "",
-    street: "",
-    zipCode: "",
-  });
+const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+const handleProfileImageChange = async (
+  e: React.ChangeEvent<HTMLInputElement>
+) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
 
-  const [identityForm, setIdentityForm] = useState({
-    documentType: "",
-    verificationNumber: "",
-    file: null as File | null,
-  });
+  setProfileImage(file);
+  setProfileImagePreview(URL.createObjectURL(file));
+
+  setUploading(true);
+  try {
+    const user = {
+      firstName: formData.firstName || "Temp",
+      lastName: formData.lastName || "User",
+      id: localStorage.getItem("userId") || "temp",
+    };
+
+    const uploadResult = await uploadImage(file, "Writer", user);
+    setFormData((prev) => ({
+      ...prev,
+      profileImageUrl: uploadResult.url,
+      profileImagePublicId: uploadResult.publicId,
+    }));
+
+    toast.success("Profile image uploaded successfully!");
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to upload profile image");
+  } finally {
+    setUploading(false);
+  }
+};
 
   const isPersonalInfoComplete = Boolean(
     formData.firstName &&
@@ -90,7 +136,7 @@ export default function WriterProfilePage() {
     locationForm.country &&
       locationForm.state &&
       locationForm.city &&
-      locationForm.houseNumber &&
+      locationForm.zipCode &&
       locationForm.street
   );
 
@@ -108,7 +154,6 @@ export default function WriterProfilePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-
     if (activeTab === "personal" && isPersonalInfoComplete) {
       setActiveTab("location");
       return;
@@ -123,73 +168,92 @@ export default function WriterProfilePage() {
         return;
       }
 
+      setResponseModal(true);
+      setRequestStatus("loading");
       try {
-        const writerPayload = {
-          FirstName: formData.firstName,
-          LastName: formData.lastName,
-          MiddleName: formData.middleName ?? "",
-          PhoneNumber: formData.phone,
-          Gender: formData.gender,
-          Bio: formData.bio ?? "",
-          DateOfBirth: formData.dateOfBirth, 
-          IsPremiumMember: false,
-          Experiences: experiences.map((exp) => ({
-            Description: exp.description,
-            Organization: exp.org,
-            Project: exp.title,
-            StartDate: exp.startDate || null,
-            EndDate: exp.ongoing ? null : exp.endDate || null,
-            IsCurrent: exp.ongoing,
-          })),
-          AddressDetail: {
-            Country: locationForm.country,
-            State: locationForm.state,
-            City: locationForm.city,
-            Street: locationForm.street,
-            PostalCode: locationForm.zipCode ?? "",
-            AdditionalDetails: locationForm.houseNumber ?? "",
-          },
-          VerificationDocument: {
-            Type: identityForm.documentType,
-            VerificationNumber: identityForm.verificationNumber,
-          },
-        };
-
         const form = new FormData();
-        form.append("FirstName", writerPayload.FirstName);
-        form.append("LastName", writerPayload.LastName);
-        form.append("MiddleName", writerPayload.MiddleName);
-        form.append("PhoneNumber", writerPayload.PhoneNumber);
-        form.append("Gender", writerPayload.Gender);
-        form.append("Bio", writerPayload.Bio);
-        form.append("DateOfBirth", writerPayload.DateOfBirth);
-        form.append("IsPremiumMember", String(writerPayload.IsPremiumMember));
-        form.append("Experiences", JSON.stringify(writerPayload.Experiences));
-        form.append(
-          "AddressDetail",
-          JSON.stringify(writerPayload.AddressDetail)
-        );
-        form.append(
-          "VerificationDocument",
-          JSON.stringify(writerPayload.VerificationDocument)
-        );
 
+        form.append("FirstName", formData.firstName);
+        form.append("LastName", formData.lastName);
+        form.append("MiddleName", formData.middleName || "");
+        form.append("PhoneNumber", formData.phone);
+        form.append("Gender", formData.gender);
+        form.append("Bio", formData.bio || "");
+        form.append("DateOfBirth", formData.dateOfBirth);
+        form.append("IsPremiumMember", "false");
+        form.append("AddressDetail.Street", locationForm.street || "");
+        form.append("AddressDetail.City", locationForm.city || "");
+        form.append("AddressDetail.State", locationForm.state || "");
+        form.append("AddressDetail.Country", locationForm.country || "Nigeria");
+        form.append("AddressDetail.PostalCode", locationForm.zipCode || "");
+        form.append("PortfolioUrl", formData.portfolioLink || "");
         form.append(
-          "verificationFile",
+          "AddressDetail.AdditionalDetails",
+          locationForm.additionalDetails || "no additional details"
+        );
+        form.append("VerificationDocument.Type", identityForm.documentType);
+        form.append(
+          "VerificationDocument.VerificationNumber",
+          identityForm.verificationNumber
+        );
+        form.append(
+          "VerificationDocument.Document",
           identityForm.file!,
           identityForm.file!.name
         );
+        if (profileImageUrl) {
+          form.append("ProfileImageUrl", profileImageUrl);
+          form.append("ProfileImagePublicId", profileImagePublicId);
+        }
+
+        const validExperiences = experiences.filter(
+          (exp) =>
+            exp.org?.trim() && exp.title?.trim() && exp.description?.trim()
+        );
+        if (validExperiences.length > 0) {
+          validExperiences.forEach((exp, index) => {
+            form.append(`Experiences[${index}].Description`, exp.description);
+            form.append(`Experiences[${index}].Organization`, exp.org);
+            form.append(`Experiences[${index}].Project`, exp.title);
+            form.append(`Experiences[${index}].IsCurrent`, String(exp.ongoing));
+
+            if (exp.startDate) {
+              form.append(`Experiences[${index}].StartDate`, exp.startDate);
+            }
+
+            if (!exp.ongoing && exp.endDate) {
+              form.append(`Experiences[${index}].EndDate`, exp.endDate);
+            }
+          });
+        }
+
+        // console.log("Location Form State:", locationForm);
+
+        // console.log("=== FormData Contents ===");
+        // for (let [key, value] of form.entries()) {
+        //   console.log(key, ":", value);
+        // }
 
         const userId = localStorage.getItem("userId");
         const res = await api.createWriter(form, userId as string);
-        if (!res.ok) {
-          toast.error(res.message || "Failed to create writer profile");
-          return;
-        }
 
+        console.log(res);
+
+        if (!res.data.isSucess) {
+          setRequestStatus("failed");
+          toast.error(res.data.message || "Failed to create writer profile");
+          return;
+        } else if (res.data.statusCode === 409) {
+          setRequestStatus("conflict");
+          toast.error(res.data.message);
+          router.push(`/writer/profile/${userId}`);
+        }
         toast.success("Writer profile created!");
-        router.push("/writer/dashboard");
+        setRequestStatus("success");
+        localStorage.setItem(`WriterProfile-${userId}`, res.data.data);
+        router.push(`/writer/profile/${userId}`);
       } catch (err: any) {
+        setRequestStatus("error");
         console.error(err);
         toast.error("An unexpected error occurred. Check console.");
       }
@@ -202,6 +266,10 @@ export default function WriterProfilePage() {
     else if (activeTab === "identity") {
       router.push("/writer/dashboard");
     }
+  };
+  const handleClose = () => {
+    setResponseModal(false);
+    setTimeout(() => setRequestStatus("loading"), 300);
   };
 
   return (
@@ -289,6 +357,63 @@ export default function WriterProfilePage() {
                   />
                 </div>
               </div>
+              <div>
+                <label className="block mb-1 text-sm font-semibold text-[#22242A]">
+                  Upload your profile picture
+                </label>
+
+                {profileImage ? (
+                  <div className="border-2 border-dashed border-[#ABADB2] rounded-md p-4 bg-[#F5F5F5]">
+                    <div className="flex flex-col items-center space-y-3">
+                      <Image
+                        src="/checkring.png"
+                        alt="Upload complete"
+                        width={32}
+                        height={32}
+                      />
+                      <span className="text-sm text-[#333740] font-medium">
+                        Upload complete
+                      </span>
+
+                      <Image
+                        src={
+                          profileImagePreview ||
+                          URL.createObjectURL(profileImage)
+                        }
+                        alt="Profile preview"
+                        width={100}
+                        height={100}
+                        className="rounded-full border object-cover"
+                      />
+
+                      <div className="w-full h-1 bg-green-600 rounded" />
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full h-40 border-2 border-dashed border-[#ABADB2] rounded-md bg-[#F5F5F5] flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-100 transition"
+                  >
+                    <p className="text-sm text-[#333740]">
+                      Drag and drop your image here
+                    </p>
+                    <p className="text-sm text-[#333740] mt-1">
+                      or{" "}
+                      <span className="text-[#810306] font-semibold underline">
+                        Browse
+                      </span>
+                    </p>
+                  </div>
+                )}
+
+                <input
+                  type="file"
+                  accept="image/png, image/jpeg"
+                  onChange={handleProfileImageChange}
+                  ref={fileInputRef}
+                  className="hidden"
+                />
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div className="flex flex-col">
@@ -369,7 +494,9 @@ export default function WriterProfilePage() {
                     <PhoneInput
                       country={"ng"}
                       value={formData.phone}
-                      onChange={(phone) => setFormData({ ...formData, phone })}
+                      onChange={(phone) =>
+                        setFormData({ ...formData, phone: `+${phone}` })
+                      }
                       inputClass="!bg-transparent !border-none !text-sm !w-full"
                       containerClass="!w-full"
                       buttonClass="!border-none"
@@ -418,18 +545,28 @@ export default function WriterProfilePage() {
 
             <button
               type="submit"
+              onClick={handleSubmit}
               disabled={!isCurrentStepComplete}
               className={`px-8 py-2 rounded-md font-semibold ${
                 isCurrentStepComplete
-                  ? "bg-[#810306] text-white"
+                  ? "bg-[#810306] text-white cursor-pointer"
                   : "bg-[#F5F5F5] text-[#858990] cursor-not-allowed"
               }`}
             >
-              {activeTab === "identity" ? "Get Started" : "Save"}
+              {activeTab === "identity" ? "Complete Profile" : "continue"}
             </button>
           </div>
         </div>
       </form>
+
+      <ProcessingModal
+        isOpen={responseModal}
+        status={requestStatus}
+        loadingMessage="Creating your profile"
+        successMessage="profile created successfully!"
+        errorMessage="Failed to create profile. Please try again."
+        onClose={handleClose}
+      />
     </div>
   );
 }

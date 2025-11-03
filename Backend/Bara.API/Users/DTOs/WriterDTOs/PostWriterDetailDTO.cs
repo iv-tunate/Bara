@@ -52,12 +52,12 @@ namespace Bara.API.Users.DTOs.WriterDTOs
         /// <summary>
         /// The address details of the writer.
         /// </summary>
-        public required AddressDetail AddressDetail { get; init; }
+        public AddressDetail AddressDetail { get; init; }
 
         /// <summary>
         /// Represents the experiences of a writer including their bio description, projects, organization, etc.
         /// </summary>
-        public required List<BioExperienceDTO> Experiences { get; init; }
+        public List<BioExperienceDTO>? Experiences { get; init; }
 
         /// <summary>
         /// The verification document submitted by the writer for identity confirmation.
@@ -69,5 +69,8 @@ namespace Bara.API.Users.DTOs.WriterDTOs
         /// </summary>
         public List<PostServiceDetailDTO>? PostServiceDetail { get; init; }
 
+        public string ProfileImageUrl { get; init; }
+        public string ProfileImagePublicId { get; init; }
+        public string PortfolioUrl { get; set; }
     }
 }

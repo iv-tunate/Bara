@@ -14,7 +14,7 @@ namespace Bara.API.Users.Models
         /// </summary>
         [DataType(DataType.Text), MaxLength(200)]
         public string Bio { get; set; } = string.Empty;
-        public List<BioExperience> Experiences { get; set; }
+        public List<BioExperience>? Experiences { get; set; }
         public bool IsPremiumMember { get; set; }
         /// <summary>
         /// The list of services provided by the writer, such as script editing, proofreading, etc.

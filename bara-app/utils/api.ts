@@ -191,8 +191,9 @@ export const api = {
   },
 
   createWriter: async (formData: FormData, userId: string) => {
+    debugger;
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-    const writerUrl = `/api/writer/${userId}`;
+    const writerUrl = `/api/writer/create-profile/${userId}`;
 
     return apiRequest(`${baseUrl}${writerUrl}`, {
       method: "POST",

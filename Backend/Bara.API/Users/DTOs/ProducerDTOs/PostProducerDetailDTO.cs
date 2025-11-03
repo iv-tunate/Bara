@@ -43,7 +43,7 @@ namespace Bara.API.Users.DTOs.ProducerDTOs
         /// <summary>
         /// The address details of the producer.
         /// </summary>
-        public required AddressDetail AddressDetail { get; init; }
+        public AddressDetail AddressDetail { get; init; }
 
         /// <summary>
         /// The verification document required for validating the producer's identity.
@@ -54,5 +54,9 @@ namespace Bara.API.Users.DTOs.ProducerDTOs
         /// A short biography or description about the producer.
         /// </summary>
         public string Bio { get; init; } = "";
+
+        public string ProfileImageUrl { get; init; }
+        public string ProfileImagePublicId { get; init; }
+        public string PortfolioUrl { get; set; }
     }
 }

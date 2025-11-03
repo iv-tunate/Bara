@@ -65,13 +65,21 @@ namespace Bara.API.Users.Repositories
                     return ResponseDetail<GetWriterDetailDTO>.Failed($"Writer profile with ID {userId} does not exist.", 404, "Not Found");
                 }
 
+                //if (writerProfile.AuthProfile.IsProfileSetupComplete)
+                //{
+                //    logger.LogInformation($"Writer named: {writerProfile.AuthProfile.FullName} with id {writerProfile.Id} tried to create their profile again... This is most likely an error on the frontend. They can update profile but not use this method if they already have completed their profile setup");
+                //    return ResponseDetail<GetWriterDetailDTO>.Failed($"Profile setup is already complete", 409, "Conflict");
+                //}
 
                 writerProfile.FirstName = writerDetailDTO.FirstName.ToUpperInvariant();
                 writerProfile.LastName = writerDetailDTO.LastName.ToUpperInvariant();
                 writerProfile.MiddleName = writerDetailDTO.MiddleName?.ToUpperInvariant() ?? "";
                 writerProfile.PhoneNumber = writerDetailDTO.PhoneNumber;
                 writerProfile.Bio = writerDetailDTO.Bio ?? "";
-                writerProfile.Experiences = writerDetailDTO.Experiences.Select(x => new BioExperience
+                writerProfile.ProfileImagePublicId = writerDetailDTO.ProfileImagePublicId ?? "";
+                writerProfile.ProfileImageUrl = writerDetailDTO.ProfileImageUrl ?? "";
+                writerProfile.PortfolioUrl = writerDetailDTO.PortfolioUrl ?? "";
+                writerProfile.Experiences = writerDetailDTO.Experiences?.Select(x => new BioExperience
                 {
                     WriterId = userId,
                     IsCurrent = x.IsCurrent,
@@ -164,7 +172,10 @@ namespace Bara.API.Users.Repositories
                     MiddleName = writerProfile.MiddleName,
                     Name = $"{writerProfile.FirstName} {writerProfile.LastName}",
                     Bio = writerProfile.Bio,
-                    Experiences = writerProfile.Experiences.Select(x => new BioExperience
+                    ProfileImagePublicId = writerProfile.ProfileImagePublicId,
+                    ProfileImageUrl = writerProfile.ProfileImageUrl,
+                    PortfolioUrl = writerProfile.PortfolioUrl,
+                    Experiences = writerProfile.Experiences?.Select(x => new BioExperience
                     {
                         Description = x.Description,
                         Organization = x.Organization,
@@ -325,6 +336,9 @@ namespace Bara.API.Users.Repositories
                                         IsVerified = x.AuthProfile.IsVerified,
                                         ModifiedAt = x.ModifiedAt,
                                         PhoneNumber = x.PhoneNumber,
+                                        ProfileImagePublicId = x.ProfileImagePublicId,
+                                        ProfileImageUrl = x.ProfileImageUrl,
+                                        PortfolioUrl = x.PortfolioUrl,
                                         TimeModified = x.TimeModified,
                                         VerificationStatus = x.VerificationStatus.ToString()
                                     }).FirstOrDefaultAsync(x => x.Id == writerId);

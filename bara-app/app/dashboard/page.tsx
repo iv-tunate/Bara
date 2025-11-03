@@ -12,6 +12,8 @@ import { getUserSession } from "@/utils/tokenManager";
 import { Script, Genre } from "@/models/script";
 import Navbar from "@/components/Navbar";
 import CompleteProfileNav from "@/components/CompleteProfileNav";
+import { Button } from "@/components/ui/button";
+
 export default function DashboardPage() {
   const [scripts, setScripts] = useState<Script[]>([]);
   const [selectedGenres, setSelectedGenres] = useState<Genre[]>([]);
@@ -29,7 +31,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const session = getUserSession();
-
+   
     if (session && !session.profileComplete) {
       setUserName(session.name);
       setRole(session.userType);
@@ -103,7 +105,7 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mt-4">
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-bold text-[#22242A]">
-              Hello {userName}!
+              Hello {userName}
             </h2>
             <Image src="/wave.png" alt="Wave" width={20} height={20} />
           </div>
@@ -140,15 +142,44 @@ export default function DashboardPage() {
           )} */}
         </div>
         {role === "Writer" && (
-          <div className="mt-4 rounded-lg overflow-hidden">
-            <Image
-              src="/writer-banner.png"
-              alt="Writer Dashboard Banner"
-              width={1200}
-              height={400}
-              className="w-full h-56 object-cover rounded-md"
-            />
-          </div>
+          <section className="relative bg-[#F2F0E4] rounded-lg p-6 md:p-8 my-8 overflow-hidden border border-[#ABADB2]">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute top-4 right-4 h-8 w-8 p-0 text-[#444955] hover:bg-white/50 z-10 cursor-pointer"
+            >
+              <Image
+                src="/cancel-icon.png"
+                alt="Close"
+                width={16}
+                height={16}
+              />
+            </Button>
+
+            <div className="flex flex-col lg:flex-row items-stretch gap-6 lg:gap-10">
+              <div className="flex-1 flex flex-col justify-center max-w-xl z-10">
+                <h2 className="text-xl md:text-2xl font-semibold text-[#000000] mb-4">
+                  Want More Producers to Discover Your Work?
+                </h2>
+                <p className="text-[#000000] text-sm md:text-base leading-relaxed mb-6 ">
+                  With Bara Premium, your work gets priority placement in
+                  producer searches, increased visibility by genre, and access
+                  to valuable insights like script views and engagement.
+                </p>
+                <Button className="bg-[#810306] text-white px-6 py-2 w-fit">
+                  Get Bara Premium
+                </Button>
+              </div>
+
+              <div className="flex-1 relative">
+                <img
+                  src="/writerdashboard.png"
+                  alt="Writers and producers collaborating"
+                  className="w-full h-full object-cover rounded-lg"
+                />
+              </div>
+            </div>
+          </section>
         )}
 
         {error && (

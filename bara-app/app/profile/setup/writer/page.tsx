@@ -1,4 +1,4 @@
-import Writer from "../Writer";
+import Writer from "./Writer";
 
 export default function WriterProfilePage() {
   return <Writer />;
