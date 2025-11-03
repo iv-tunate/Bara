@@ -302,6 +302,7 @@ namespace Bara.API.Users.Repositories
                         message = $"Your KYC was verified successful",
                         time = DateTime.UtcNow
                     });
+                    cache.Remove($"{user.Type}_Profile_{user.Id}");
                     return ResponseDetail<bool>.Successful(true, $"User verification status updated successfully for {name}.");
                 }
             }
