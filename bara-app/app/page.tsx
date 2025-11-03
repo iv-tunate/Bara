@@ -3,16 +3,42 @@
 import Navbar from "@/components/Navbar";
 import Image from "next/image";
 import HeroImage from "../public/hero.png"
+import {useState, useEffect} from "react"
+import CompleteProfileNav from "@/components/CompleteProfileNav";
+import DashboardNavbar from "@/components/DashboardNavbar";
+import { getUserSession } from "@/utils/tokenManager";
 // import CreateAccountDropdown from "@/components/CreateAccountDropdown";
 // import { useState } from "react";
 
 export default function HomePage() {
   // const [showDropdown, setShowDropdown] = useState(false);
+const [role, setRole] = useState<string>("Guest");
+  const [profileState, setProfileState] = useState(false);
+    useEffect(() => {
+      const session = getUserSession();
+     
+      if (session && !session.profileComplete) {
+        setRole(session.userType);
+        setProfileState(false);
+        return;
+      } else if (!session) {
+        setRole("Guest");
+        return;
+      }
+      setRole(session.userType);
+      setProfileState(true);
+    }, []);
 
   return (
     <main className="min-h-screen bg-white flex flex-col relative">
-      <Navbar />
-
+      c{" "}
+      {role === "Guest" ? (
+        <Navbar />
+      ) : profileState === false ? (
+        <CompleteProfileNav />
+      ) : (
+        <DashboardNavbar />
+      )}
       <section className="flex flex-col-reverse md:flex-row items-center justify-between px-6 md:px-16 py-12 md:py-20 flex-1 max-w-7xl mx-auto w-full">
         <div className="md:w-1/2 max-w-xl mt-10 md:mt-0 relative">
           <h1 className="[font-family:var(--font-lato)] text-3xl md:text-5xl font-semibold leading-tight text-barRedMain">

@@ -6,11 +6,13 @@ export interface UserSession {
   accessToken: string;
   wrongLoginAttempts?: number;
   profileComplete: boolean;
+  createdAt?: number;
 }
 
 const TOKEN_KEY = "bara_session";
-const USER_ID_KEY = "bara_user_id";
-const USER_TYPE_KEY = "bara_user_type";
+const USER_ID_KEY = "userId";
+const USER_TYPE_KEY = "userType";
+const SESSION_MAX_AGE = 1000 * 60 * 60;
 
 export function setUserSession(session: UserSession): void {
   try {
@@ -18,7 +20,7 @@ export function setUserSession(session: UserSession): void {
 
     localStorage.setItem(USER_ID_KEY, session.userId);
     localStorage.setItem(USER_TYPE_KEY, session.userType);
-    
+
     const sessionDetails = sessionStorage.getItem(TOKEN_KEY);
     console.log("User Session Details", sessionDetails);
   } catch (error) {
@@ -31,7 +33,13 @@ export function getUserSession(): UserSession | null {
     const sessionData = sessionStorage.getItem(TOKEN_KEY);
     if (!sessionData) return null;
 
-    return JSON.parse(sessionData) as UserSession;
+    const session = JSON.parse(sessionData);
+    if (Date.now() - session.createdAt > SESSION_MAX_AGE) {
+      clearUserSession();
+      //console.warn("Session ended automatically... Please proceed to login");
+      return null;
+    }
+    return session as UserSession;
   } catch (error) {
     console.error("Failed to retrieve user session:", error);
     return null;

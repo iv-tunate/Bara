@@ -60,7 +60,8 @@ export default function LoginPage() {
          userType: response.role,
          accessToken: response.accessToken,
          wrongLoginAttempts: response.wrongLoginAttempts,
-         profileComplete: response.isProfileSetupComplete,  
+         profileComplete: response.isProfileSetupComplete,
+         createdAt: Date.now() - 2 * 60 * 1000,
        });
 
        if (!response.isProfileSetupComplete) {
@@ -115,7 +116,9 @@ export default function LoginPage() {
           userType: response.role || "Unknown",
           accessToken: response.accessToken,
           wrongLoginAttempts: response.wrongLoginAttempts,
-          profileComplete: response.isProfileSetupComplete,  
+          profileComplete: response.isProfileSetupComplete,
+          createdAt: Date.now() - 2 * 60 * 1000,
+
         });
 
         if (!response.isProfileSetupComplete) {
