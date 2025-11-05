@@ -14,6 +14,7 @@ import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { uploadImage } from "@/utils/upload";
 import { ProcessingModal, ProcessingStatus } from "@/components/ResponseModal";
+import LoadingButton from "@/components/LoadingButton";
 
 type TabType = "personal" | "location" | "identity";
 type Experience = {
@@ -37,10 +38,8 @@ export default function WriterProfilePage() {
  );
  const [uploading, setUploading] = useState(false);
 
+const [loading, setLoading] = useState(false);
 
-  const [requestStatus, setRequestStatus] =
-    useState<ProcessingStatus>("loading");
-  const [responseModal, setResponseModal] = useState(false);
   const [experiences, setExperiences] = useState<Experience[]>([
     {
       org: "",
@@ -75,6 +74,9 @@ export default function WriterProfilePage() {
     verificationNumber: "",
     file: null as File | null,
   });
+   useEffect(() => {
+     window.scrollTo({ top: 0, behavior: "smooth" });
+   }, [activeTab]);
 
   const handleAddExperience = (exp: Experience) => {
     setExperiences((prev) => [...prev, exp]);
@@ -149,124 +151,106 @@ const handleProfileImageChange = async (
     (activeTab === "location" && isLocationInfoComplete) ||
     (activeTab === "identity" && isIdentityInfoComplete);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+ const handleSubmit = async (e: React.FormEvent) => {
+   e.preventDefault();
 
-    if (activeTab === "personal" && isPersonalInfoComplete) {
-      setActiveTab("location");
-      return;
-    } else if (activeTab === "location" && isLocationInfoComplete) {
-      setActiveTab("identity");
-      return;
-    } else if (activeTab === "identity") {
-      if (!isIdentityInfoComplete) {
-        toast.error(
-          "Please complete identity verification (type, number and upload)."
-        );
-        return;
-      }
+   if (activeTab === "personal" && isPersonalInfoComplete) {
+     setActiveTab("location");
+     return;
+   } else if (activeTab === "location" && isLocationInfoComplete) {
+     setActiveTab("identity");
+     return;
+   } else if (activeTab === "identity") {
+     if (!isIdentityInfoComplete) {
+       toast.error(
+         "Please complete identity verification (type, number, and upload)."
+       );
+       return;
+     }
 
-      setResponseModal(true);
-      setRequestStatus("loading");
-      try {
-        const form = new FormData();
+     setLoading(true); 
 
-        form.append("FirstName", formData.firstName);
-        form.append("LastName", formData.lastName);
-        form.append("MiddleName", formData.middleName || "none");
-        form.append("PhoneNumber", formData.phone);
-        form.append("Gender", formData.gender);
-        form.append("Bio", formData.bio || "");
-        form.append("DateOfBirth", formData.dateOfBirth);
-        form.append("IsPremiumMember", "false");
-        form.append("AddressDetail.Street", locationForm.street || "");
-        form.append("AddressDetail.City", locationForm.city || "");
-        form.append("AddressDetail.State", locationForm.state || "");
-        form.append("AddressDetail.Country", locationForm.country || "Nigeria");
-        form.append("AddressDetail.PostalCode", locationForm.zipCode || "");
-        form.append("PortfolioUrl", formData.portfolioLink || "");
-        form.append(
-          "AddressDetail.AdditionalDetails",
-          locationForm.additionalDetails || "no additional details"
-        );
-        form.append("VerificationDocument.Type", identityForm.documentType);
-        form.append(
-          "VerificationDocument.VerificationNumber",
-          identityForm.verificationNumber
-        );
-        form.append(
-          "VerificationDocument.Document",
-          identityForm.file!,
-          identityForm.file!.name
-        );
-        if (profileImageUrl) {
-          form.append("ProfileImageUrl", profileImageUrl);
-          form.append("ProfileImagePublicId", profileImagePublicId);
-        }
+     try {
+       const form = new FormData();
 
-        const validExperiences = experiences.filter(
-          (exp) =>
-            exp.org?.trim() && exp.title?.trim() && exp.description?.trim()
-        );
-        if (validExperiences.length > 0) {
-          validExperiences.forEach((exp, index) => {
-            form.append(`Experiences[${index}].Description`, exp.description);
-            form.append(`Experiences[${index}].Organization`, exp.org);
-            form.append(`Experiences[${index}].Project`, exp.title);
-            form.append(`Experiences[${index}].IsCurrent`, String(exp.ongoing));
+       form.append("FirstName", formData.firstName);
+       form.append("LastName", formData.lastName);
+       form.append("MiddleName", formData.middleName || "none");
+       form.append("PhoneNumber", formData.phone);
+       form.append("Gender", formData.gender);
+       form.append("Bio", formData.bio || "");
+       form.append("DateOfBirth", formData.dateOfBirth);
+       form.append("IsPremiumMember", "false");
+       form.append("AddressDetail.Street", locationForm.street || "");
+       form.append("AddressDetail.City", locationForm.city || "");
+       form.append("AddressDetail.State", locationForm.state || "");
+       form.append("AddressDetail.Country", locationForm.country || "Nigeria");
+       form.append("AddressDetail.PostalCode", locationForm.zipCode || "");
+       form.append("PortfolioUrl", formData.portfolioLink || "");
+       form.append(
+         "AddressDetail.AdditionalDetails",
+         locationForm.additionalDetails || "no additional details"
+       );
+       form.append("VerificationDocument.Type", identityForm.documentType);
+       form.append(
+         "VerificationDocument.VerificationNumber",
+         identityForm.verificationNumber
+       );
+       form.append(
+         "VerificationDocument.Document",
+         identityForm.file!,
+         identityForm.file!.name
+       );
 
-            if (exp.startDate) {
-              form.append(`Experiences[${index}].StartDate`, exp.startDate);
-            }
+       if (profileImageUrl) {
+         form.append("ProfileImageUrl", profileImageUrl);
+         form.append("ProfileImagePublicId", profileImagePublicId);
+       }
 
-            if (!exp.ongoing && exp.endDate) {
-              form.append(`Experiences[${index}].EndDate`, exp.endDate);
-            }
-          });
-        }
+       const validExperiences = experiences.filter(
+         (exp) =>
+           exp.org?.trim() && exp.title?.trim() && exp.description?.trim()
+       );
 
-        // console.log("Location Form State:", locationForm);
+       if (validExperiences.length > 0) {
+         validExperiences.forEach((exp, index) => {
+           form.append(`Experiences[${index}].Description`, exp.description);
+           form.append(`Experiences[${index}].Organization`, exp.org);
+           form.append(`Experiences[${index}].Project`, exp.title);
+           form.append(`Experiences[${index}].IsCurrent`, String(exp.ongoing));
 
-        // console.log("=== FormData Contents ===");
-        // for (let [key, value] of form.entries()) {
-        //   console.log(key, ":", value);
-        // }
+           if (exp.startDate)
+             form.append(`Experiences[${index}].StartDate`, exp.startDate);
 
-        const userId = localStorage.getItem("userId");
-        debugger;
-        const res = await api.createWriter(form, userId as string);
+           if (!exp.ongoing && exp.endDate)
+             form.append(`Experiences[${index}].EndDate`, exp.endDate);
+         });
+       }
 
-        console.log(res);
+       const userId = localStorage.getItem("userId");
+       const res = await api.createWriter(form, userId as string);
 
-        if (res.data.isSucess && res.data.statusCode ===201) {
-           toast.success("Writer profile created!");
-        setRequestStatus("success");
-        //localStorage.setItem(`WriterProfile-${userId}`, res.data.data);
+       if (res.data.isSucess && res.data.statusCode === 201) {
+         toast.success("Writer profile created!");
          setTimeout(() => {
            router.push(`/writer/profile/${userId}`);
          }, 1500);
-     
-          return;
-        } else if (res.data.statusCode === 409) {
-          setRequestStatus("conflict");
-          toast.error(res.data.message);
-           setTimeout(() => {
-             router.push(`/writer/profile/${userId}`);
-           }, 1500);
-          return;
-        }
-       else{
-             setRequestStatus("failed");
-             toast.error(res.data.message || "Failed to create writer profile");
-             return
+       } else if (res.data.statusCode === 409) {
+         toast.error(res.data.message);
+         setTimeout(() => {
+           router.push(`/writer/profile/${userId}`);
+         }, 1500);
+       } else {
+         toast.error(res.data.message || "Failed to create writer profile");
        }
-      } catch (err: any) {
-        setRequestStatus("error");
-        console.error(err);
-        toast.error("An unexpected error occurred. Check console.");
-      }
-    }
-  };
+     } catch (err) {
+       console.error(err);
+       toast.error("An unexpected error occurred. Check console.");
+     } finally {
+       setLoading(false); 
+     }
+   }
+ };
 
   const handleSkip = () => {
     if (activeTab === "personal") setActiveTab("location");
@@ -275,10 +259,7 @@ const handleProfileImageChange = async (
       router.push("/writer/dashboard");
     }
   };
-  const handleClose = () => {
-    setResponseModal(false);
-    setTimeout(() => setRequestStatus("loading"), 300);
-  };
+
 
   return (
     <div className="fixed inset-0 bg-[#1a0000] bg-opacity-80 flex items-center justify-center z-50 p-2">
@@ -543,38 +524,28 @@ const handleProfileImageChange = async (
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-4 pt-4 mt-auto">
-            <button
-              type="button"
-              onClick={handleSkip}
-              className="px-8 py-2 border-2 border-[#810306] text-[#810306] rounded-md font-semibold"
-            >
-              Skip
-            </button>
+           
+              <LoadingButton
+                type="button"
+                onClick={handleSkip}
+                variant="secondary"
+                disabled={activeTab === "identity"}
+              >
+                Skip
+              </LoadingButton>
 
-            <button
-              type="submit"
-              onClick={handleSubmit}
-              disabled={!isCurrentStepComplete}
-              className={`px-8 py-2 rounded-md font-semibold ${
-                isCurrentStepComplete
-                  ? "bg-[#810306] text-white cursor-pointer"
-                  : "bg-[#F5F5F5] text-[#858990] cursor-not-allowed"
-              }`}
-            >
-              {activeTab === "identity" ? "Complete Profile" : "continue"}
-            </button>
+              <LoadingButton
+                type="submit"
+                loading={loading}
+                disabled={!isCurrentStepComplete}
+                variant="primary"
+              >
+                {activeTab === "identity" ? "Complete Profile" : "Continue"}
+              </LoadingButton>
+           
           </div>
         </div>
       </form>
-
-      <ProcessingModal
-        isOpen={responseModal}
-        status={requestStatus}
-        loadingMessage="Creating your profile"
-        successMessage="profile created successfully!"
-        errorMessage="Failed to create profile. Please try again."
-        onClose={handleClose}
-      />
     </div>
   );
 }
