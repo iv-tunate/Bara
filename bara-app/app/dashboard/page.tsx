@@ -112,7 +112,7 @@ export default function DashboardPage() {
 
           <div className="flex items-center gap-3">
             {role === "Writer" && profileState === true && (
-              <Link href="/dashboard/scripts">
+              <Link href="/writer/add-script">
                 <button
                   type="button"
                   className="bg-[#800000] text-white font-medium px-6 py-2 rounded-md hover:bg-[#1a0000] transition-colors"
