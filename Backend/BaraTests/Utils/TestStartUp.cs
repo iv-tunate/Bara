@@ -1,26 +1,26 @@
-﻿using Hangfire;
-using Infrastructure.DataContext;
-using Infrastructure.Repositories.FileRepositories;
-using Infrastructure.Repositories.ScriptRepositories;
-using Infrastructure.Repositories.UserRepositories;
+﻿using Bara.API.DataContext;
+using Bara.API.Scripts.Interfaces;
+using Bara.API.Scripts.Repositories;
+using Bara.API.Services.BackgroudServices;
+using Bara.API.Services.FileStorageServices.FileRepositories;
+using Bara.API.Services.YouVerifyIntegration;
+using Bara.API.Users.Interfaces.UserInterfaces;
+using Bara.API.Users.Repositories;
+using Bara.API.Utilities.Settings;
+using Bara.API.Utilities.ToolKit;
+using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using ScriptModule.Interfaces;
-using Services.BackgroudServices;
 using Services.ExternalAPI_Integration;
 using Services.FileStorageServices.CloudinaryStorage;
 using Services.FileStorageServices.Interfaces;
 using Services.MailingService;
 using Services.MailingService.SendGrid;
-using Services.YouVerifyIntegration;
-using SharedModule.Settings;
-using SharedModule.Utils;
 using System.Text;
 using System.Text.Json.Serialization;
-using UserModule.Interfaces.UserInterfaces;
 
 namespace BaraTests.Utils
 {

@@ -1,7 +1,7 @@
+using Bara.API.Scripts.DTOs;
+using Bara.API.Scripts.Enums;
 using BaraTests.Utils;
 using Microsoft.AspNetCore.Http;
-using ScriptModule.DTOs;
-using ScriptModule.Enums;
 
 namespace BaraTests
 {
@@ -204,7 +204,11 @@ namespace BaraTests
             return new PostScriptDetailDTO
             {
                 Title = "Test Script " + Guid.NewGuid(),
-                Genre = "Drama",
+                GenreId = new List<Guid>
+                {
+                    Guid.NewGuid(),
+                    Guid.NewGuid(),
+                },
                 Logline = "A compelling story about integration testing",
                 Synopsis = "Detailed synopsis for integration test.",
                 Price = 500.00m,
@@ -231,7 +235,11 @@ namespace BaraTests
             return new PostScriptDetailDTO
             {
                 Title = "Invalid Script " + Guid.NewGuid(),
-                Genre = "Drama",
+                GenreId = new List<Guid>
+                {
+                    Guid.NewGuid(),
+                    Guid.NewGuid(),
+                },
                 Logline = "Invalid file format test",
                 Synopsis = "Should fail because file extension is not allowed.",
                 Price = 500.00m,
@@ -261,7 +269,11 @@ namespace BaraTests
             return new PostScriptDetailDTO
             {
                 Title = "Oversized Script " + Guid.NewGuid(),
-                Genre = "Drama",
+                GenreId = new List<Guid>
+                {
+                    Guid.NewGuid(),
+                    Guid.NewGuid(),
+                },
                 Logline = "This should fail due to file size limit.",
                 Synopsis = "Oversized test script for integration test.",
                 Price = 500.00m,

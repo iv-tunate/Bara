@@ -29,7 +29,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SharedModule\SharedModule.csproj" />
-    <ProjectReference Include="..\UserModule\UserModule.csproj" />
   </ItemGroup>
 
 </Project>

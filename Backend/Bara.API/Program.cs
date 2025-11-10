@@ -1,32 +1,32 @@
 using AspNetCoreRateLimit;
+using Bara.API.DataContext;
+using Bara.API.Scripts.Interfaces;
+using Bara.API.Scripts.Repositories;
+using Bara.API.Services.BackgroudServices;
+using Bara.API.Services.FileStorageServices.FileRepositories;
+using Bara.API.Services.Paystack;
+using Bara.API.Services.SignalR;
+using Bara.API.Services.YouVerifyIntegration;
+using Bara.API.Transactions.Interfaces;
+using Bara.API.Transactions.Repositories;
+using Bara.API.Users.Interfaces.UserInterfaces;
+using Bara.API.Users.Repositories;
+using Bara.API.Utilities.Settings;
+using Bara.API.Utilities.ToolKit;
 using Hangfire;
 using Hangfire.PostgreSql;
-using Infrastructure.DataContext;
-using Infrastructure.Repositories.FileRepositories;
-using Infrastructure.Repositories.ScriptRepositories;
-using Infrastructure.Repositories.TransactionRepositories;
-using Infrastructure.Repositories.UserRepositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using ScriptModule.Interfaces;
 using Serilog;
-using Services.BackgroudServices;
 using Services.ExternalAPI_Integration;
 using Services.FileStorageServices.CloudinaryStorage;
 using Services.FileStorageServices.Interfaces;
 using Services.MailingService;
 using Services.MailingService.SendGrid;
-using Services.Paystack;
-using Services.SignalR;
-using Services.YouVerifyIntegration;
-using SharedModule.Settings;
-using SharedModule.Utils;
 using System.Text;
 using System.Text.Json.Serialization;
-using TransactionModule.Interfaces;
-using UserModule.Interfaces.UserInterfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -130,7 +130,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowRegisteredOrigins",
         builder => builder.WithOrigins(allowedOrigins)
                 .AllowAnyHeader()
-                .AllowAnyMethod());
+                .AllowAnyMethod()
+                .SetPreflightMaxAge(TimeSpan.FromMinutes(10)));
 });
 
 builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));

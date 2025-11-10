@@ -2,31 +2,16 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { Writer } from "@/models/user";
+import { api } from "@/utils/api";
+import { getCountries, getStates, getCities } from "@/utils/geoservices";
 
 interface EditWriterProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: FormData) => void;
-  initialData: FormData; 
+  onSave?: (data: Writer) => void;
+  initialData: Writer;
 }
-
-export interface FormData {
-  name: string;
-  portfolio: string;
-  bio: string;
-  country: string;
-  state: string;
-  city: string;
-  houseNumber: string;
-  street: string;
-  zip: string;
-}
-
-const countryStates: Record<string, string[]> = {
-  Ghana: ["Accra", "Kumasi", "Tema"],
-  Nigeria: ["Lagos", "Abuja", "Port Harcourt"],
-  Kenya: ["Nairobi", "Mombasa", "Kisumu"],
-};
 
 export default function EditWriterProfileModal({
   isOpen,
@@ -34,16 +19,86 @@ export default function EditWriterProfileModal({
   onSave,
   initialData,
 }: EditWriterProfileModalProps) {
-  const [formData, setFormData] = useState<FormData>(initialData);
+  const [formData, setFormData] = useState<Writer>(initialData);
+
   const [countryOpen, setCountryOpen] = useState(false);
   const [stateOpen, setStateOpen] = useState(false);
+  const [cityOpen, setCityOpen] = useState(false);
 
+  const [countries, setCountries] = useState<string[]>([]);
+  const [states, setStates] = useState<string[]>([]);
+  const [cities, setCities] = useState<string[]>([]);
+
+  const [loading, setLoading] = useState(false);
+  const [loadingCountries, setLoadingCountries] = useState(false);
+  const [loadingStates, setLoadingStates] = useState(false);
+  const [loadingCities, setLoadingCities] = useState(false);
 
   useEffect(() => {
-    if (isOpen) {
-      setFormData(initialData);
-    }
+    if (isOpen) setFormData(initialData);
   }, [isOpen, initialData]);
+
+  useEffect(() => {
+    const loadCountries = async () => {
+      setLoadingCountries(true);
+      try {
+        const data = await getCountries();
+        setCountries(data);
+      } catch (e) {
+        console.error("Failed to fetch countries", e);
+      } finally {
+        setLoadingCountries(false);
+      }
+    };
+    loadCountries();
+  }, []);
+
+  useEffect(() => {
+    if (!formData.address?.country) return;
+    const loadStates = async () => {
+      setLoadingStates(true);
+      try {
+        const data = await getStates(formData.address.country);
+        setStates(data);
+        if (!data.includes(formData.address.state)) {
+          setFormData((prev) => ({
+            ...prev,
+            address: { ...prev.address, state: "", city: "" },
+          }));
+        }
+      } catch (e) {
+        console.error("Failed to fetch states", e);
+      } finally {
+        setLoadingStates(false);
+      }
+    };
+    loadStates();
+  }, [formData.address?.country]);
+
+  useEffect(() => {
+    if (!formData.address?.state || !formData.address?.country) return;
+    const loadCities = async () => {
+      setLoadingCities(true);
+      try {
+        const data = await getCities(
+          formData.address.country,
+          formData.address.state
+        );
+        setCities(data);
+        if (!data.includes(formData.address.city)) {
+          setFormData((prev) => ({
+            ...prev,
+            address: { ...prev.address, city: "" },
+          }));
+        }
+      } catch (e) {
+        console.error("Failed to fetch cities", e);
+      } finally {
+        setLoadingCities(false);
+      }
+    };
+    loadCities();
+  }, [formData.address?.state]);
 
   if (!isOpen) return null;
 
@@ -51,17 +106,20 @@ export default function EditWriterProfileModal({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    if (name in (formData.address || {})) {
+      setFormData((prev) => ({
+        ...prev,
+        address: { ...prev.address, [name]: value },
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleCountrySelect = (country: string) => {
     setFormData((prev) => ({
       ...prev,
-      country,
-      state: countryStates[country][0], 
+      address: { ...prev.address, country, state: "", city: "" },
     }));
     setCountryOpen(false);
   };
@@ -69,14 +127,32 @@ export default function EditWriterProfileModal({
   const handleStateSelect = (state: string) => {
     setFormData((prev) => ({
       ...prev,
-      state,
+      address: { ...prev.address, state, city: "" },
     }));
     setStateOpen(false);
   };
 
-  const handleSave = () => {
-    onSave(formData);
-    onClose();
+  const handleCitySelect = (city: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      address: { ...prev.address, city },
+    }));
+    setCityOpen(false);
+  };
+
+  const handleSave = async () => {
+    try {
+      setLoading(true);
+      // const updated = await api.updateWriterProfile(formData);
+      // onSave?.(updated);
+      onSave?.(formData);
+      onClose();
+    } catch (err) {
+      console.error("Error updating writer profile:", err);
+      alert("Failed to update profile. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -88,13 +164,7 @@ export default function EditWriterProfileModal({
           className="inline-flex items-center gap-2 whitespace-nowrap text-sm text-[#22242A] mb-4 font-bold cursor-pointer"
           onClick={onClose}
         >
-          <Image
-            src="/Arrow_left.png"
-            alt="Back"
-            width={20}
-            height={20}
-            className="inline-block"
-          />
+          <Image src="/Arrow_left.png" alt="Back" width={20} height={20} />
           <span>Back</span>
         </button>
 
@@ -110,7 +180,7 @@ export default function EditWriterProfileModal({
             </label>
             <input
               name="name"
-              value={formData.name}
+              value={formData.name || ""}
               onChange={handleChange}
               className="border border-[#ABADB2] rounded px-3 py-2 w-full text-sm focus:outline-none focus:border-[#810306]"
             />
@@ -120,8 +190,8 @@ export default function EditWriterProfileModal({
               Portfolio
             </label>
             <input
-              name="portfolio"
-              value={formData.portfolio}
+              name="portfolioUrl"
+              value={formData.portfolioUrl || ""}
               onChange={handleChange}
               className="border border-[#ABADB2] rounded px-3 py-2 w-full text-sm focus:outline-none focus:border-[#810306]"
             />
@@ -135,36 +205,39 @@ export default function EditWriterProfileModal({
           </label>
           <textarea
             name="bio"
-            value={formData.bio}
+            value={formData.bio || ""}
             onChange={handleChange}
             className="border border-[#ABADB2] rounded px-3 py-2 w-full text-sm focus:outline-none focus:border-[#810306]"
             rows={3}
           />
         </div>
 
-        {/* Country /State/City */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div>
+          <div className="relative">
             <label className="block text-sm font-medium mb-1 text-[#22242A]">
               Country
             </label>
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setCountryOpen((p) => !p)}
-                className="border border-[#ABADB2] rounded px-3 py-2 w-full text-sm flex justify-between items-center focus:outline-none focus:border-[#810306]"
-              >
-                {formData.country || "Select country"}
-                <Image
-                  src="/dropdown.png"
-                  alt="Dropdown"
-                  width={20}
-                  height={20}
-                />
-              </button>
-              {countryOpen && (
-                <div className="absolute left-0 top-full mt-1 bg-white border border-[#ABADB2] rounded shadow w-full z-10">
-                  {Object.keys(countryStates).map((c) => (
+            <button
+              type="button"
+              onClick={() => setCountryOpen((p) => !p)}
+              className="border border-[#ABADB2] rounded px-3 py-2 w-full text-sm flex justify-between items-center focus:outline-none focus:border-[#810306]"
+            >
+              {formData.address?.country || "Select country"}
+              <Image
+                src="/dropdown.png"
+                alt="Dropdown"
+                width={20}
+                height={20}
+              />
+            </button>
+            {countryOpen && (
+              <div className="absolute left-0 top-full mt-1 bg-white border border-[#ABADB2] rounded shadow w-full z-10 max-h-48 overflow-y-auto">
+                {loadingCountries ? (
+                  <div className="px-3 py-2 text-sm text-gray-400">
+                    Loading...
+                  </div>
+                ) : (
+                  countries.map((c) => (
                     <div
                       key={c}
                       onClick={() => handleCountrySelect(c)}
@@ -172,33 +245,37 @@ export default function EditWriterProfileModal({
                     >
                       {c}
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
 
-          <div>
+          <div className="relative">
             <label className="block text-sm font-medium mb-1 text-[#22242A]">
               State/province
             </label>
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setStateOpen((p) => !p)}
-                className="border border-[#ABADB2] rounded px-3 py-2 w-full text-sm flex justify-between items-center focus:outline-none focus:border-[#810306]"
-              >
-                {formData.state || "Select state"}
-                <Image
-                  src="/dropdown.png"
-                  alt="Dropdown"
-                  width={20}
-                  height={20}
-                />
-              </button>
-              {stateOpen && (
-                <div className="absolute left-0 top-full mt-1 bg-white border rounded shadow w-full z-10">
-                  {countryStates[formData.country || "Ghana"]?.map((s) => (
+            <button
+              type="button"
+              onClick={() => setStateOpen((p) => !p)}
+              className="border border-[#ABADB2] rounded px-3 py-2 w-full text-sm flex justify-between items-center focus:outline-none focus:border-[#810306]"
+            >
+              {formData.address?.state || "Select state"}
+              <Image
+                src="/dropdown.png"
+                alt="Dropdown"
+                width={20}
+                height={20}
+              />
+            </button>
+            {stateOpen && (
+              <div className="absolute left-0 top-full mt-1 bg-white border rounded shadow w-full z-10 max-h-48 overflow-y-auto">
+                {loadingStates ? (
+                  <div className="px-3 py-2 text-sm text-gray-400">
+                    Loading...
+                  </div>
+                ) : (
+                  states.map((s) => (
                     <div
                       key={s}
                       onClick={() => handleStateSelect(s)}
@@ -206,47 +283,62 @@ export default function EditWriterProfileModal({
                     >
                       {s}
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
 
-          <div>
+          <div className="relative">
             <label className="block text-sm font-medium mb-1 text-[#22242A]">
               City
             </label>
-            <input
-              name="city"
-              value={formData.city}
-              onChange={handleChange}
-              className="border border-[#ABADB2] rounded px-3 py-2 w-full text-sm focus:outline-none focus:border-[#810306]"
-            />
+            <button
+              type="button"
+              onClick={() => setCityOpen((p) => !p)}
+              className="border border-[#ABADB2] rounded px-3 py-2 w-full text-sm flex justify-between items-center focus:outline-none focus:border-[#810306]"
+            >
+              {formData.address?.city || "Select city"}
+              <Image
+                src="/dropdown.png"
+                alt="Dropdown"
+                width={20}
+                height={20}
+              />
+            </button>
+            {cityOpen && (
+              <div className="absolute left-0 top-full mt-1 bg-white border rounded shadow w-full z-10 max-h-48 overflow-y-auto">
+                {loadingCities ? (
+                  <div className="px-3 py-2 text-sm text-gray-400">
+                    Loading...
+                  </div>
+                ) : (
+                  cities.map((c) => (
+                    <div
+                      key={c}
+                      onClick={() => handleCitySelect(c)}
+                      className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                    >
+                      {c}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Address */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div>
-            <label className="block text-sm font-medium mb-1 text-[#22242A]">
-              House Number
-            </label>
-            <input
-              name="houseNumber"
-              value={formData.houseNumber}
-              onChange={handleChange}
-              className="border border-[#ABADB2] rounded px-3 py-2 w-full text-sm"
-            />
-          </div>
+          
           <div>
             <label className="block text-sm font-medium mb-1 text-[#22242A]">
               Street
             </label>
             <input
               name="street"
-              value={formData.street}
+              value={formData.address?.street || ""}
               onChange={handleChange}
-              className="border border-[#ABADB2] rounded px-3 py-2 w-full text-sm focus:outline-none focus:border-[#810306]"
+              className="border border-[#ABADB2] rounded px-3 py-2 w-full text-sm"
             />
           </div>
           <div>
@@ -254,27 +346,28 @@ export default function EditWriterProfileModal({
               Zip code
             </label>
             <input
-              name="zip"
-              value={formData.zip}
+              name="postalCode"
+              value={formData.address?.postalCode || ""}
               onChange={handleChange}
-              className="border border-[#ABADB2] rounded px-3 py-2 w-full text-sm focus:outline-none focus:border-[#810306]"
+              className="border border-[#ABADB2] rounded px-3 py-2 w-full text-sm"
             />
           </div>
         </div>
 
-        {/* Buttons */}
         <div className="flex justify-end gap-3 mt-6">
           <button
             className="border border-[#810306] text-[#810306] px-10 py-2 rounded-md text-sm cursor-pointer"
             onClick={onClose}
+            disabled={loading}
           >
             Cancel
           </button>
           <button
-            className="bg-[#810306] text-white px-4 py-2 rounded-md text-sm cursor-pointer"
+            className="bg-[#810306] text-white px-4 py-2 rounded-md text-sm cursor-pointer disabled:opacity-70"
             onClick={handleSave}
+            disabled={loading}
           >
-            Save changes
+            {loading ? "Saving..." : "Save changes"}
           </button>
         </div>
       </div>

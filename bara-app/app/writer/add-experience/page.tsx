@@ -52,7 +52,7 @@ export default function AddExperiencePage() {
   };
 
   const handleCancel = () => {
-    router.push("/profile/writer");
+    router.push("/profile/setup/writer");
   };
 
   return (

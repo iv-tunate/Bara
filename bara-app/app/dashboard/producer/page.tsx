@@ -8,7 +8,7 @@ import GenreDropdown from "@/components/GenreDropdown";
 import { api } from "@/utils/api";
 import { getUserSession, getUserId } from "@/utils/tokenManager";
 import { useRouter } from "next/navigation";
-import { Script } from "@/models/script";
+import { Script, Genre } from "@/models/script";
 
 export default function DashboardPage() {
   const [scripts, setScripts] = useState<Script[]>([]);
@@ -16,7 +16,7 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
   const [userName, setUserName] = useState("User");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [selectedGenres, setSelectedGenres] = useState<Genre[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -43,16 +43,16 @@ export default function DashboardPage() {
         response = await api.searchScripts(searchTerm, currentPage, pageSize);
       } else if (selectedGenres.length > 0) {
         response = await api.getScriptsByGenre(
-          selectedGenres[0],
+          selectedGenres[0].id,
           currentPage,
           pageSize
         );
       } else {
         response = await api.getAllScripts(currentPage, pageSize);
       }
-      //console.log("API Response:", response);
+      console.log("API Response:", response.data);
       if (response.success && response.data) {
-        setScripts(response.data || []);
+        setScripts(response.data.data || []);
         setTotalPages(response.totalPages || 1);
       } else {
         setError(response.message || "Failed to load scripts");
@@ -71,7 +71,7 @@ export default function DashboardPage() {
     fetchScripts();
   }, [currentPage, selectedGenres, searchTerm]);
 
-  const handleGenreChange = (genres: string[]) => {
+  const handleGenreChange = (genres: Genre[]) => {
     setSelectedGenres(genres);
     setCurrentPage(1);
   };
@@ -137,7 +137,7 @@ export default function DashboardPage() {
               {searchTerm
                 ? `No scripts match "${searchTerm}"`
                 : selectedGenres.length > 0
-                ? `No scripts found in ${selectedGenres[0]} genre`
+                ? `No scripts found in ${selectedGenres[0].name} genre`
                 : "No scripts are currently available"}
             </p>
           </div>

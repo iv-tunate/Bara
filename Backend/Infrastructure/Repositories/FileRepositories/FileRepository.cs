@@ -1,12 +1,9 @@
-﻿using Infrastructure.DataContext;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Services.BackgroudServices;
 using Services.FileStorageServices.Interfaces;
 using SharedModule.Settings;
 using SharedModule.Utils;
-using UserModule.DTOs.DocumentDTOs;
-using Document = UserModule.Models.Document;
 
 namespace Infrastructure.Repositories.FileRepositories
 {

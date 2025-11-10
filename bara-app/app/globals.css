@@ -5,6 +5,8 @@ body {
   background-color: #ffffff; /* white background */
   color: #000000;            /* black text */
   font-family: var(--font-lato), var(--font-dm-sans), sans-serif;
+   -ms-overflow-style: none;
+  overflow-y: scroll;
 }
 
 /* force input backgrounds to stay white, even on autofill */
@@ -31,6 +33,17 @@ button,
 textarea,
 select {
   transition: all 0.2s ease-in-out;
+}
+
+/* Hide scrollbar but keep scrolling */
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent; /* Optional: just to be safe */
+}
+
+/* For Firefox */
+html {
+  scrollbar-width: none;
 }
 
 

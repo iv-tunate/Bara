@@ -98,7 +98,7 @@ namespace ScriptModule.Interfaces
         /// <param name="pageNumber">The page number for pagination</param>
         /// <param name="pageSize">The number of items per page</param>
         /// <returns>A paginated list of scripts in the specified genre</returns>
-        Task<ResponseDetail<List<Script>>> GetScriptsByGenre(string genre, int pageNumber, int pageSize);
+        Task<ResponseDetail<List<Script>>> GetScriptsByGenre(Guid genre, int pageNumber, int pageSize);
 
         /// <summary>
         /// Searches scripts by title, description, or genre with pagination.

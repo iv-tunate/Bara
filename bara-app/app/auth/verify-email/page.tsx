@@ -5,7 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { Suspense } from "react";
-
+import { generateDeviceFingerprint } from "@/utils/deviceDetection";
+import { setUserSession } from "@/utils/tokenManager";
 function VerifyEmailPageContent() {
   const [otp, setOtp] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
@@ -54,18 +55,27 @@ function VerifyEmailPageContent() {
       });
 
       if (response.ok) {
+        const data = await response.json();
         toast.success("Email verified successfully!");
         setVerificationState("success");
 
-        // Get user type and normalize
         const rawUserType = localStorage.getItem("userType") || "";
-        const userType = rawUserType.toLowerCase();
+        const userType =
+          rawUserType !== "" ? rawUserType.toLowerCase() : (data.role || "unknown").toLowerCase();
 
-        // Redirect after 1s
+        setUserSession({
+          userId: data.data.userId,
+          email: data.data.email,
+          name: data.data.name,
+          userType: userType,
+          accessToken: data.data.accessToken,
+          wrongLoginAttempts: data.data.wrongLoginAttempts,
+          profileComplete: data.data.isProfileSetupComplete,
+          createdAt: Date.now() - 2 * 60 * 1000,
+        });
+
         if (userType === "writer" || userType === "producer") {
-          setTimeout(() => router.push(`/profile/${userType}`), 1000);
-        } else {
-          setTimeout(() => router.push("/profile"), 1000);
+          setTimeout(() => router.push(`/profile/setup/${userType}`), 1000);
         }
       } else {
         const res = await response.json();
@@ -74,7 +84,7 @@ function VerifyEmailPageContent() {
         if (res.statusCode === 409) {
           toast.success(res.message || "Email already verified!");
           setVerificationState("alreadyVerified");
-          setTimeout(() => router.push("/profile"), 1000);
+          setTimeout(() => router.push("/auth/login"), 1000);
         } else {
           setErrorMessage(errorMsg);
           setVerificationState("failed");
@@ -96,10 +106,11 @@ function VerifyEmailPageContent() {
     if (isResending || resendCooldown > 0) return;
 
     setIsResending(true);
-
+    const deviceFingerprint = generateDeviceFingerprint();
+    
     try {
       const response = await fetch(
-        `${baseUrl}${resendVerificationTokenUrl}/${email}`,
+        `${baseUrl}${resendVerificationTokenUrl}/${email}/register/${deviceFingerprint}`,
         {
           method: "POST",
           headers: {

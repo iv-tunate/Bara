@@ -1,106 +1,106 @@
 "use client";
 import { useState } from "react";
 import Image from "next/image";
+import toast from "react-hot-toast";
+import { generateImages } from "@/utils/replicateClient"; // adjust path
 
-interface AiImageModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSelect: (img: string) => void;
-}
-
-export default function AiImageModal({
-  isOpen,
+export function AiImageGeneratorModal({
+  title,
+  logline,
+  synopsis,
+  onSelectImage,
   onClose,
-  onSelect,
-}: AiImageModalProps) {
-  const [prompt, setPrompt] = useState("");
-  const [generated, setGenerated] = useState(false); // track if generate was clicked
-  const [showImages, setShowImages] = useState(false);
+}: {
+  title: string;
+  logline: string;
+  synopsis: string;
+  onSelectImage: (file: File) => void;
+  onClose: () => void;
+}) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [images, setImages] = useState<string[]>([]);
 
-  if (!isOpen) return null;
+  const handleGenerate = async () => {
+    if (!title && !logline && !synopsis) {
+      toast.error(
+        "Please provide title, logline or synopsis to generate images."
+      );
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const prompt = `Generate 3-5 poster-style images for a film titled "${title}". The story: ${logline}. Synopsis: ${synopsis}.`;
+      const urls = await generateImages(prompt, 3);
+      setImages(urls);
+    } catch (err) {
+      console.error("AI generation error:", err);
+      toast.error("Image generation failed. Try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  // Temporary sample images (replace later with API results)
-  const aiImages = ["/ai-sample1.png", "/ai-sample2.png"];
-
-  const handleGenerate = () => {
-    setGenerated(true);
-    setShowImages(true);
+  const handleSelect = async (imgUrl: string) => {
+    try {
+      const response = await fetch(imgUrl);
+      const blob = await response.blob();
+      const file = new File([blob], "ai-generated.png", { type: blob.type });
+      onSelectImage(file);
+    } catch (e) {
+      console.error("Select image error:", e);
+      toast.error("Couldn’t select image.");
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Image src="/gray star.png" alt="AI Icon" width={16} height={16} />
-            <h2 className="text-sm font-medium">AI generated image</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 max-w-3xl w-full shadow-lg relative">
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+        >
+          ✕
+        </button>
+        <h2 className="text-lg font-semibold mb-4 text-[#22242A]">
+          Generate AI Images
+        </h2>
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="animate-spin h-8 w-8 border-2 border-[#800000] border-t-transparent rounded-full"></div>
+            <p className="mt-4 text-sm text-gray-500">Generating...</p>
           </div>
-          <button onClick={onClose} className="cursor-pointer">
-            <Image src="/cancel-icon.png" alt="Close" width={16} height={16} />
-          </button>
-        </div>
-
-        {/* Prompt textarea */}
-        <textarea
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Describe the image you want..."
-          className="w-full border border-gray-300 rounded-md p-3 text-sm mb-4 focus:ring-1 focus:ring-[#800000]"
-          rows={3}
-        />
-
-        {/* Buttons */}
-        <div className="flex justify-end gap-3 mb-4">
-          <button
-            onClick={onClose}
-            className="px-10 py-2 text-sm rounded-md border border-[#810306] flex items-center gap-2 text-[#810306] font-semibold"
-          >
-            Cancel
-          </button>
-
-          {/* Generate / Regenerate button */}
-          <button
-            onClick={handleGenerate}
-            className="px-4 py-2 text-sm rounded-md bg-[#800000] text-white hover:bg-[#660000] flex items-center gap-2"
-          >
-            {generated ? (
-              <>
-                Regenerate Image
-                <Image
-                  src="/regenerate.png"
-                  alt="Regenerate"
-                  width={14}
-                  height={14}
-                />
-              </>
-            ) : (
-              <>Generate Image</>
-            )}
-          </button>
-        </div>
-
-        {/* Generated images */}
-        {showImages && (
-          <div className="grid grid-cols-2 gap-4">
-            {aiImages.map((src, idx) => (
+        ) : images.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {images.map((img, idx) => (
               <div
                 key={idx}
-                onClick={() => {
-                  onSelect(src);
-                  onClose();
-                }}
-                className="cursor-pointer border rounded-md overflow-hidden hover:shadow-md transition"
+                className="relative cursor-pointer group"
+                onClick={() => handleSelect(img)}
               >
                 <Image
-                  src={src}
-                  alt={`AI ${idx + 1}`}
-                  width={200}
-                  height={120}
-                  className="w-full h-28 object-cover"
+                  src={img}
+                  alt={`Generated ${idx}`}
+                  width={300}
+                  height={300}
+                  className="rounded-md group-hover:opacity-80 transition-all"
                 />
+                <div className="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white font-medium">
+                  Select
+                </div>
               </div>
             ))}
+          </div>
+        ) : (
+          <div className="text-center">
+            <p className="text-sm text-gray-600 mb-4">
+              Generate AI-based concept images for your script.
+            </p>
+            <button
+              onClick={handleGenerate}
+              className="bg-[#800000] text-white px-4 py-2 rounded-md text-sm hover:bg-[#9c0000] transition-all"
+            >
+              Generate Images
+            </button>
           </div>
         )}
       </div>

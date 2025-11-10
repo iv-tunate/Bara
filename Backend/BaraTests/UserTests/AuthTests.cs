@@ -1,5 +1,5 @@
-﻿using BaraTests.Utils;
-using UserModule.DTOs.AuthDTOs;
+﻿using Bara.API.Users.DTOs.AuthDTOs;
+using BaraTests.Utils;
 
 namespace BaraTests.UserTests
 {
@@ -50,7 +50,7 @@ namespace BaraTests.UserTests
         [Fact]
         public async Task ResendVerificationToken_WithNonExistentEmail_ShouldReturnNotFoundResponse()
         {
-            var result = await authService.ResendVerificationToken("nonexistent@example.com");
+            var result = await authService.ResendVerificationToken("nonexistent@example.com", "register", "unknown");
 
             Assert.NotNull(result);
             Assert.False(result.IsSuccess);

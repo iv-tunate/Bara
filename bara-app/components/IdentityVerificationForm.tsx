@@ -1,22 +1,26 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
+import toast from "react-hot-toast";
 
-const options = [
-  "National identity number",
-  "International passport",
-  "Driver’s license",
+const OPTIONS = [
+  { label: "National identity number (NIN)", value: "NIN" },
+  { label: "Bank verification number (BVN)", value: "BVN" },
+  { label: "International passport", value: "INTERNATIONAL_PASSPORT" },
+  { label: "Driver’s license", value: "DRIVERS_LICENSE" },
 ];
 
 interface IdentityFormProps {
   form: {
     documentType: string;
+    verificationNumber?: string;
     file: File | null;
   };
   setForm: React.Dispatch<
     React.SetStateAction<{
       documentType: string;
+      verificationNumber?: string;
       file: File | null;
     }>
   >;
@@ -27,17 +31,28 @@ export default function IdentityVerificationForm({
   setForm,
 }: IdentityFormProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [dropdownOpen, setDropdownOpen] = useState(false); 
-  const handleSelect = (option: string) => {
-    setForm((prev) => ({ ...prev, documentType: option }));
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+const [verificationType, setVerificationType] = useState<string>("");
+
+  const handleSelect = (optionValue: string) => {
+    setVerificationType(optionValue);
+    setForm((prev) => ({
+      ...prev,
+      documentType: optionValue,
+      verificationNumber: "",
+    }));
     setDropdownOpen(false);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && (file.type === "image/png" || file.type === "image/jpeg")) {
-      setForm((prev) => ({ ...prev, file }));
+    const file = e.target.files?.[0] ?? null;
+    if (!file) return;
+    const allowed = ["image/png", "image/jpeg", "application/pdf"];
+    if (!allowed.includes(file.type)) {
+      toast.error("Only PNG, JPEG and PDF files are accepted");
+      return;
     }
+    setForm((prev) => ({ ...prev, file }));
   };
 
   const handleBrowseClick = () => {
@@ -46,49 +61,77 @@ export default function IdentityVerificationForm({
 
   return (
     <div className="space-y-6 pt-2">
-      {/* Document Type Dropdown */}
-      <div className="relative">
-        <label className="block mb-1 text-sm font-semibold text-[#22242A]">
-          Proof of identity
-        </label>
-        <div
-          className="relative cursor-pointer"
-          onClick={() => setDropdownOpen((prev) => !prev)} 
-        >
-          <input
-            type="text"
-            placeholder="Select document type"
-            className="w-full border border-[#ABADB2] focus:border-[#800000] focus:outline-none p-3 rounded-md pr-10 text-sm text-[#22242A] placeholder:text-[#9CA3AF] cursor-pointer"
-            value={form.documentType}
-            readOnly
-          />
-          <Image
-            src="/dropdown.png"
-            alt="Dropdown icon"
-            width={20}
-            height={12}
-            className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
-          />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Document Type Dropdown */}
+        <div className="relative">
+          <label className="block mb-1 text-sm font-semibold text-[#22242A]">
+            Proof of identity
+          </label>
+          <div
+            className="relative cursor-pointer"
+            onClick={() => setDropdownOpen((prev) => !prev)}
+          >
+            <input
+              type="text"
+              placeholder="Select document type"
+              className="w-full border border-[#ABADB2] focus:border-[#800000] focus:outline-none p-3 pb-2 rounded-md pr-10 text-sm text-[#22242A] placeholder:text-[#9CA3AF] cursor-pointer"
+              value={
+                OPTIONS.find((o) => o.value === form.documentType)?.label ?? ""
+              }
+              readOnly
+            />
+            <Image
+              src="/dropdown.png"
+              alt="Dropdown icon"
+              width={20}
+              height={10}
+              className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+            />
+          </div>
+
+          {dropdownOpen && (
+            <div className="absolute mt-1 w-full bg-white border border-[#ABADB2] rounded-md shadow-lg z-10">
+              {OPTIONS.map((option) => (
+                <div
+                  key={option.value}
+                  className="flex items-center px-4 py-2 text-sm cursor-pointer hover:bg-[#F5F5F5]"
+                  onClick={() => handleSelect(option.value)}
+                >
+                  <div className="w-4 h-4 mr-2 rounded-full border border-[#ABADB2] flex items-center justify-center">
+                    {form.documentType === option.value && (
+                      <div className="w-2 h-2 bg-[#800000] rounded-full" />
+                    )}
+                  </div>
+                  {option.label}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        {dropdownOpen && (
-          <div className="absolute mt-1 w-full bg-white border border-[#ABADB2] rounded-md shadow-lg z-10">
-            {options.map((option) => (
-              <div
-                key={option}
-                className="flex items-center px-4 py-2 text-sm cursor-pointer hover:bg-[#F5F5F5]"
-                onClick={() => handleSelect(option)}
-              >
-                <div className="w-4 h-4 mr-2 rounded-full border border-[#ABADB2] flex items-center justify-center">
-                  {form.documentType === option && (
-                    <div className="w-2 h-2 bg-[#800000] rounded-full" />
-                  )}
-                </div>
-                {option}
-              </div>
-            ))}
-          </div>
-        )}
+        <div>
+          <label className="block mb-1 text-sm font-semibold text-[#22242A]">
+          Identity Verification number
+          </label>
+          <input
+            type="text"
+            name="verificationNumber"
+            value={form.verificationNumber ?? ""}
+            onChange={(e) =>
+              setForm((prev) => ({
+                ...prev,
+                verificationNumber: e.target.value,
+              }))
+            }
+            className="w-full border border-[#ABADB2] rounded-md px-3 py-2"
+            placeholder={
+              form.documentType
+                ? "Enter verification number"
+                : "Select document type first"
+            }
+            disabled={!form.documentType}
+          />
+        </div>
       </div>
 
       {/* Upload Section */}
@@ -109,13 +152,18 @@ export default function IdentityVerificationForm({
               <span className="text-sm text-[#333740] font-medium">
                 Upload complete
               </span>
-              <Image
-                src={URL.createObjectURL(form.file)}
-                alt="Uploaded preview"
-                width={60}
-                height={100}
-                className="rounded-sm border"
-              />
+              {/* preview for images, show filename for pdfs */}
+              {form.file.type.startsWith("image/") ? (
+                <Image
+                  src={URL.createObjectURL(form.file)}
+                  alt="Uploaded preview"
+                  width={60}
+                  height={100}
+                  className="rounded-sm border"
+                />
+              ) : (
+                <div className="text-sm">{form.file.name}</div>
+              )}
               <div className="w-full h-1 bg-green-600 rounded" />
             </div>
           </div>
@@ -125,7 +173,7 @@ export default function IdentityVerificationForm({
             className="w-full h-40 border-2 border-dashed border-[#ABADB2] rounded-md bg-[#F5F5F5] flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-100 transition"
           >
             <p className="text-sm text-[#333740]">
-              Drag and drop file (png, jpeg) here
+              Drag and drop file (png, jpeg, pdf) here
             </p>
             <p className="text-sm text-[#333740] mt-1">
               or{" "}
@@ -138,7 +186,7 @@ export default function IdentityVerificationForm({
 
         <input
           type="file"
-          accept="image/png, image/jpeg"
+          accept="image/png, image/jpeg, application/pdf"
           onChange={handleFileChange}
           ref={fileInputRef}
           className="hidden"

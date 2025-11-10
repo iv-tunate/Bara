@@ -1,20 +1,37 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import DashboardNavbar from "@/components/DashboardNavbar";
-import { getUserSession } from "@/utils/tokenManager";
+import { getUserSession, getUserId, getUserType } from "@/utils/tokenManager";
 
 export default function SavedScriptsPage() {
   const router = useRouter();
 
-  useEffect(() => {
-    const session = getUserSession();
-    if (!session) {
+  const [userType, setUserType] = useState<string>("");
+
+ useEffect(() => {
+   const session = getUserSession();
+   console.log("Session:", session);
+
+   if (!session) {
+     router.push("/auth/login");
+     return;
+   }
+
+   const type = getUserType();
+   console.log("User role:", type);
+   setUserType(getUserType()?.toLowerCase() || "");
+ }, [router]);
+
+  const handleBrowse = () => {
+    if (!userType) {
+      console.warn("Invalid User");
       router.push("/auth/login");
       return;
     }
-  }, [router]);
+    router.push(`/dashboard/${userType}`);
+  };
 
   return (
     <main className="min-h-screen bg-white">
@@ -27,7 +44,7 @@ export default function SavedScriptsPage() {
             Saved Scripts
           </h1>
           <p className="text-[#666] text-sm">
-            Your collection of saved scripts for easy access
+            Your collection of saved scripts
           </p>
         </div>
 
@@ -57,8 +74,11 @@ export default function SavedScriptsPage() {
           </p>
           <button
             type="button"
-            onClick={() => router.push("/dashboard")}
-            className="bg-[#800000] text-white px-6 py-2 rounded-md hover:bg-[#1a0000] transition-colors"
+            onClick={handleBrowse}
+            // disabled={!userType}
+            className={`bg-[#800000] text-white px-6 py-2 rounded-md transition-colors ${
+              userType ? "hover:bg-[#1a0000]" : "opacity-50 cursor-not-allowed"
+            }`}
           >
             Browse Scripts
           </button>

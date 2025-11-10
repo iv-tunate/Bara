@@ -1,13 +1,14 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Bara.API.Scripts.Interfaces;
+using Bara.API.Services.BackgroudServices;
+using Bara.API.Services.SignalR;
+using Bara.API.Services.YouVerifyIntegration;
+using Bara.API.Users.Interfaces.UserInterfaces;
+using Bara.API.Utilities.Settings;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
-using ScriptModule.Interfaces;
-using Services.BackgroudServices;
 using Services.FileStorageServices.Interfaces;
 using Services.MailingService;
-using Services.SignalR;
-using Services.YouVerifyIntegration;
-using SharedModule.Settings;
-using UserModule.Interfaces.UserInterfaces;
+
 
 namespace BaraTests.Utils
 {

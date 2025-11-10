@@ -1,9 +1,9 @@
+using Bara.API.Users.DTOs.AddressDTOs;
+using Bara.API.Users.DTOs.DocumentDTOs;
+using Bara.API.Users.DTOs.ProducerDTOs;
+using Bara.API.Users.Enums;
 using BaraTests.Utils;
 using Microsoft.AspNetCore.Http;
-using UserModule.DTOs.AddressDTOs;
-using UserModule.DTOs.DocumentDTOs;
-using UserModule.DTOs.ProducerDTOs;
-using UserModule.Enums;
 
 namespace BaraTests.UserTests
 {

@@ -1,5 +1,5 @@
-﻿using BaraTests.Utils;
-using Services.YouVerifyIntegration;
+﻿using Bara.API.Services.YouVerifyIntegration;
+using BaraTests.Utils;
 
 namespace BaraTests
 {
