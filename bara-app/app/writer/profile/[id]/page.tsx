@@ -263,7 +263,7 @@ export default function WriterProfile() {
         <ChangePhotoModal
           isOpen={isPhotoModalOpen}
           onClose={() => setIsPhotoModalOpen(false)}
-          currentAvatar="/writer.png" // 👈 or profileData.avatar if you add avatar to state
+          currentAvatar="/writer.png" 
         />
       </main>
     </div>
