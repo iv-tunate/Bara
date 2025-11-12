@@ -24,7 +24,7 @@ export default function Navbar() {
         <div className="relative">
           <button
             onClick={() => setShowDropdown((prev) => !prev)}
-            className="bg-[#800000] text-white font-medium px-10 py-3 rounded-md hover:bg-[#1a0000] transition-colors text-center"
+            className="bg-[#800000] text-white font-medium px-10 py-3 rounded-md hover:bg-[#1a0000] transition-colors text-center cursor-pointer"
           >
             Create account
           </button>
