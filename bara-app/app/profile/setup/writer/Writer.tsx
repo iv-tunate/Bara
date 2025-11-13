@@ -9,6 +9,7 @@ import LocationForm from "@/components/LocationForm";
 import IdentityVerificationForm from "@/components/IdentityVerificationForm";
 import AddExperienceModal from "@/components/AddExperienceModal";
 import { api } from "@/utils/api";
+import { updateUserSession, getUserSession } from "@/utils/tokenManager";
 import toast from "react-hot-toast";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
@@ -34,11 +35,11 @@ export default function WriterProfilePage() {
   const [profileImageUrl, setProfileImageUrl] = useState("");
   const [profileImagePublicId, setProfileImagePublicId] = useState("");
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(
-   null
- );
- const [uploading, setUploading] = useState(false);
+    null
+  );
+  const [uploading, setUploading] = useState(false);
 
-const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [experiences, setExperiences] = useState<Experience[]>([
     {
@@ -74,13 +75,15 @@ const [loading, setLoading] = useState(false);
     verificationNumber: "",
     file: null as File | null,
   });
-   useEffect(() => {
-     window.scrollTo({ top: 0, behavior: "smooth" });
-   }, [activeTab]);
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [activeTab]);
 
-  const handleAddExperience = (exp: Experience) => {
-    setExperiences((prev) => [...prev, exp]);
-  };
+const handleAddExperience = (newExperiences: Experience[]) => {
+  setExperiences(newExperiences); 
+};
+
+
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -91,38 +94,38 @@ const [loading, setLoading] = useState(false);
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-const handleProfileImageChange = async (
-  e: React.ChangeEvent<HTMLInputElement>
-) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
+  const handleProfileImageChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  setProfileImage(file);
-  setProfileImagePreview(URL.createObjectURL(file));
+    setProfileImage(file);
+    setProfileImagePreview(URL.createObjectURL(file));
 
-  setUploading(true);
-  try {
-    const user = {
-      firstName: formData.firstName || "Temp",
-      lastName: formData.lastName || "User",
-      id: localStorage.getItem("userId") || "temp",
-    };
+    setUploading(true);
+    try {
+      const user = {
+        firstName: formData.firstName || "Temp",
+        lastName: formData.lastName || "User",
+        id: localStorage.getItem("userId") || "temp",
+      };
 
-    const uploadResult = await uploadImage(file, "Writer", user);
+      const uploadResult = await uploadImage(file, "Writer", user);
 
-    setProfileImageUrl(uploadResult.url);
-    setProfileImagePublicId(uploadResult.publicId || "");
+      setProfileImageUrl(uploadResult.url);
+      setProfileImagePublicId(uploadResult.publicId || "");
 
-    toast.success("Profile image uploaded successfully!");
-  } catch (err) {
-    console.error(err);
-    toast.error("Failed to upload profile image");
-  } finally {
-    setUploading(false);
-  }
-};
+      toast.success("Profile image uploaded successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to upload profile image");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const isPersonalInfoComplete = Boolean(
     formData.firstName &&
@@ -151,106 +154,107 @@ const handleProfileImageChange = async (
     (activeTab === "location" && isLocationInfoComplete) ||
     (activeTab === "identity" && isIdentityInfoComplete);
 
- const handleSubmit = async (e: React.FormEvent) => {
-   e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-   if (activeTab === "personal" && isPersonalInfoComplete) {
-     setActiveTab("location");
-     return;
-   } else if (activeTab === "location" && isLocationInfoComplete) {
-     setActiveTab("identity");
-     return;
-   } else if (activeTab === "identity") {
-     if (!isIdentityInfoComplete) {
-       toast.error(
-         "Please complete identity verification (type, number, and upload)."
-       );
-       return;
-     }
+    if (activeTab === "personal" && isPersonalInfoComplete) {
+      setActiveTab("location");
+      return;
+    } else if (activeTab === "location" && isLocationInfoComplete) {
+      setActiveTab("identity");
+      return;
+    } else if (activeTab === "identity") {
+      if (!isIdentityInfoComplete) {
+        toast.error(
+          "Please complete identity verification (type, number, and upload)."
+        );
+        return;
+      }
 
-     setLoading(true); 
+      setLoading(true);
 
-     try {
-       const form = new FormData();
+      try {
+        const form = new FormData();
 
-       form.append("FirstName", formData.firstName);
-       form.append("LastName", formData.lastName);
-       form.append("MiddleName", formData.middleName || "none");
-       form.append("PhoneNumber", formData.phone);
-       form.append("Gender", formData.gender);
-       form.append("Bio", formData.bio || "");
-       form.append("DateOfBirth", formData.dateOfBirth);
-       form.append("IsPremiumMember", "false");
-       form.append("AddressDetail.Street", locationForm.street || "");
-       form.append("AddressDetail.City", locationForm.city || "");
-       form.append("AddressDetail.State", locationForm.state || "");
-       form.append("AddressDetail.Country", locationForm.country || "Nigeria");
-       form.append("AddressDetail.PostalCode", locationForm.zipCode || "");
-       form.append("PortfolioUrl", formData.portfolioLink || "");
-       form.append(
-         "AddressDetail.AdditionalDetails",
-         locationForm.additionalDetails || "no additional details"
-       );
-       form.append("VerificationDocument.Type", identityForm.documentType);
-       form.append(
-         "VerificationDocument.VerificationNumber",
-         identityForm.verificationNumber
-       );
-       form.append(
-         "VerificationDocument.Document",
-         identityForm.file!,
-         identityForm.file!.name
-       );
+        form.append("FirstName", formData.firstName);
+        form.append("LastName", formData.lastName);
+        form.append("MiddleName", formData.middleName || "none");
+        form.append("PhoneNumber", formData.phone);
+        form.append("Gender", formData.gender);
+        form.append("Bio", formData.bio || "");
+        form.append("DateOfBirth", formData.dateOfBirth);
+        form.append("IsPremiumMember", "false");
+        form.append("AddressDetail.Street", locationForm.street || "");
+        form.append("AddressDetail.City", locationForm.city || "");
+        form.append("AddressDetail.State", locationForm.state || "");
+        form.append("AddressDetail.Country", locationForm.country || "Nigeria");
+        form.append("AddressDetail.PostalCode", locationForm.zipCode || "");
+        form.append("PortfolioUrl", formData.portfolioLink || "");
+        form.append(
+          "AddressDetail.AdditionalDetails",
+          locationForm.additionalDetails || "no additional details"
+        );
+        form.append("VerificationDocument.Type", identityForm.documentType);
+        form.append(
+          "VerificationDocument.VerificationNumber",
+          identityForm.verificationNumber
+        );
+        form.append(
+          "VerificationDocument.Document",
+          identityForm.file!,
+          identityForm.file!.name
+        );
 
-       if (profileImageUrl) {
-         form.append("ProfileImageUrl", profileImageUrl);
-         form.append("ProfileImagePublicId", profileImagePublicId);
-       }
+        if (profileImageUrl) {
+          form.append("ProfileImageUrl", profileImageUrl);
+          form.append("ProfileImagePublicId", profileImagePublicId);
+        }
 
-       const validExperiences = experiences.filter(
-         (exp) =>
-           exp.org?.trim() && exp.title?.trim() && exp.description?.trim()
-       );
+        const validExperiences = experiences.filter(
+          (exp) =>
+            exp.org?.trim() && exp.title?.trim() && exp.description?.trim()
+        );
 
-       if (validExperiences.length > 0) {
-         validExperiences.forEach((exp, index) => {
-           form.append(`Experiences[${index}].Description`, exp.description);
-           form.append(`Experiences[${index}].Organization`, exp.org);
-           form.append(`Experiences[${index}].Project`, exp.title);
-           form.append(`Experiences[${index}].IsCurrent`, String(exp.ongoing));
+        if (validExperiences.length > 0) {
+          validExperiences.forEach((exp, index) => {
+            form.append(`Experiences[${index}].Description`, exp.description);
+            form.append(`Experiences[${index}].Organization`, exp.org);
+            form.append(`Experiences[${index}].Project`, exp.title);
+            form.append(`Experiences[${index}].IsCurrent`, String(exp.ongoing));
 
-           if (exp.startDate)
-             form.append(`Experiences[${index}].StartDate`, exp.startDate);
+            if (exp.startDate)
+              form.append(`Experiences[${index}].StartDate`, exp.startDate);
 
-           if (!exp.ongoing && exp.endDate)
-             form.append(`Experiences[${index}].EndDate`, exp.endDate);
-         });
-       }
-
-       const userId = localStorage.getItem("userId");
-       const res = await api.createWriter(form, userId as string);
-
-       if (res.data.isSucess && res.data.statusCode === 201) {
+            if (!exp.ongoing && exp.endDate)
+              form.append(`Experiences[${index}].EndDate`, exp.endDate);
+          });
+        }
+        debugger;
+        const userId = localStorage.getItem("userId");
+        const res = await api.createWriter(form, userId as string);
+      //  console.log("Response Data:", res.data);
+       if (res.data.isSuccess && res.data.statusCode === 201) {
          toast.success("Writer profile created!");
-         setTimeout(() => {
-           router.push(`/writer/profile/${userId}`);
-         }, 1500);
+         updateUserSession({ profileComplete: true });
+         router.push(`/writer/profile/${userId}`);
+         return; 
        } else if (res.data.statusCode === 409) {
          toast.error(res.data.message);
          setTimeout(() => {
            router.push(`/writer/profile/${userId}`);
          }, 1500);
+         return;
        } else {
          toast.error(res.data.message || "Failed to create writer profile");
        }
-     } catch (err) {
-       console.error(err);
-       toast.error("An unexpected error occurred. Check console.");
-     } finally {
-       setLoading(false); 
-     }
-   }
- };
+      } catch (err) {
+        console.error(err);
+        toast.error("An unexpected error occurred. Check console.");
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
 
   const handleSkip = () => {
     if (activeTab === "personal") setActiveTab("location");
@@ -259,7 +263,6 @@ const handleProfileImageChange = async (
       router.push("/writer/dashboard");
     }
   };
-
 
   return (
     <div className="fixed inset-0 bg-[#1a0000] bg-opacity-80 flex items-center justify-center z-50 p-2">
@@ -380,7 +383,7 @@ const handleProfileImageChange = async (
                         onClick={() => fileInputRef.current?.click()}
                         className="text-[#810306] text-sm font-semibold underline mt-2 hover:text-[#a22]"
                       >
-                        Change Image
+                        Edit Image
                       </button>
 
                       <div className="w-full h-1 bg-green-600 rounded" />
@@ -411,7 +414,6 @@ const handleProfileImageChange = async (
                   className="hidden"
                 />
               </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div className="flex flex-col">
                   <label className="text-sm font-semibold text-[#22242A] mb-1">
@@ -443,7 +445,6 @@ const handleProfileImageChange = async (
                   </select>
                 </div>
               </div>
-
               {/* Bio */}
               <div className="flex flex-col mt-4">
                 <label className="text-sm font-semibold text-[#22242A] mb-1">
@@ -457,7 +458,6 @@ const handleProfileImageChange = async (
                 />
               </div>
 
-              {/* Add Experience */}
               <div className="flex justify-end items-center gap-1 cursor-pointer text-[#810306] font-semibold mb-4 text-sm">
                 <button
                   type="button"
@@ -470,12 +470,17 @@ const handleProfileImageChange = async (
                     width={20}
                     height={20}
                   />
-                  <span>Add Experience</span>
+                  <span>
+                    {experiences.length > 0
+                      ? "Add more experience"
+                      : "Add Experience"}
+                  </span>
                 </button>
               </div>
 
               {showModal && (
                 <AddExperienceModal
+                  initial={experiences} 
                   onClose={() => setShowModal(false)}
                   onSave={handleAddExperience}
                 />

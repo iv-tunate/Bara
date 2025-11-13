@@ -9,7 +9,7 @@ export interface UserSession {
   createdAt?: number;
 }
 
-const TOKEN_KEY = "bara_session";
+const TOKEN_KEY = "user_session";
 const USER_ID_KEY = "userId";
 const USER_TYPE_KEY = "userType";
 const SESSION_MAX_AGE = 1000 * 60 * 60;
@@ -25,6 +25,27 @@ export function setUserSession(session: UserSession): void {
     console.log("User Session Details", sessionDetails);
   } catch (error) {
     console.error("Failed to store user session:", error);
+  }
+}
+
+export function updateUserSession(updates: Partial<UserSession>): void {
+  try {
+    const current = getUserSession();
+    if (!current) return;
+
+    const updatedSession = { ...current, ...updates };
+
+    sessionStorage.setItem(TOKEN_KEY, JSON.stringify(updatedSession));
+    if (updatedSession.userId) {
+      localStorage.setItem(USER_ID_KEY, updatedSession.userId);
+    }
+    if (updatedSession.userType) {
+      localStorage.setItem(USER_TYPE_KEY, updatedSession.userType);
+    }
+
+    console.log("User session updated:", updatedSession);
+  } catch (error) {
+    console.error("Failed to update user session:", error);
   }
 }
 

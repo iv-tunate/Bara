@@ -2,13 +2,32 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug Next.js (Client)",
-      "type": "pwa-chrome",
+      "name": "Next.js: Debug Development Server",
+      "type": "node",
       "request": "launch",
-      "url": "http://localhost:3000",
-      "webRoot": "${workspaceFolder}",
-      "sourceMaps": true,
-      "breakOnLoad": true
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "skipFiles": ["<node_internals>/**"],
+      "port": 9229,
+      "console": "integratedTerminal",
+      "env": {
+        "NODE_OPTIONS": "--inspect"
+      }
+    },
+    {
+      "name": "Next.js: Attach to Existing Server",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "restart": true,
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Next.js: Debug a Single File",
+      "type": "node",
+      "request": "launch",
+      "program": "${file}",
+      "skipFiles": ["<node_internals>/**"]
     }
   ]
 }

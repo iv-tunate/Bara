@@ -111,7 +111,7 @@ const [verificationType, setVerificationType] = useState<string>("");
 
         <div>
           <label className="block mb-1 text-sm font-semibold text-[#22242A]">
-          Identity Verification number
+            Identity Verification number
           </label>
           <input
             type="text"
@@ -152,7 +152,8 @@ const [verificationType, setVerificationType] = useState<string>("");
               <span className="text-sm text-[#333740] font-medium">
                 Upload complete
               </span>
-              {/* preview for images, show filename for pdfs */}
+
+              {/* Preview for images, show filename for PDFs */}
               {form.file.type.startsWith("image/") ? (
                 <Image
                   src={URL.createObjectURL(form.file)}
@@ -164,7 +165,17 @@ const [verificationType, setVerificationType] = useState<string>("");
               ) : (
                 <div className="text-sm">{form.file.name}</div>
               )}
+
               <div className="w-full h-1 bg-green-600 rounded" />
+
+              {/* 👇 Add “Edit File” button */}
+              <button
+                type="button"
+                onClick={handleBrowseClick}
+                className="mt-2 text-[#810306] text-sm font-semibold underline hover:text-[#a00909]"
+              >
+                Change file
+              </button>
             </div>
           </div>
         ) : (

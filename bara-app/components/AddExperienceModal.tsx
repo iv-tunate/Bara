@@ -1,13 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import Logo from "./Logo";
 import MonthDropdown from "./MonthDropdown";
 import YearDropdown from "./YearDropdown";
 
-type Experience = {
+export type Experience = {
   org: string;
   title: string;
   startMonth: string;
@@ -29,22 +27,24 @@ export default function AddExperienceModal({
   onClose,
   onSave,
 }: Props) {
-  const [items, setItems] = useState<Experience[]>(
-    initial.length > 0
-      ? initial
-      : [
-          {
-            org: "",
-            title: "",
-            startMonth: "",
-            startYear: "",
-            endMonth: "",
-            endYear: "",
-            ongoing: false,
-            description: "",
-          },
-        ]
-  );
+  const [items, setItems] = useState<Experience[]>([]);
+
+  useEffect(() => {
+    if (initial.length > 0) setItems(initial);
+    else
+      setItems([
+        {
+          org: "",
+          title: "",
+          startMonth: "",
+          startYear: "",
+          endMonth: "",
+          endYear: "",
+          ongoing: false,
+          description: "",
+        },
+      ]);
+  }, [initial]);
 
   const updateAt = (index: number, patch: Partial<Experience>) =>
     setItems((prev) =>
@@ -66,14 +66,24 @@ export default function AddExperienceModal({
       },
     ]);
 
-  const removeAt = (index: number) => {
+  const removeAt = (index: number) =>
     setItems((prev) => prev.filter((_, i) => i !== index));
-  };
 
   const handleSave = () => {
-    const normalized = items.filter(
-      (it) => it.description.trim() || it.org.trim() || it.title.trim()
-    );
+    const normalized = items
+      .filter((it) => it.description.trim() || it.org.trim() || it.title.trim())
+      .map((it) => ({
+        ...it,
+        startDate:
+          it.startYear && it.startMonth
+            ? `${it.startYear}-${it.startMonth}-01`
+            : "",
+        endDate:
+          !it.ongoing && it.endYear && it.endMonth
+            ? `${it.endYear}-${it.endMonth}-01`
+            : null,
+      }));
+
     onSave(normalized);
     onClose();
   };
@@ -141,7 +151,6 @@ export default function AddExperienceModal({
                     />
                   </div>
                 </div>
-
                 <div>
                   <div>
                     <label className="text-xs text-gray-600">End month</label>

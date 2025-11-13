@@ -24,17 +24,18 @@ export default function WriterProfile() {
     async function fetchProfile() {
       setIsLoading(true);
       try {
-        const cacheKey = `WriterProfile-${writerId}`;
-        const cached = localStorage.getItem(cacheKey);
+        // const cacheKey = `User_${writerId}`;
+        // const cached = localStorage.getItem(cacheKey);
 
-        if (cached) {
-          const cachedData = JSON.parse(cached);
-          setProfileData(cachedData);
-        }
+        // if (cached) {
+        //   const cachedData = JSON.parse(cached);
+        //   setProfileData(cachedData);
+        // }
 
         const res = await api.getWriterProfile(writerId as string);
         if (res?.data?.data) {
           const fresh = res.data.data;
+          console.log("Fresh data:", fresh);
           //localStorage.setItem(cacheKey, JSON.stringify(fresh));
           setProfileData(fresh);
         }

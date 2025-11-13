@@ -306,7 +306,7 @@ function RegisterPageContent() {
                     height={16}
                     className="object-contain"
                   />
-                  Your Bara account has been created!
+                  Registration Successful
                 </div>
               )}
             </div>

@@ -64,12 +64,11 @@ namespace Bara.API.Users.Repositories
                     logger.LogError($"Writer profile with ID {userId} does not exist.");
                     return ResponseDetail<GetWriterDetailDTO>.Failed($"Writer profile with ID {userId} does not exist.", 404, "Not Found");
                 }
-
-                //if (writerProfile.AuthProfile.IsProfileSetupComplete)
-                //{
-                //    logger.LogInformation($"Writer named: {writerProfile.AuthProfile.FullName} with id {writerProfile.Id} tried to create their profile again... This is most likely an error on the frontend. They can update profile but not use this method if they already have completed their profile setup");
-                //    return ResponseDetail<GetWriterDetailDTO>.Failed($"Profile setup is already complete", 409, "Conflict");
-                //}
+                if (writerProfile.AuthProfile.IsProfileSetupComplete)
+                {
+                    logger.LogInformation($"Writer named: {writerProfile.AuthProfile.FullName} with id {writerProfile.Id} tried to create their profile again... This is most likely an error on the frontend. They can update profile but not use this method if they already have completed their profile setup");
+                    return ResponseDetail<GetWriterDetailDTO>.Failed($"Profile setup is already complete", 409, "Conflict");
+                }
 
                 writerProfile.FirstName = writerDetailDTO.FirstName.ToUpperInvariant();
                 writerProfile.LastName = writerDetailDTO.LastName.ToUpperInvariant();
@@ -183,7 +182,8 @@ namespace Bara.API.Users.Repositories
                         StartDate = x.StartDate,
                         EndDate = x.EndDate,
                         IsCurrent = x.IsCurrent,
-                        Id = x.Id
+                        Id = x.Id,
+                        WriterId = x.WriterId
                     }).ToList(),
                     IsBlacklisted = writerProfile.IsBlacklisted,
                     Address = new AddressDetail
