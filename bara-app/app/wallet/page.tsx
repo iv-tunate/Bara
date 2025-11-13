@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import DashboardNavbar from "@/components/DashboardNavbar";
 
 export default function WalletPage() {
@@ -13,8 +12,8 @@ export default function WalletPage() {
       amount: "NGN 250,000",
       status: "Successful",
       dateTime: "Today | 02:46pm",
-      ref: "TXN-20250912-8391",
-      description: "Payment received for the waiters dream",
+      ref: "Ref: TXN-20250912-8391",
+      description: "Payment received for The waiters Dream",
       avatar: "/profilePic.png",
     },
     {
@@ -22,7 +21,7 @@ export default function WalletPage() {
       amount: "NGN 250,000",
       status: "Successful",
       dateTime: "30.08.2025 | 02:45pm",
-      ref: "TXN-20250912-8392",
+      ref: "Ref: TXN-20250912-8392",
       description: "Withdrawal successfully completed",
       avatar: "/profilePic.png",
     },
@@ -31,7 +30,7 @@ export default function WalletPage() {
       amount: "NGN 250,000",
       status: "Failed",
       dateTime: "30.08.2025 | 02:45pm",
-      ref: "TXN-20250912-8393",
+      ref: "Ref: TXN-20250912-8393",
       description: "₦250,000 withdrawal to GTBank failed. Please try again.",
       avatar: "/profilePic.png",
     },
@@ -40,7 +39,7 @@ export default function WalletPage() {
       amount: "NGN 250,000",
       status: "Failed",
       dateTime: "30.08.2025 | 02:44pm",
-      ref: "TXN-20250912-8394",
+      ref: "Ref: TXN-20250912-8394",
       description: "₦250,000 withdrawal to GTBank failed. Please try again.",
       avatar: "/profilePic.png",
     },
@@ -61,7 +60,7 @@ export default function WalletPage() {
       <DashboardNavbar />
 
       <div className="max-w-4xl mx-auto px-4 md:px-10 lg:px-10 py-4 flex flex-col gap-10">
-        <h2 className="text-4xl font-semibold">Bara Wallet</h2>
+        <h2 className="text-4xl font-semibold">Bara wallet</h2>
 
         {/* Balance Card */}
         <div className="flex flex-col items-left justify-start  bg-[#FFEDEE] bg-[url('/whisk-bg.png')] bg-contain bg-no-repeat bg-right py-5 px-7 rounded-md gap-10">
@@ -69,7 +68,7 @@ export default function WalletPage() {
             <Image src="/Money.svg" alt="Close" width={20} height={20} />
             <p className="font-semibold">Available Balance</p>
           </div>
-          <h2 className="font-semibold text-4xl">NGN 600,000,000.00</h2>
+          <h2 className="font-semibold text-4xl">NGN 600,000.00</h2>
           <Link href="/wallet">
             <button className="rounded-md bg-[#810306] px-4 py-2 text-white hover:bg-[#810306]/70 transition">
               Withdraw Funds
@@ -82,26 +81,26 @@ export default function WalletPage() {
           {/* Total earnings */}
           <div className="bg-white border border-2 border-gray-800/20 rounded-xl p-4 flex flex-col gap-3">
             <div className=" flex flex-row gap-3">
-              <Image src="/Money.svg" alt="arrow" width={20} height={20} />
-              <p className="text-lg">Total Earnings so far</p>
+              {/* <Image src="/earned-arrow.svg" alt="arrow" width={20} height={20} /> */}
+              <p className="text-md">Total earnings so far</p>
             </div>
-            <p className="text-2xl font-semibold">NGN 2, 000, 000.00</p>
+            <p className="text-2xl font-semibold">NGN 2, 018, 500.00</p>
           </div>
 
           {/* Amount withdrawn */}
           <div className="bg-white border border-2 border-gray-800/20 rounded-xl p-4 flex flex-col gap-3">
             <div className=" flex flex-row gap-3">
-              <img src="/lock.png" alt="lock" className="w-5 h-5" />
-              <p className="text-lg">Amount withdrawn</p>
+              {/* <img src="/Lock_light.svg" alt="lock" width={20} height={20} /> */}
+              <p className="text-md">Amount withdrawn</p>
             </div>
-            <p className="text-2xl font-semibold">NGN 2, 000, 000.00</p>
+            <p className="text-2xl font-semibold">NGN 230, 000.00</p>
           </div>
         </div>
 
         {/* Recent Transactions */}
         <h2 className="text-2xl font-semibold">Recent Transactions</h2>
 
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 -mt-4">
           {transactions.map((transaction) => (
             <div
               key={transaction.id}
@@ -126,18 +125,18 @@ export default function WalletPage() {
                   </div>
                 </div>
                 <div>
-                  <button
+                  <div
                     className={`text-xs font-medium px-3 py-1 rounded-sm border ${
                       statusClasses[transaction.status] || "bg-neutral-800"
                     }`}
                   >
                     {transaction.status}
-                  </button>
+                  </div>
                 </div>
               </div>
 
               {/* Date & Time */}
-              <div className="flex flex-row justify-between text-xs">
+              <div className="flex flex-row justify-between text-[10px]">
                 <p>{transaction.dateTime}</p>
                 <p>{transaction.ref}</p>
               </div>
