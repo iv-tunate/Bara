@@ -375,6 +375,14 @@ const handleProfileImageChange = async (
                         className="rounded-full border object-cover"
                       />
 
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="text-[#810306] text-sm font-semibold underline mt-2 hover:text-[#a22]"
+                      >
+                        Change Image
+                      </button>
+
                       <div className="w-full h-1 bg-green-600 rounded" />
                     </div>
                   </div>
@@ -524,25 +532,23 @@ const handleProfileImageChange = async (
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-4 pt-4 mt-auto">
-           
-              <LoadingButton
-                type="button"
-                onClick={handleSkip}
-                variant="secondary"
-                disabled={activeTab === "identity"}
-              >
-                Skip
-              </LoadingButton>
+            <LoadingButton
+              type="button"
+              onClick={handleSkip}
+              variant="secondary"
+              disabled={activeTab === "identity"}
+            >
+              Skip
+            </LoadingButton>
 
-              <LoadingButton
-                type="submit"
-                loading={loading}
-                disabled={!isCurrentStepComplete}
-                variant="primary"
-              >
-                {activeTab === "identity" ? "Complete Profile" : "Continue"}
-              </LoadingButton>
-           
+            <LoadingButton
+              type="submit"
+              loading={loading}
+              disabled={!isCurrentStepComplete}
+              variant="primary"
+            >
+              {activeTab === "identity" ? "Complete Profile" : "Continue"}
+            </LoadingButton>
           </div>
         </div>
       </form>
