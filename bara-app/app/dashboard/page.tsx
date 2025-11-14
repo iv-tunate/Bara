@@ -31,7 +31,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const session = getUserSession();
-   console.log("Session Details", session);
+    console.log("Session Details", session);
     if (session && !session.profileComplete) {
       setUserName(session.name);
       setRole(session.userType);
@@ -45,6 +45,7 @@ export default function DashboardPage() {
     setUserName(session.name);
     setRole(session.userType);
     setProfileState(true);
+ 
   }, []);
 
   const fetchScripts = async () => {
@@ -111,7 +112,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            {role === "Writer" && profileState === true && (
+            {role === "writer" && profileState === true && (
               <Link href="/writer/add-script">
                 <button
                   type="button"
@@ -127,7 +128,7 @@ export default function DashboardPage() {
         </div>
         <div className="flex items-center justify-between mt-2">
           <p className="text-sm text-[#22242A]">
-            {role === "Writer"
+            {role === "writer"
               ? "Share your creativity, upload your scripts, and inspire the world."
               : "Explore powerful scripts, connect with talented writers."}
           </p>
@@ -141,7 +142,7 @@ export default function DashboardPage() {
             </div>
           )} */}
         </div>
-        {role === "Writer" && (
+        {role === "writer" && (
           <section className="relative bg-[#F2F0E4] rounded-lg p-6 md:p-8 my-8 overflow-hidden border border-[#ABADB2]">
             <Button
               variant="ghost"

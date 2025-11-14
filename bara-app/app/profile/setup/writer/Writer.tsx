@@ -79,11 +79,9 @@ export default function WriterProfilePage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [activeTab]);
 
-const handleAddExperience = (newExperiences: Experience[]) => {
-  setExperiences(newExperiences); 
-};
-
-
+  const handleAddExperience = (newExperiences: Experience[]) => {
+    setExperiences(newExperiences);
+  };
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -232,21 +230,24 @@ const handleAddExperience = (newExperiences: Experience[]) => {
         debugger;
         const userId = localStorage.getItem("userId");
         const res = await api.createWriter(form, userId as string);
-      //  console.log("Response Data:", res.data);
-       if (res.data.isSuccess && res.data.statusCode === 201) {
-         toast.success("Writer profile created!");
-         updateUserSession({ profileComplete: true });
-         router.push(`/writer/profile/${userId}`);
-         return; 
-       } else if (res.data.statusCode === 409) {
-         toast.error(res.data.message);
-         setTimeout(() => {
-           router.push(`/writer/profile/${userId}`);
-         }, 1500);
-         return;
-       } else {
-         toast.error(res.data.message || "Failed to create writer profile");
-       }
+        //  console.log("Response Data:", res.data);
+        if (res.data.isSuccess && res.data.statusCode === 201) {
+          toast.success("Writer profile created!");
+          updateUserSession({
+            profileComplete: true,
+            name: `${res.data.data.name}`,
+          });
+          router.push(`/writer/profile/${userId}`);
+          return;
+        } else if (res.data.statusCode === 409) {
+          toast.error(res.data.message);
+          setTimeout(() => {
+            router.push(`/writer/profile/${userId}`);
+          }, 1500);
+          return;
+        } else {
+          toast.error(res.data.message || "Failed to create writer profile");
+        }
       } catch (err) {
         console.error(err);
         toast.error("An unexpected error occurred. Check console.");
@@ -480,7 +481,7 @@ const handleAddExperience = (newExperiences: Experience[]) => {
 
               {showModal && (
                 <AddExperienceModal
-                  initial={experiences} 
+                  initial={experiences}
                   onClose={() => setShowModal(false)}
                   onSave={handleAddExperience}
                 />
