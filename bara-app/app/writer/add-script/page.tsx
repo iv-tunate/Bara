@@ -69,7 +69,7 @@ export default function AddScriptPage() {
   const [role, setRole] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [error, setError] = useState<string>("");
-const [dragActive, setDragActive] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
   const scriptInputRef = useRef<HTMLInputElement | null>(null);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -131,7 +131,11 @@ const [dragActive, setDragActive] = useState(false);
   const handleImageChange = (e) => {
     const file = e.target.files?.[0] ?? null;
     if (!file) return;
-    if (!["image/png", "image/jpeg", "image/jpg", "image/webp"].includes(file.type)) {
+    if (
+      !["image/png", "image/jpeg", "image/jpg", "image/webp"].includes(
+        file.type
+      )
+    ) {
       alert("Invalid image format. Only PNG/JPEG/JPG/WEBP allowed");
       return;
     }
@@ -213,10 +217,7 @@ const [dragActive, setDragActive] = useState(false);
     try {
       const formData = new FormData();
       formData.append("Title", title.trim());
-      formData.append(
-        "GenreId",
-        JSON.stringify(selectedGenres.map((g) => g.id))
-      );
+      formData.append("Genre", JSON.stringify(selectedGenres));
       formData.append("Logline", logline.trim());
       formData.append("Synopsis", synopsis.trim());
       formData.append("Price", price);
@@ -234,14 +235,17 @@ const [dragActive, setDragActive] = useState(false);
         toast.success("Script added successfully");
         router.push(`/writer/profile/${userId}`);
       } else {
-        const msg = res?.message || "Failed to upload script";
+        const msg =
+          res?.data?.message || res?.message || "Failed to upload script";
         setError(msg);
         toast.error(msg);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      setError("An unexpected error occurred");
-      toast.error("An unexpected error occurred while uploading");
+      const msg =
+        e?.data?.message || e?.message || "An unexpected error occurred";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -637,4 +641,3 @@ const [dragActive, setDragActive] = useState(false);
     </div>
   );
 }
-
