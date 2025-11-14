@@ -8,7 +8,6 @@ import BackButton from "@/components/BackButton";
 import { getUserSession } from "@/utils/tokenManager";
 import { api } from "@/utils/api";
 import toast from "react-hot-toast";
-import type { Genre as GenreModel } from "@/models/script";
 import AiImageGeneratorModal from "@/components/AiImageModal";
 import ImageCatalogModal from "@/components/ImageCatalogModal";
 
@@ -64,30 +63,35 @@ export default function AddScriptPage() {
   const [showCatalogModal, setShowCatalogModal] = useState(false);
   const [showAiImageModal, setShowAiImageModal] = useState(false);
 
-  const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [role, setRole] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState("");
   const [dragActive, setDragActive] = useState(false);
+
   const scriptInputRef = useRef<HTMLInputElement | null>(null);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
+    return () => {
+      if (mediaPreviewUrl) URL.revokeObjectURL(mediaPreviewUrl);
+    };
+  }, [mediaPreviewUrl]);
+
+  useEffect(() => {
     const session = getUserSession();
     if (session) {
-      setRole(session.userType || null);
-      setUserId(session.userId || null);
+      setRole(session.userType);
+      setUserId(session.userId);
     }
 
     (async () => {
       try {
         const res = await api.getGenres();
-        const genreList = res?.data?.data ?? res?.data ?? [];
-        console.log(genreList);
-        setAvailableGenres(genreList);
-      } catch (e) {
-        console.error("Failed to load genres", e);
+        const list = res?.data?.data ?? res?.data ?? [];
+        setAvailableGenres(list);
+      } catch {
+        toast.error("Failed to load genres");
       }
     })();
   }, []);
@@ -95,105 +99,70 @@ export default function AddScriptPage() {
   const handleBrowseScript = () => scriptInputRef.current?.click();
   const handleBrowseImage = () => imageInputRef.current?.click();
 
-  const handleScriptDrop = (file: File | null) => {
-    if (!file) return;
-    const allowed = [".pdf", ".doc", ".docx"];
-    const ext = file.name.split(".").pop()?.toLowerCase();
-    if (!ext || !allowed.includes(`.${ext}`)) {
-      toast.error("Invalid script format. Allowed: .pdf, .doc, .docx");
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("Script exceeds 10MB limit");
-      return;
-    }
-    setScriptFile(file);
-  };
-
-  const handleCatalogOpen = () => setShowCatalogModal(true);
-
   const handleScriptChange = (e) => {
-    const file = e.target.files?.[0] ?? null;
+    const file = e.target.files?.[0];
     if (!file) return;
-    const allowed = [".pdf", ".doc", ".docx"];
+
     const ext = file.name.split(".").pop()?.toLowerCase();
-    if (!ext || !allowed.includes(`.${ext}`)) {
-      alert("Invalid script format. Allowed: .pdf, .doc, .docx");
+    if (!["pdf", "doc", "docx"].includes(ext)) {
+      toast.error("Only PDF, DOC, DOCX allowed");
       return;
     }
+
     if (file.size > 10 * 1024 * 1024) {
-      alert("Script exceeds 10MB limit");
+      toast.error("Max script size is 10MB");
       return;
     }
+
     setScriptFile(file);
   };
 
   const handleImageChange = (e) => {
-    const file = e.target.files?.[0] ?? null;
+    const file = e.target.files?.[0];
     if (!file) return;
+
     if (
       !["image/png", "image/jpeg", "image/jpg", "image/webp"].includes(
         file.type
       )
     ) {
-      alert("Invalid image format. Only PNG/JPEG/JPG/WEBP allowed");
+      toast.error("Only PNG, JPEG, JPG, WEBP allowed");
       return;
     }
+
     setMediaFile(file);
     setMediaPreviewUrl(URL.createObjectURL(file));
   };
 
-  const handleCatalogSelect = (imageSrc, imageName) => {
-    fetch(imageSrc)
-      .then((res) => res.blob())
-      .then((blob) => {
-        const file = new File([blob], imageName || "catalog-image.jpg", {
-          type: "image/jpeg",
-        });
-        setMediaFile(file);
-        setMediaPreviewUrl(imageSrc);
-        setShowCatalogModal(false);
-      })
-      .catch((err) => {
-        console.error("Error loading catalog image:", err);
-        alert("Failed to load image from catalog");
+  const handleCatalogSelect = async (url, name) => {
+    try {
+      const blob = await fetch(url).then((r) => r.blob());
+      const file = new File([blob], name ?? "image.jpg", {
+        type: "image/jpeg",
       });
+      setMediaFile(file);
+      setMediaPreviewUrl(url);
+      setShowCatalogModal(false);
+    } catch {
+      toast.error("Failed to load catalog image");
+    }
   };
-
-  const handleAiGenerate = (file, previewUrl) => {
-    setMediaFile(file);
-    setMediaPreviewUrl(previewUrl);
-    setShowAiImageModal(false);
-  };
-
-  const handleRemoveImage = () => {
-    setMediaFile(null);
-    setMediaPreviewUrl(null);
-  };
-
-  const removeGenre = (id) =>
-    setSelectedGenres((prev) => prev.filter((g) => g.id !== id));
 
   const toggleSelectGenre = (g) => {
-    if (
-      selectedGenres.length >= 5 &&
-      !selectedGenres.some((sg) => sg.id === g.id)
-    ) {
-      alert("You can select up to 5 genres");
-      return;
-    }
     setSelectedGenres((prev) =>
-      prev.some((p) => p.id === g.id)
-        ? prev.filter((p) => p.id !== g.id)
-        : [...prev, g]
+      prev.some((x) => x.id === g.id)
+        ? prev.filter((x) => x.id !== g.id)
+        : prev.length < 5
+        ? [...prev, g]
+        : (toast.error("Max 5 genres"), prev)
     );
   };
 
   const isFormComplete =
-    title.trim() &&
+    title &&
     selectedGenres.length > 0 &&
-    logline.trim() &&
-    synopsis.trim() &&
+    logline &&
+    synopsis &&
     ownership &&
     price &&
     scriptFile &&
@@ -203,49 +172,41 @@ export default function AddScriptPage() {
 
   const handleSubmit = async () => {
     if (!isFormComplete) {
-      toast.error("Please complete all required fields");
+      toast.error("Complete all required fields");
       return;
     }
     if (!userId) {
-      toast.error("Unable to identify writer. Please relogin.");
+      toast.error("User session missing");
       return;
     }
 
     setIsSubmitting(true);
-    setError("");
 
     try {
-      const formData = new FormData();
-      formData.append("Title", title.trim());
-      formData.append("Genre", JSON.stringify(selectedGenres));
-      formData.append("Logline", logline.trim());
-      formData.append("Synopsis", synopsis.trim());
-      formData.append("Price", price);
-      formData.append("Currency", currency);
-      formData.append("IsScriptRegistered", isRegistered.toString());
-      if (isRegistered && registrationBody)
-        formData.append("RegistrationBody", registrationBody);
-      if (ownership) formData.append("OwnershipRights", ownership);
-      if (mediaFile) formData.append("Image", mediaFile);
-      formData.append("File", scriptFile as File);
+      const fd = new FormData();
+      fd.append("Title", title);
+      fd.append("Genre", JSON.stringify(selectedGenres));
+      fd.append("Logline", logline);
+      fd.append("Synopsis", synopsis);
+      fd.append("Price", price);
+      fd.append("Currency", currency);
+      fd.append("IsScriptRegistered", isRegistered.toString());
+      if (isRegistered) fd.append("RegistrationBody", registrationBody);
+      fd.append("OwnershipRights", ownership);
+      fd.append("Image", mediaFile);
+      fd.append("File", scriptFile);
 
-      const res = await api.addScript(formData, userId);
-
-      if (res?.success && res?.data) {
+      debugger;
+      const res = await api.addScript(fd, userId);
+      console.log("add script from response",res);
+      if (res?.success) {
         toast.success("Script added successfully");
         router.push(`/writer/profile/${userId}`);
       } else {
-        const msg =
-          res?.data?.message || res?.message || "Failed to upload script";
-        setError(msg);
-        toast.error(msg);
+        toast.error(res?.message ?? "Error uploading script");
       }
-    } catch (e: any) {
-      console.error(e);
-      const msg =
-        e?.data?.message || e?.message || "An unexpected error occurred";
-      setError(msg);
-      toast.error(msg);
+    } catch (err: any) {
+      toast.error(err?.message ?? "Unexpected error");
     } finally {
       setIsSubmitting(false);
     }
@@ -254,6 +215,7 @@ export default function AddScriptPage() {
   return (
     <div className="min-h-screen bg-white">
       <DashboardNavbar />
+
       <main className="max-w-3xl mx-auto px-4 py-10">
         <h1 className="text-2xl font-semibold text-[#22242A] mb-6 text-center">
           Add Script
@@ -270,8 +232,8 @@ export default function AddScriptPage() {
           />
         </div>
 
-        {/* Logline & Synopsis */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        {/* Logline + Synopsis */}
+        <div className="grid md:grid-cols-2 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium mb-1">Logline</label>
             <textarea
@@ -280,6 +242,7 @@ export default function AddScriptPage() {
               className="w-full border border-[#ABADB2] rounded-md px-3 py-2 text-sm h-24 resize-none"
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium mb-1">Synopsis</label>
             <textarea
@@ -290,17 +253,17 @@ export default function AddScriptPage() {
           </div>
         </div>
 
-        {/* Genre & Ownership */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          {/* Genre multi-select */}
+        {/* Genre + Ownership */}
+        <div className="grid md:grid-cols-2 gap-4 mb-4">
           <div className="relative">
             <label className="block text-sm font-medium mb-1">Genre</label>
-            <div
-              className="cursor-pointer relative"
-              onClick={() => setGenreOpen((p) => !p)}
+
+            <button
+              type="button"
+              onClick={() => setGenreOpen((x) => !x)}
+              className="w-full"
             >
               <input
-                type="text"
                 readOnly
                 value={selectedGenres.map((g) => g.name).join(", ")}
                 placeholder="Select up to 5 genres"
@@ -309,34 +272,27 @@ export default function AddScriptPage() {
               <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#858990]">
                 {selectedGenres.length}/5
               </div>
+            </button>
 
-              {/* Dropdown */}
-              {genreOpen && (
-                <div className="absolute left-0 top-full mt-1 w-full bg-white border border-[#ABADB2] rounded-md shadow-lg max-h-48 overflow-auto z-[9999]">
-                  {availableGenres.map((g) => {
-                    const isSelected = selectedGenres.some(
-                      (sg) => sg.id === g.id
-                    );
-                    return (
-                      <div
-                        key={g.id}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleSelectGenre(g);
-                        }}
-                        className={`px-4 py-2 text-sm cursor-pointer hover:bg-[#F5F5F5] ${
-                          isSelected ? "bg-[#F5F5F5] font-medium" : ""
-                        }`}
-                      >
-                        {g.name}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            {genreOpen && (
+              <div className="absolute left-0 top-full mt-1 w-full bg-white border border-[#ABADB2] rounded-md shadow-lg max-h-48 overflow-auto z-50">
+                {availableGenres.map((g) => {
+                  const active = selectedGenres.some((s) => s.id === g.id);
+                  return (
+                    <div
+                      key={g.id}
+                      onClick={() => toggleSelectGenre(g)}
+                      className={`px-4 py-2 text-sm cursor-pointer hover:bg-[#F5F5F5] ${
+                        active ? "bg-[#F5F5F5] font-medium" : ""
+                      }`}
+                    >
+                      {g.name}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
-            {/* Selected genres display */}
             {selectedGenres.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {selectedGenres.map((g) => (
@@ -346,9 +302,12 @@ export default function AddScriptPage() {
                   >
                     <span>{g.name}</span>
                     <button
-                      type="button"
-                      onClick={() => removeGenre(g.id)}
-                      className="text-[#800000] hover:text-black font-bold text-base leading-none"
+                      onClick={() =>
+                        setSelectedGenres((prev) =>
+                          prev.filter((x) => x.id !== g.id)
+                        )
+                      }
+                      className="text-[#800000] hover:text-black font-bold text-base"
                     >
                       ×
                     </button>
@@ -377,8 +336,8 @@ export default function AddScriptPage() {
           </div>
         </div>
 
-        {/* Price & Registration Body */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        {/* Price + Registration */}
+        <div className="grid md:grid-cols-2 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium mb-1">Price</label>
             <div className="flex items-center gap-2">
@@ -393,6 +352,7 @@ export default function AddScriptPage() {
                   </option>
                 ))}
               </select>
+
               <input
                 type="number"
                 value={price}
@@ -424,25 +384,24 @@ export default function AddScriptPage() {
           )}
         </div>
 
-        {/* Registration Checkbox */}
-        <div className="mb-4">
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <input
-              type="checkbox"
-              checked={isRegistered}
-              onChange={(e) => setIsRegistered(e.target.checked)}
-              className="accent-[#800000]"
-            />
-            Is this a registered script?
-          </label>
-        </div>
+        {/* Registered? */}
+        <label className="flex items-center gap-2 text-sm mb-4 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={isRegistered}
+            onChange={(e) => setIsRegistered(e.target.checked)}
+            className="accent-[#800000]"
+          />
+          Is this a registered script?
+        </label>
 
-        {/* === Upload Cover Image Section (drag/drop + AI + gallery) === */}
+        {/* Cover Image */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-1">
-            <label className="block text-sm font-medium mb-1 text-[#22242A]">
+            <label className="block text-sm font-medium text-[#22242A]">
               Upload Cover Image *
             </label>
+
             <span
               onClick={() => setShowAiImageModal(true)}
               className="flex items-center text-xs font-bold text-[#800000] cursor-pointer hover:underline"
@@ -450,16 +409,16 @@ export default function AddScriptPage() {
               Generate with AI
               <Image
                 src="/star.png"
-                alt="star"
+                alt=""
                 width={10}
                 height={10}
                 className="ml-1"
               />
             </span>
           </div>
+
           <p className="text-xs italic text-gray-500 my-2">
-            A script cover image helps producers visualize the tone and feel of
-            your story before reading. It’s your script’s first impression.
+            A cover image helps producers visualize the tone of your story.
           </p>
 
           <div
@@ -474,26 +433,28 @@ export default function AddScriptPage() {
             onDrop={(e) => {
               e.preventDefault();
               setDragActive(false);
-              const file = e.dataTransfer.files?.[0] ?? null;
+              const file = e.dataTransfer.files?.[0];
               if (file) handleImageChange({ target: { files: [file] } });
             }}
             className={`relative ${
-              dragActive ? "ring-2 ring-[#810306]/30" : ""
+              dragActive ? "ring-2 ring-[#810306]/40" : ""
             }`}
           >
             {mediaPreviewUrl ? (
               <div className="relative w-full h-48 rounded-md overflow-hidden">
-                <input
-                  ref={imageInputRef}
-                  type="file"
-                  accept="image/png, image/jpeg, image/jpg, image/webp"
-                  onChange={handleImageChange}
-                  className="hidden"
+                <Image
+                  src={mediaPreviewUrl}
+                  alt="Cover preview"
+                  fill
+                  className="object-cover"
                 />
 
                 <button
                   type="button"
-                  onClick={handleRemoveImage}
+                  onClick={() => {
+                    setMediaFile(null);
+                    setMediaPreviewUrl(null);
+                  }}
                   className="absolute top-2 right-2 bg-[#800000] text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
                 >
                   ×
@@ -504,25 +465,17 @@ export default function AddScriptPage() {
                 onClick={handleBrowseImage}
                 className="w-full h-48 border-2 border-dashed border-[#ABADB2] rounded-md bg-[#F5F5F5] flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-100 transition"
               >
-                <p className="text-sm text-[#333740]">
-                  Drag and drop image (PNG, JPG) here
-                </p>
+                <p className="text-sm text-[#333740]">Drag & drop (PNG, JPG)</p>
                 <p className="text-sm text-[#333740] mt-1">
+                  or{" "}
+                  <span className="text-[#810306] font-semibold">Browse</span>{" "}
                   or{" "}
                   <button
                     type="button"
-                    onClick={handleBrowseImage}
-                    className="text-[#810306] font-semibold hover:underline inline"
+                    onClick={() => setShowCatalogModal(true)}
+                    className="text-[#810306] font-semibold hover:underline"
                   >
-                    Browse
-                  </button>{" "}
-                  <span>or</span>{" "}
-                  <button
-                    type="button"
-                    onClick={handleCatalogOpen}
-                    className="text-[#810306] font-semibold hover:underline inline"
-                  >
-                    Choose from our gallery
+                    Choose from gallery
                   </button>
                 </p>
               </div>
@@ -531,46 +484,40 @@ export default function AddScriptPage() {
             <input
               ref={imageInputRef}
               type="file"
-              accept="image/png, image/jpeg"
+              accept="image/png, image/jpeg, image/jpg, image/webp"
               onChange={handleImageChange}
               className="hidden"
             />
           </div>
         </div>
 
-        {/* Upload Script Section */}
+        {/* Script Upload */}
         <div className="mb-6">
-          <label className="block text-sm font-medium mb-1 text-[#22242A]">
+          <label className="block text-sm font-medium text-[#22242A]">
             Upload script *
           </label>
 
           {scriptFile ? (
-            <div className="space-y-3">
-              <div
-                onClick={handleBrowseScript}
-                className="w-full h-32 border-2 border-dashed border-[#ABADB2] rounded-md bg-[#F5F5F5] flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-100 transition"
-              >
-                <p className="text-sm text-[#333740] font-medium">
-                  {scriptFile.name}
-                </p>
-                <p className="text-xs text-[#666] mt-1">
-                  {(scriptFile.size / 1024 / 1024).toFixed(2)} MB
-                </p>
-                <p className="text-xs text-[#800000] font-semibold mt-2">
-                  Click to change file
-                </p>
-              </div>
+            <div
+              onClick={handleBrowseScript}
+              className="w-full h-32 border-2 border-dashed border-[#ABADB2] rounded-md bg-[#F5F5F5] flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100"
+            >
+              <p className="text-sm font-medium">{scriptFile.name}</p>
+              <p className="text-xs text-gray-600 mt-1">
+                {(scriptFile.size / 1024 / 1024).toFixed(2)} MB
+              </p>
+              <p className="text-xs text-[#800000] font-semibold mt-2">
+                Click to change file
+              </p>
             </div>
           ) : (
             <div
               onClick={handleBrowseScript}
-              className="w-full h-32 border-2 border-dashed border-[#ABADB2] rounded-md bg-[#F5F5F5] flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-100 transition"
+              className="w-full h-32 border-2 border-dashed border-[#ABADB2] rounded-md bg-[#F5F5F5] flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100"
             >
-              <p className="text-sm text-[#333740]">
-                Drag and drop file (PDF, DOC, DOCX) here
-              </p>
-              <p className="text-sm text-[#333740] mt-1">
-                or <span className="text-[#810306] font-semibold">Browse</span>
+              <p className="text-sm">Drag & drop PDF/DOC/DOCX</p>
+              <p className="text-sm mt-1 text-[#810306] font-semibold">
+                Browse
               </p>
             </div>
           )}
@@ -595,6 +542,7 @@ export default function AddScriptPage() {
             />
             I agree this script is my original work
           </label>
+
           <label className="flex items-center gap-2 text-sm cursor-pointer">
             <input
               type="checkbox"
@@ -602,7 +550,7 @@ export default function AddScriptPage() {
               onChange={(e) => setAgreeCommission(e.target.checked)}
               className="accent-[#800000]"
             />
-            I agree to Bara's 15% commission on successful sales
+            I agree to Bara’s 15% commission on successful sales
           </label>
         </div>
 
@@ -628,12 +576,16 @@ export default function AddScriptPage() {
             onClose={() => setShowCatalogModal(false)}
           />
         )}
+
         {showAiImageModal && (
           <AiImageGeneratorModal
             title={title}
             logline={logline}
             synopsis={synopsis}
-            onGenerate={handleAiGenerate}
+            onGenerate={(file, url) => {
+              setMediaFile(file);
+              setMediaPreviewUrl(url);
+            }}
             onClose={() => setShowAiImageModal(false)}
           />
         )}

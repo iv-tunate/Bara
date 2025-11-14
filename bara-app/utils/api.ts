@@ -307,6 +307,7 @@ export const api = {
   },
 
   addScript: async (formData: FormData, writerId: string) => {
+    debugger;
     return apiRequest(`${BASE_URL}${API_ENDPOINTS.ADD_SCRIPT(writerId)}`, {
       method: "POST",
       body: formData,

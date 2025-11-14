@@ -40,11 +40,11 @@ namespace Bara.API.Users.Controllers
                 }
                 else if (response.StatusCode == 500)
                 {
-                    logger.LogError("Login failed with status code 500: {Message}", response.Message);
+                    logger.LogError($"Login failed with status code 500: {response.Message}", response.Message);
                     return StatusCode(500, response);
                 }
 
-                logger.LogError("Login failed with status code {response}", response);
+                logger.LogError($"Login failed with status code {response}", response);
                 return StatusCode(response.StatusCode, response);
             }
             catch (Exception ex)
@@ -67,7 +67,7 @@ namespace Bara.API.Users.Controllers
             try
             {
                 await authService.Logout(userId);
-                logger.LogInformation("User with ID {userId} logged out successfully", userId);
+                logger.LogInformation($"User with ID {userId} logged out successfully", userId);
                 return Ok(new { message = "Logout successful" });
             }
             catch (Exception ex)
