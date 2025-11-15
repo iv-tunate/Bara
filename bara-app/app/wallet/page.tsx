@@ -1,11 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import DashboardNavbar from "@/components/DashboardNavbar";
+import WithdrawModal from "@/components/WithdrawModal";
 
 export default function WalletPage() {
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const handleWithdrawSuccess = () => {
+    setSuccessMessage("Withdrawal successful! Your balance will be updated shortly.");
+    // You would typically refetch the wallet balance here
+  };
+
   const transactions = [
     {
       id: 1,
@@ -63,17 +72,18 @@ export default function WalletPage() {
         <h2 className="text-4xl font-semibold">Bara wallet</h2>
 
         {/* Balance Card */}
-        <div className="flex flex-col items-left justify-start  bg-[#FFEDEE] bg-[url('/whisk-bg.png')] bg-contain bg-no-repeat bg-right py-5 px-7 rounded-md gap-10">
+        <div className="flex flex-col items-left justify-start bg-[#FFEDEE] bg-[url('/whisk-bg.png')] bg-contain bg-no-repeat bg-right py-5 px-7 rounded-md gap-10">
           <div className=" flex flex-row gap-3">
             <Image src="/Money.svg" alt="Close" width={20} height={20} />
             <p className="font-semibold">Available Balance</p>
           </div>
           <h2 className="font-semibold text-4xl">NGN 600,000.00</h2>
-          <Link href="/wallet">
-            <button className="rounded-md bg-[#810306] px-4 py-2 text-white hover:bg-[#810306]/70 transition">
-              Withdraw Funds
-            </button>
-          </Link>
+          <button
+            onClick={() => setModalOpen(true)}
+            className="rounded-md bg-[#810306] px-4 py-2 text-white hover:bg-[#810306]/70 transition w-fit"
+          >
+            Withdraw Funds
+          </button>
         </div>
 
         {/* Summary */}
@@ -144,6 +154,12 @@ export default function WalletPage() {
           ))}
         </div>
       </div>
+      {/* Withdraw Modal */}
+      <WithdrawModal
+        isOpen={isModalOpen}
+        onClose={() => setModalOpen(false)}
+        onSuccess={handleWithdrawSuccess}
+      />
     </main>
   );
 }
