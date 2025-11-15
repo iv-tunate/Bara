@@ -1,7 +1,5 @@
 "use client";
-import { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import DashboardNavbar from "@/components/DashboardNavbar";
 
 interface WithdrawModalProps {
@@ -29,7 +27,15 @@ export default function WithdrawModal({
   return (
     <div className="fixed inset-0 bg-white bg-opacity-50 z-50">
       <DashboardNavbar />
-      <div className="max-w-3xl mx-auto mt-15 px-4 md:px-10 lg:px-10 py-4 flex flex-col gap-10">
+      <button onClick={onClose} className="cursor-pointer relative left-0 md:left-60 top-23">
+        <Image
+          src="/Arrow_left.png"
+          alt="Withdrawal Banner"
+          width={20}
+          height={20}
+        />
+      </button>
+      <div className="max-w-2xl mx-auto mt-10 px-4 md:px-10 lg:px-10 py-4 flex flex-col gap-10">
         <div>
           <h2 className="text-2xl font-semibold mb-4">Withdraw Funds</h2>
           <p>Withdraw your available balance securely to your bank account.</p>
@@ -44,7 +50,7 @@ export default function WithdrawModal({
               Enter Amount
             </label>
             <div className="flex flex-row border-1 border-[#ABADB2] p-2 w-full rounded-sm gap-2">
-              <div className="flex flex-row border-1 border-[#ABADB2] gap-5 rounded-sm px-2">
+              <div className="flex flex-row border-1 border-[#ABADB2] gap-5 md:gap-5 rounded-sm md:rounded-sm px-2">
                 <div className="flex flex-row gap-1">
                   <Image
                     src="/naijaFlag.svg"
@@ -83,7 +89,7 @@ export default function WithdrawModal({
               className="border-1 border-[#ABADB2] p-2 w-full rounded-sm focus:outline-none appearance-none"
               required
             >
-              <option value="" selected></option>
+              <option defaultValue={""}></option>
               <option value="GTBank">GTBank</option>
               <option value="FirstBank">First Bank</option>
             </select>
