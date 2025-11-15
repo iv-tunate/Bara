@@ -44,7 +44,7 @@ export default function WithdrawModal({
               Enter Amount
             </label>
             <div className="flex flex-row border-1 border-[#ABADB2] p-2 w-full rounded-sm gap-2">
-              <div className="flex flex-row border-1 border-[#ABADB2] gap-3 rounded-sm px-2">
+              <div className="flex flex-row border-1 border-[#ABADB2] gap-5 rounded-sm px-2">
                 <div className="flex flex-row gap-1">
                   <Image
                     src="/naijaFlag.svg"
@@ -83,10 +83,7 @@ export default function WithdrawModal({
               className="border-1 border-[#ABADB2] p-2 w-full rounded-sm focus:outline-none appearance-none"
               required
             >
-              <option value="" disabled selected>
-                Select Bank Account
-              </option>
-              {/* You would populate this from user's bank accounts */}
+              <option value="" selected></option>
               <option value="GTBank">GTBank</option>
               <option value="FirstBank">First Bank</option>
             </select>
@@ -124,6 +121,19 @@ export default function WithdrawModal({
             >
               Submit
             </button>
+          </div>
+
+          {/* Remember Me Checkbox */}
+          <div className="mb-6">
+            <label className="inline-flex items-center">
+              <input
+                type="checkbox"
+                className="scale-150 border-1 border-[#810306]"
+              />
+              <span className="ml-2 text-sm text-gray-700">
+                Save this bank account for future payouts
+              </span>
+            </label>
           </div>
         </form>
       </div>
