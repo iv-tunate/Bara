@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import DashboardNavbar from "@/components/DashboardNavbar";
-import WithdrawModal from "@/components/WithdrawModal";
+import WithdrawModal from "@/components/WithdrawFunds";
 
 export default function WalletPage() {
   const [isModalOpen, setModalOpen] = useState(false);
