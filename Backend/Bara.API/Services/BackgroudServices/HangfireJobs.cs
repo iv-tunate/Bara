@@ -57,7 +57,7 @@ namespace Bara.API.Services.BackgroudServices
                 }
                 else if (res.Success)
                 {
-                    logger.LogInformation($"Background KYC verification successful for user {payload.UserId}");
+                    logger.LogInformation($"KYC verification in progress for user with ID: {payload.UserId}");
                 }
             }
             catch (OperationCanceledException)

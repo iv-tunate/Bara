@@ -10,7 +10,7 @@ import { api } from "@/utils/api";
 import toast from "react-hot-toast";
 import AiImageGeneratorModal from "@/components/AiImageModal";
 import ImageCatalogModal from "@/components/ImageCatalogModal";
-
+import { uploadImage } from "@/utils/upload";
 const IPDealOptions = [
   { label: "Writer retains all rights", value: "WriterRetainsRights" },
   { label: "Producer retains all rights", value: "ProducerRetainsRights" },
@@ -27,7 +27,7 @@ const currencyOptions = [
 const registrationBodies = [
   "Writers Guild of America (WGA)",
   "U.S. Copyright Office",
-  "UK Writers’ Guild",
+  "UK Writers' Guild",
   "European Copyright Office",
   "Nigerian Copyright Commission (NCC)",
   "South African Copyright Office",
@@ -131,19 +131,26 @@ export default function AddScriptPage() {
     }
 
     setMediaFile(file);
+    if (mediaPreviewUrl) {
+      URL.revokeObjectURL(mediaPreviewUrl);
+    }
     setMediaPreviewUrl(URL.createObjectURL(file));
   };
 
   const handleCatalogSelect = async (url, name) => {
     try {
       const blob = await fetch(url).then((r) => r.blob());
-      const file = new File([blob], name ?? "image.jpg", {
-        type: "image/jpeg",
+      const file = new File([blob], name ?? "catalog-image.jpg", {
+        type: blob.type || "image/jpeg",
       });
       setMediaFile(file);
-      setMediaPreviewUrl(url);
+      if (mediaPreviewUrl) {
+        URL.revokeObjectURL(mediaPreviewUrl);
+      }
+      setMediaPreviewUrl(URL.createObjectURL(file));
       setShowCatalogModal(false);
-    } catch {
+    } catch (err) {
+      console.error("Catalog image error:", err);
       toast.error("Failed to load catalog image");
     }
   };
@@ -170,47 +177,81 @@ export default function AddScriptPage() {
     isOriginal &&
     agreeCommission;
 
-  const handleSubmit = async () => {
-    if (!isFormComplete) {
-      toast.error("Complete all required fields");
-      return;
-    }
-    if (!userId) {
-      toast.error("User session missing");
-      return;
-    }
+   const handleSubmit = async () => {
+     if (!isFormComplete) {
+       toast.error("Complete all required fields");
+       return;
+     }
 
-    setIsSubmitting(true);
+     const session = getUserSession();
+     if (!session || !session.userId) {
+       toast.error("Session expired. Please login again");
+       router.push("/auth/login");
+       return;
+     }
 
-    try {
-      const fd = new FormData();
-      fd.append("Title", title);
-      fd.append("Genre", JSON.stringify(selectedGenres));
-      fd.append("Logline", logline);
-      fd.append("Synopsis", synopsis);
-      fd.append("Price", price);
-      fd.append("Currency", currency);
-      fd.append("IsScriptRegistered", isRegistered.toString());
-      if (isRegistered) fd.append("RegistrationBody", registrationBody);
-      fd.append("OwnershipRights", ownership);
-      fd.append("Image", mediaFile);
-      fd.append("File", scriptFile);
+     setIsSubmitting(true);
 
-      debugger;
-      const res = await api.addScript(fd, userId);
-      console.log("add script from response",res);
-      if (res?.success) {
-        toast.success("Script added successfully");
-        router.push(`/writer/profile/${userId}`);
-      } else {
-        toast.error(res?.message ?? "Error uploading script");
-      }
-    } catch (err: any) {
-      toast.error(err?.message ?? "Unexpected error");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+     try {
+       const fd = new FormData();
+       fd.append("Title", title);
+
+       selectedGenres.forEach((genre, index) => {
+         fd.append(`GenreId[${index}]`, genre.id);
+       });
+
+       fd.append("Logline", logline);
+       fd.append("Synopsis", synopsis);
+       fd.append("Price", price.toString());
+       fd.append("Currency", currency);
+       fd.append("IsScriptRegistered", isRegistered.toString());
+       if (isRegistered && registrationBody) {
+         fd.append("RegistrationBody", registrationBody);
+       }
+       fd.append("OwnershipRights", ownership);
+       fd.append("Image", mediaFile);
+       fd.append("File", scriptFile);
+
+      //  console.log("FormData contents:");
+      //  for (let pair of fd.entries()) {
+      //    console.log(pair[0], pair[1]);
+      //  }
+
+    
+
+       const res = await api.addScript(fd, session.userId);
+       console.log("Add script response:", res);
+
+       if (res?.success) {
+         toast.success("Script added successfully");
+         router.push(`/writer/profile/${session.userId}`);
+       } else {
+
+         if (
+           res?.statusCode === 401 ||
+           res?.message?.toLowerCase().includes("unauthorized") ||
+           res?.message?.toLowerCase().includes("token")
+         ) {
+           toast.error("Session expired. Please login again");
+           router.push("/auth/login");
+         } else {
+           toast.error(res?.message ?? "Error uploading script");
+         }
+       }
+     } catch (err: any) {
+       console.error("Submit error:", err);
+
+       if (err?.status === 401 || err?.response?.status === 401) {
+         toast.error("Session expired. Please login again");
+         router.push("/auth/login");
+       } else {
+         toast.error(err?.message ?? "Unexpected error");
+       }
+     } finally {
+       setIsSubmitting(false);
+     }
+   };
+
 
   return (
     <div className="min-h-screen bg-white">
@@ -269,7 +310,7 @@ export default function AddScriptPage() {
                 placeholder="Select up to 5 genres"
                 className="w-full border border-[#ABADB2] rounded-md px-3 py-2 text-sm bg-white cursor-pointer"
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#858990]">
+              <div className="absolute right-3 top-[70%] -translate-y-1/2 text-xs text-[#858990] pointer-events-none">
                 {selectedGenres.length}/5
               </div>
             </button>
@@ -441,21 +482,25 @@ export default function AddScriptPage() {
             }`}
           >
             {mediaPreviewUrl ? (
-              <div className="relative w-full h-48 rounded-md overflow-hidden">
+              <div className="relative w-full h-64 rounded-md overflow-hidden border-2 border-[#ABADB2]">
                 <Image
                   src={mediaPreviewUrl}
                   alt="Cover preview"
                   fill
-                  className="object-cover"
+                  className="object-contain bg-gray-50"
                 />
 
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (mediaPreviewUrl) {
+                      URL.revokeObjectURL(mediaPreviewUrl);
+                    }
                     setMediaFile(null);
                     setMediaPreviewUrl(null);
                   }}
-                  className="absolute top-2 right-2 bg-[#800000] text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
+                  className="absolute top-2 right-2 bg-[#800000] text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold hover:bg-[#660000] shadow-lg"
                 >
                   ×
                 </button>
@@ -472,7 +517,10 @@ export default function AddScriptPage() {
                   or{" "}
                   <button
                     type="button"
-                    onClick={() => setShowCatalogModal(true)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowCatalogModal(true);
+                    }}
                     className="text-[#810306] font-semibold hover:underline"
                   >
                     Choose from gallery
@@ -493,7 +541,7 @@ export default function AddScriptPage() {
 
         {/* Script Upload */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-[#22242A]">
+          <label className="block text-sm font-medium text-[#22242A] mb-1">
             Upload script *
           </label>
 
@@ -550,7 +598,7 @@ export default function AddScriptPage() {
               onChange={(e) => setAgreeCommission(e.target.checked)}
               className="accent-[#800000]"
             />
-            I agree to Bara’s 15% commission on successful sales
+            I agree to Bara's 15% commission on successful sales
           </label>
         </div>
 
@@ -558,14 +606,14 @@ export default function AddScriptPage() {
         <div className="flex justify-center mt-6">
           <button
             onClick={handleSubmit}
-            disabled={!isFormComplete}
+            disabled={!isFormComplete || isSubmitting}
             className={`w-full sm:w-80 md:w-96 py-3 rounded-md text-sm font-medium ${
-              !isFormComplete
+              !isFormComplete || isSubmitting
                 ? "bg-[#DADBDD] text-[#858990] cursor-not-allowed"
                 : "bg-[#800000] text-white hover:bg-[#660000]"
             }`}
           >
-            Add script
+            {isSubmitting ? "Adding script..." : "Add script"}
           </button>
         </div>
 
@@ -584,7 +632,11 @@ export default function AddScriptPage() {
             synopsis={synopsis}
             onGenerate={(file, url) => {
               setMediaFile(file);
+              if (mediaPreviewUrl) {
+                URL.revokeObjectURL(mediaPreviewUrl);
+              }
               setMediaPreviewUrl(url);
+              setShowAiImageModal(false);
             }}
             onClose={() => setShowAiImageModal(false)}
           />

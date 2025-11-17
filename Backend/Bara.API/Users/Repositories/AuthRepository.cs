@@ -48,7 +48,7 @@ namespace Bara.API.Users.Repositories
             try
             {
                 var validationErrors = new List<string>();
-                var user = await dbContext.AuthProfiles.FirstOrDefaultAsync(u => u.Email == email);
+                var user = await dbContext.AuthProfiles.FirstOrDefaultAsync(u => u.Email.ToLower() == email);
                 if (user == null)
                 {
                     return ResponseDetail<LoginResponseDTO>.Failed("Login unsuccessful...Email or password is invalid");

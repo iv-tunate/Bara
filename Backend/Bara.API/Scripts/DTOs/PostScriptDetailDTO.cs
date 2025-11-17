@@ -51,7 +51,8 @@ namespace Bara.API.Scripts.DTOs
         /// <summary>
         /// A URL or base64 representation of the cover image or thumbnail for the script.
         /// </summary>
-        public string? Image { get; set; }
+        public string? ImageUrl { get; set; }
+        public string? ImagePublicId { get; set; }
 
         /// <summary>
         /// The copyright number or certificate ID, if available.

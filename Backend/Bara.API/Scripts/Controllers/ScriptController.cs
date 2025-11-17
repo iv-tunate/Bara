@@ -33,7 +33,7 @@ namespace Bara.API.Scripts.Controllers
         /// or a 500 Internal Server Error if an unexpected exception occurs.
         /// </returns>
 
-        [Authorize(Roles = "Writer", Policy = "VerifiedOnly")]
+        [Authorize(Roles = "Writer")]
         [HttpPost("script/{writerId}")]
         public async Task<IActionResult> AddScript([FromForm] PostScriptDetailDTO scriptDetail, Guid writerId)
         {

@@ -94,7 +94,9 @@ namespace Bara.API.Scripts.Models
         /// The URL or filename of the script's cover image or poster.
         /// </summary>
         [DataType(DataType.ImageUrl)]
-        public string? Image { get; set; }
+        public string? ImageUrl { get; set; }
+
+        public string? ImagePublicId { get; set; }
 
         /// <summary>
         /// The copyright number associated with the script.
