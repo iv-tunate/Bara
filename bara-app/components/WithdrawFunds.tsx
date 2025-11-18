@@ -1,33 +1,31 @@
 "use client";
 import Image from "next/image";
+import { useState } from "react";
 import DashboardNavbar from "@/components/DashboardNavbar";
+import WithdrawSuccessModal from "@/components/withdrawSuccessModal";
 
 interface WithdrawModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
 }
 
-export default function WithdrawModal({
-  isOpen,
-  onClose,
-  onSuccess,
-}: WithdrawModalProps) {
+export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
+  const [isSuccessModalOpen, setSuccessModalOpen] = useState(false);
+
   if (!isOpen) return null;
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    console.log("Submitting withdrawal request...");
-
-    // On successful withdrawal:
-    onSuccess();
-    onClose();
+    setSuccessModalOpen(true);
   };
 
   return (
     <div className="fixed inset-0 bg-white bg-opacity-50 z-50">
       <DashboardNavbar />
-      <button onClick={onClose} className="cursor-pointer relative left-0 md:left-60 top-23">
+      <button
+        onClick={onClose}
+        className="cursor-pointer relative left-0 md:left-60 top-23"
+      >
         <Image
           src="/Arrow_left.png"
           alt="Withdrawal Banner"
@@ -68,10 +66,10 @@ export default function WithdrawModal({
                 />
               </div>
               <input
-                type="decimal"
+                type="number"
                 id="amount"
                 required
-                className="w-full border-none focus:outline-none"
+                className="w-full border-none focus:outline-none appearance-none"
               />
             </div>
           </div>
@@ -113,10 +111,12 @@ export default function WithdrawModal({
               Account Number
             </label>
             <input
+              type="number"
               id="accountNumber"
               className="border-1 border-[#ABADB2] p-2 w-full rounded-sm focus:outline-none"
               required
             />
+            <p className="flex justify-end">TIMOTHY SEUN EDWARDS</p>
           </div>
 
           {/* Buttons */}
@@ -143,6 +143,10 @@ export default function WithdrawModal({
           </div>
         </form>
       </div>
+      <WithdrawSuccessModal
+        isOpen={isSuccessModalOpen}
+        onClose={() => setSuccessModalOpen(false)}
+      />
     </div>
   );
 }

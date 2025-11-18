@@ -2,33 +2,28 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import DashboardNavbar from "@/components/DashboardNavbar";
-import WithdrawModal from "@/components/WithdrawFunds";
+import WithdrawFunds from "@/components/WithdrawFunds";
 
 export default function WalletPage() {
   const [isModalOpen, setModalOpen] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  const handleWithdrawSuccess = () => {
-    setSuccessMessage("Withdrawal successful! Your balance will be updated shortly.");
-    // You would typically refetch the wallet balance here
-  };
 
   const transactions = [
     {
       id: 1,
       amount: "NGN 250,000",
       status: "Successful",
+      recepient: "The waiters Dream",
       dateTime: "Today | 02:46pm",
       ref: "Ref: TXN-20250912-8391",
-      description: "Payment received for The waiters Dream",
+      description: "Payment received for ",
       avatar: "/profilePic.png",
     },
     {
       id: 2,
       amount: "NGN 250,000",
       status: "Successful",
+      recepient: "",
       dateTime: "30.08.2025 | 02:45pm",
       ref: "Ref: TXN-20250912-8392",
       description: "Withdrawal successfully completed",
@@ -38,6 +33,7 @@ export default function WalletPage() {
       id: 3,
       amount: "NGN 250,000",
       status: "Failed",
+      recepient: "",
       dateTime: "30.08.2025 | 02:45pm",
       ref: "Ref: TXN-20250912-8393",
       description: "₦250,000 withdrawal to GTBank failed. Please try again.",
@@ -47,6 +43,7 @@ export default function WalletPage() {
       id: 4,
       amount: "NGN 250,000",
       status: "Failed",
+      recepient: "",
       dateTime: "30.08.2025 | 02:44pm",
       ref: "Ref: TXN-20250912-8394",
       description: "₦250,000 withdrawal to GTBank failed. Please try again.",
@@ -131,7 +128,10 @@ export default function WalletPage() {
                     >
                       {transaction.amount}
                     </p>
-                    <p className="text-sm">{transaction.description}</p>
+                    <p className="text-sm">
+                      {transaction.description}
+                      <b>{transaction.recepient}</b>
+                    </p>
                   </div>
                 </div>
                 <div>
@@ -155,11 +155,7 @@ export default function WalletPage() {
         </div>
       </div>
       {/* Withdraw Modal */}
-      <WithdrawModal
-        isOpen={isModalOpen}
-        onClose={() => setModalOpen(false)}
-        onSuccess={handleWithdrawSuccess}
-      />
+      <WithdrawFunds isOpen={isModalOpen} onClose={() => setModalOpen(false)} />
     </main>
   );
 }
