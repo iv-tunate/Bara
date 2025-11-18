@@ -106,8 +106,8 @@ export default function WriterProfilePage() {
     setUploading(true);
     try {
       const user = {
-        firstName: formData.firstName || "Temp",
-        lastName: formData.lastName || "User",
+       
+        name: `${formData.firstName} ${formData.lastName}`,
         id: localStorage.getItem("userId") || "temp",
       };
 

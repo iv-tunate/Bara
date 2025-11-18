@@ -55,7 +55,7 @@ export default function AddScriptPage() {
 
   const [isOriginal, setIsOriginal] = useState(false);
   const [agreeCommission, setAgreeCommission] = useState(false);
-
+  const [copyrightNumber, setCopyrightNumber] = useState<string | null>(null);
   const [scriptFile, setScriptFile] = useState(null);
   const [mediaFile, setMediaFile] = useState(null);
   const [mediaPreviewUrl, setMediaPreviewUrl] = useState(null);
@@ -68,6 +68,9 @@ export default function AddScriptPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [dragActive, setDragActive] = useState(false);
+  const [mediaUrl, setMediaUrl] = useState("");
+  const [mediaPublicId, setMediaPublicId] = useState("");
+  const [mediaUploading, setMediaUploading] = useState(false);
 
   const scriptInputRef = useRef<HTMLInputElement | null>(null);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
@@ -99,10 +102,48 @@ export default function AddScriptPage() {
   const handleBrowseScript = () => scriptInputRef.current?.click();
   const handleBrowseImage = () => imageInputRef.current?.click();
 
-  const handleScriptChange = (e) => {
+  const handleImageChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setMediaFile(file);
+    setMediaPreviewUrl(URL.createObjectURL(file));
+
+    try {
+      const session = getUserSession();
+      if (!session || !session.userId) {
+        toast.error("Please login to upload images");
+        return;
+      }
+
+      const user = {
+        name: session.name,
+        id: session.userId,
+      };
+
+      setMediaUploading(true);
+
+      const result = await uploadImage(file, "Writer", user);
+
+      setMediaUrl(result.url);
+      setMediaPublicId(result.publicId || "");
+
+      toast.success("Cover image uploaded!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to upload cover image");
+    } finally {
+      setMediaUploading(false);
+    }
+  };
+
+  const handleScriptChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 100 * 1024) {
+      toast.error("Image too large. Maximum allowed size is 100KB.");
+      return;
+    }
     const ext = file.name.split(".").pop()?.toLowerCase();
     if (!["pdf", "doc", "docx"].includes(ext)) {
       toast.error("Only PDF, DOC, DOCX allowed");
@@ -117,25 +158,25 @@ export default function AddScriptPage() {
     setScriptFile(file);
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  //const handleImageChange = (e) => {
+  //   const file = e.target.files?.[0];
+  //   if (!file) return;
 
-    if (
-      !["image/png", "image/jpeg", "image/jpg", "image/webp"].includes(
-        file.type
-      )
-    ) {
-      toast.error("Only PNG, JPEG, JPG, WEBP allowed");
-      return;
-    }
+  //   if (
+  //     !["image/png", "image/jpeg", "image/jpg", "image/webp"].includes(
+  //       file.type
+  //     )
+  //   ) {
+  //     toast.error("Only PNG, JPEG, JPG, WEBP allowed");
+  //     return;
+  //   }
 
-    setMediaFile(file);
-    if (mediaPreviewUrl) {
-      URL.revokeObjectURL(mediaPreviewUrl);
-    }
-    setMediaPreviewUrl(URL.createObjectURL(file));
-  };
+  //   setMediaFile(file);
+  //   if (mediaPreviewUrl) {
+  //     URL.revokeObjectURL(mediaPreviewUrl);
+  //   }
+  //   setMediaPreviewUrl(URL.createObjectURL(file));
+  // };
 
   const handleCatalogSelect = async (url, name) => {
     try {
@@ -177,81 +218,81 @@ export default function AddScriptPage() {
     isOriginal &&
     agreeCommission;
 
-   const handleSubmit = async () => {
-     if (!isFormComplete) {
-       toast.error("Complete all required fields");
-       return;
-     }
+  const handleSubmit = async () => {
+    if (!isFormComplete) {
+      toast.error("Complete all required fields");
+      return;
+    }
 
-     const session = getUserSession();
-     if (!session || !session.userId) {
-       toast.error("Session expired. Please login again");
-       router.push("/auth/login");
-       return;
-     }
+    const session = getUserSession();
+    if (!session || !session.userId) {
+      toast.error("Session expired. Please login again");
+      router.push("/auth/login");
+      return;
+    }
 
-     setIsSubmitting(true);
+    setIsSubmitting(true);
 
-     try {
-       const fd = new FormData();
-       fd.append("Title", title);
+    try {
+      const fd = new FormData();
+      fd.append("Title", title);
 
-       selectedGenres.forEach((genre, index) => {
-         fd.append(`GenreId[${index}]`, genre.id);
-       });
+      selectedGenres.forEach((genre, index) => {
+        fd.append(`GenreId[${index}]`, genre.id);
+      });
+      if (mediaUrl) fd.append("CoverImageUrl", mediaUrl);
+      if (mediaPublicId) fd.append("CoverImagePublicId", mediaPublicId);
 
-       fd.append("Logline", logline);
-       fd.append("Synopsis", synopsis);
-       fd.append("Price", price.toString());
-       fd.append("Currency", currency);
-       fd.append("IsScriptRegistered", isRegistered.toString());
-       if (isRegistered && registrationBody) {
-         fd.append("RegistrationBody", registrationBody);
-       }
-       fd.append("OwnershipRights", ownership);
-       fd.append("Image", mediaFile);
-       fd.append("File", scriptFile);
+      fd.append("Logline", logline);
+      fd.append("Synopsis", synopsis);
+      fd.append("Price", price.toString());
+      fd.append("Currency", currency);
+      fd.append("IsScriptRegistered", isRegistered.toString());
+      if (isRegistered && registrationBody) {
+        fd.append("RegistrationBody", registrationBody);
+      }
+      fd.append("OwnershipRights", ownership);
+      fd.append("File", scriptFile);
+      if (copyrightNumber) {
+        fd.append("CopyrightRegistrationNumber", copyrightNumber);
+      }
 
       //  console.log("FormData contents:");
       //  for (let pair of fd.entries()) {
       //    console.log(pair[0], pair[1]);
       //  }
 
-    
+      const res = await api.addScript(fd, session.userId);
+      console.log("Add script response:", res);
 
-       const res = await api.addScript(fd, session.userId);
-       console.log("Add script response:", res);
+      if (res?.success) {
+        toast.success("Script added successfully");
+        router.push(`/writer/profile/${session.userId}`);
+      } else {
+        if (
+          res?.statusCode === 401 ||
+          res?.message?.toLowerCase().includes("unauthorized") ||
+          res?.message?.toLowerCase().includes("token")
+        ) {
+          toast.error("Session expired. Please login again");
+          router.push("/auth/login");
+        } else {
+          toast.error(res?.message ?? "Error uploading script");
+        }
+      }
+    } catch (err: any) {
+      console.error("Submit error:", err);
 
-       if (res?.success) {
-         toast.success("Script added successfully");
-         router.push(`/writer/profile/${session.userId}`);
-       } else {
-
-         if (
-           res?.statusCode === 401 ||
-           res?.message?.toLowerCase().includes("unauthorized") ||
-           res?.message?.toLowerCase().includes("token")
-         ) {
-           toast.error("Session expired. Please login again");
-           router.push("/auth/login");
-         } else {
-           toast.error(res?.message ?? "Error uploading script");
-         }
-       }
-     } catch (err: any) {
-       console.error("Submit error:", err);
-
-       if (err?.status === 401 || err?.response?.status === 401) {
-         toast.error("Session expired. Please login again");
-         router.push("/auth/login");
-       } else {
-         toast.error(err?.message ?? "Unexpected error");
-       }
-     } finally {
-       setIsSubmitting(false);
-     }
-   };
-
+      if (err?.status === 401 || err?.response?.status === 401) {
+        toast.error("Session expired. Please login again");
+        router.push("/auth/login");
+      } else {
+        toast.error(err?.message ?? "Unexpected error");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -477,26 +518,26 @@ export default function AddScriptPage() {
               const file = e.dataTransfer.files?.[0];
               if (file) handleImageChange({ target: { files: [file] } });
             }}
-            className={`relative ${
+            className={`relative w-full h-48 border-2 border-dashed rounded-md flex items-center justify-center cursor-pointer bg-[#F5F5F5] ${
               dragActive ? "ring-2 ring-[#810306]/40" : ""
             }`}
+            onClick={handleBrowseImage}
           >
-            {mediaPreviewUrl ? (
-              <div className="relative w-full h-64 rounded-md overflow-hidden border-2 border-[#ABADB2]">
+            {/* === Image Thumbnail Preview === */}
+            {mediaPreviewUrl && (
+              <div className="relative w-32 h-32 rounded-xl overflow-hidden border bg-gray-100 flex items-center justify-center">
                 <Image
                   src={mediaPreviewUrl}
-                  alt="Cover preview"
-                  fill
-                  className="object-contain bg-gray-50"
+                  alt="Selected"
+                  width={128}
+                  height={128}
+                  className="object-cover"
                 />
-
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (mediaPreviewUrl) {
-                      URL.revokeObjectURL(mediaPreviewUrl);
-                    }
+                    URL.revokeObjectURL(mediaPreviewUrl);
                     setMediaFile(null);
                     setMediaPreviewUrl(null);
                   }}
@@ -505,34 +546,35 @@ export default function AddScriptPage() {
                   ×
                 </button>
               </div>
-            ) : (
-              <div
-                onClick={handleBrowseImage}
-                className="w-full h-48 border-2 border-dashed border-[#ABADB2] rounded-md bg-[#F5F5F5] flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-100 transition"
-              >
-                <p className="text-sm text-[#333740]">Drag & drop (PNG, JPG)</p>
-                <p className="text-sm text-[#333740] mt-1">
-                  or{" "}
-                  <span className="text-[#810306] font-semibold">Browse</span>{" "}
-                  or{" "}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowCatalogModal(true);
-                    }}
-                    className="text-[#810306] font-semibold hover:underline"
-                  >
-                    Choose from gallery
-                  </button>
-                </p>
-              </div>
             )}
 
+            {/* === Placeholder / Instructions === */}
+            <div
+              className={`text-center ${
+                mediaPreviewUrl ? "absolute opacity-0" : ""
+              }`}
+            >
+              <p className="text-sm text-[#333740]">Drag & drop (PNG, JPG)</p>
+              <p className="text-sm text-[#333740] mt-1">
+                or <span className="text-[#810306] font-semibold">Browse</span>{" "}
+                or{" "}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowCatalogModal(true);
+                  }}
+                  className="text-[#810306] font-semibold hover:underline"
+                >
+                  Choose from gallery
+                </button>
+              </p>
+            </div>
+
             <input
-              ref={imageInputRef}
               type="file"
               accept="image/png, image/jpeg, image/jpg, image/webp"
+              ref={imageInputRef}
               onChange={handleImageChange}
               className="hidden"
             />
@@ -576,6 +618,20 @@ export default function AddScriptPage() {
             accept=".pdf,.doc,.docx"
             onChange={handleScriptChange}
             className="hidden"
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-[#22242A] mb-1">
+            Copyright Registration Number{" "}
+            <span className="text-gray-400">(optional)</span>
+          </label>
+
+          <input
+            type="text"
+            value={copyrightNumber ?? ""}
+            onChange={(e) => setCopyrightNumber(e.target.value)}
+            placeholder="e.g. WGA-123456 or NCC-2024-XYZ"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
           />
         </div>
 
