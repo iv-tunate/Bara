@@ -215,7 +215,8 @@ namespace BaraTests
                 IsScriptRegistered = true,
                 RegistrationBody = "WGA",
                 File = formFile,
-                Image = "test-image.jpg",
+                ImageUrl = "test-image.jpg",
+                ImagePublicId = "",
                 CopyrightNumber = "CR123456",
                 OwnershipRights = IPDealType.WriterRetainsRights,
                 ProofUrl = "https://example.com/proof.pdf"
@@ -246,7 +247,8 @@ namespace BaraTests
                 IsScriptRegistered = true,
                 RegistrationBody = "WGA",
                 File = formFile,
-                Image = "test-image.jpg",
+                ImageUrl = "test-image.jpg",
+                ImagePublicId = "",
                 CopyrightNumber = "CR123456",
                 OwnershipRights = IPDealType.WriterRetainsRights,
                 ProofUrl = "https://example.com/proof.pdf"
@@ -280,7 +282,8 @@ namespace BaraTests
                 IsScriptRegistered = true,
                 RegistrationBody = "WGA",
                 File = formFile,
-                Image = "test-image.jpg",
+                ImageUrl = "test-image.jpg",
+                ImagePublicId = "",
                 CopyrightNumber = "CR123456",
                 OwnershipRights = IPDealType.WriterRetainsRights,
                 ProofUrl = "https://example.com/proof.pdf"
