@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { getUserSession } from "@/utils/tokenManager";
 import { api } from "@/utils/api";
-
+import PageGaurd from "@/hooks/pageguard";
 interface BankDetail {
   id: string;
   accountNumber: string;
@@ -48,6 +48,8 @@ export default function BankDetailsPage() {
       return;
     }
 
+    PageGaurd(session);
+    
     loadData(session.userId);
   }, [router]);
 
@@ -71,9 +73,9 @@ export default function BankDetailsPage() {
   };
 
   const handleBankSelect = (bankCode: string) => {
-    const selectedBank = banks.find(bank => bank.code === bankCode);
+    const selectedBank = banks.find((bank) => bank.code === bankCode);
     if (selectedBank) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         bankCode: selectedBank.code,
         bankName: selectedBank.name,
@@ -135,7 +137,7 @@ export default function BankDetailsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <DashboardNavbar />
-      
+
       <div className="max-w-4xl mx-auto px-6 py-8">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-[#22242A]">Bank Details</h1>
@@ -164,14 +166,26 @@ export default function BankDetailsPage() {
         {showAddForm && (
           <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-[#22242A]">Add New Bank Account</h2>
+              <h2 className="text-lg font-semibold text-[#22242A]">
+                Add New Bank Account
+              </h2>
               <button
                 type="button"
                 onClick={() => setShowAddForm(false)}
                 className="text-gray-500 hover:text-gray-700"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -203,7 +217,12 @@ export default function BankDetailsPage() {
                 <input
                   type="text"
                   value={formData.accountNumber}
-                  onChange={(e) => setFormData(prev => ({ ...prev, accountNumber: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      accountNumber: e.target.value,
+                    }))
+                  }
                   placeholder="Enter your 10-digit account number"
                   maxLength={10}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#800000] focus:border-transparent"
@@ -234,28 +253,48 @@ export default function BankDetailsPage() {
         {/* Bank Details List */}
         <div className="bg-white rounded-lg shadow-sm border">
           <div className="p-6">
-            <h2 className="text-lg font-semibold text-[#22242A] mb-4">Your Bank Accounts</h2>
-            
+            <h2 className="text-lg font-semibold text-[#22242A] mb-4">
+              Your Bank Accounts
+            </h2>
+
             {bankDetails.length === 0 ? (
               <div className="text-center py-8">
-                <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                <svg
+                  className="w-12 h-12 text-gray-400 mx-auto mb-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                  />
                 </svg>
                 <p className="text-gray-500">No bank accounts added yet</p>
-                <p className="text-sm text-gray-400 mt-1">Add a bank account to receive payments</p>
+                <p className="text-sm text-gray-400 mt-1">
+                  Add a bank account to receive payments
+                </p>
               </div>
             ) : (
               <div className="space-y-4">
                 {bankDetails.map((bank) => (
-                  <div key={bank.id} className="border border-gray-200 rounded-lg p-4">
+                  <div
+                    key={bank.id}
+                    className="border border-gray-200 rounded-lg p-4"
+                  >
                     <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="font-medium text-[#22242A]">{bank.bankName}</h3>
+                        <h3 className="font-medium text-[#22242A]">
+                          {bank.bankName}
+                        </h3>
                         <p className="text-sm text-gray-600">
                           {bank.accountNumber} • {bank.accountName}
                         </p>
                         <p className="text-xs text-gray-500 mt-1">
-                          Added on {new Date(bank.createdAt).toLocaleDateString()}
+                          Added on{" "}
+                          {new Date(bank.createdAt).toLocaleDateString()}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">

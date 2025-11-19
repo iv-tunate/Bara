@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 import AiImageGeneratorModal from "@/components/AiImageModal";
 import ImageCatalogModal from "@/components/ImageCatalogModal";
 import { uploadImage } from "@/utils/upload";
+import { PageGaurd } from "@/app/hooks/pageguard";
 const IPDealOptions = [
   { label: "Writer retains all rights", value: "WriterRetainsRights" },
   { label: "Producer retains all rights", value: "ProducerRetainsRights" },
@@ -75,19 +76,16 @@ export default function AddScriptPage() {
   const scriptInputRef = useRef<HTMLInputElement | null>(null);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
 
-  useEffect(() => {
-    return () => {
-      if (mediaPreviewUrl) URL.revokeObjectURL(mediaPreviewUrl);
-    };
-  }, [mediaPreviewUrl]);
 
   useEffect(() => {
     const session = getUserSession();
-    if (session) {
+    if (!session) {
+      router.push("/auth/login");
+      return;
+    }
       setRole(session.userType);
       setUserId(session.userId);
-    }
-
+      PageGaurd(session);
     (async () => {
       try {
         const res = await api.getGenres();
@@ -99,6 +97,11 @@ export default function AddScriptPage() {
     })();
   }, []);
 
+    useEffect(() => {
+      return () => {
+        if (mediaPreviewUrl) URL.revokeObjectURL(mediaPreviewUrl);
+      };
+    }, [mediaPreviewUrl]);
   const handleBrowseScript = () => scriptInputRef.current?.click();
   const handleBrowseImage = () => imageInputRef.current?.click();
 
@@ -224,12 +227,12 @@ export default function AddScriptPage() {
       return;
     }
 
-    const session = getUserSession();
-    if (!session || !session.userId) {
-      toast.error("Session expired. Please login again");
-      router.push("/auth/login");
-      return;
-    }
+    // const session = getUserSession();
+    // if (!session || !session.userId) {
+    //   toast.error("Session expired. Please login again");
+    //   router.push("/auth/login");
+    //   return;
+    // }
 
     setIsSubmitting(true);
 
@@ -262,12 +265,12 @@ export default function AddScriptPage() {
       //    console.log(pair[0], pair[1]);
       //  }
 
-      const res = await api.addScript(fd, session.userId);
+      const res = await api.addScript(fd, userId);
       console.log("Add script response:", res);
 
       if (res?.success) {
         toast.success("Script added successfully");
-        router.push(`/writer/profile/${session.userId}`);
+        router.push(`/writer/profile/${userId}`);
       } else {
         if (
           res?.statusCode === 401 ||

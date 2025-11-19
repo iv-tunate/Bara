@@ -6,7 +6,7 @@ import DashboardNavbar from "@/components/DashboardNavbar";
 import { getUserSession } from "@/utils/tokenManager";
 import { api } from "@/utils/api";
 import { Transaction } from "@/models/transaction";
-
+import { PageGaurd } from "@/app/hooks/pageguard";
 
 export default function TransactionsPage() {
   const router = useRouter();
@@ -23,7 +23,7 @@ export default function TransactionsPage() {
       router.push("/auth/login");
       return;
     }
-
+    PageGaurd(session);
     loadTransactions(session.userId, currentPage);
   }, [router, currentPage]);
 

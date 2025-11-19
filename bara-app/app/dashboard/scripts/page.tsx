@@ -9,7 +9,7 @@ import PaymentSuccessModal from "@/components/PaymentSuccessModal";
 import { getUserSession } from "@/utils/tokenManager";
 import { api } from "@/utils/api";
 import { Script, ownershipLabels } from "@/models/script";
-
+import { PageGaurd } from "@/app/hooks/pageguard";
 
 export default function ScriptPage() {
   const router = useRouter();
@@ -36,7 +36,7 @@ export default function ScriptPage() {
           router.push("/auth/login");
           return;
         }
-
+    PageGaurd(session);
         const urlParams = new URLSearchParams(window.location.search);
         const scriptId = urlParams.get("scriptId");
 

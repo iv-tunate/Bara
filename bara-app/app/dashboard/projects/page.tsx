@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { getUserSession } from "@/utils/tokenManager";
+import { PageGaurd } from "@/app/hooks/pageguard";
 
 export default function ProjectsPage() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export default function ProjectsPage() {
       router.push("/auth/login");
       return;
     }
+        PageGaurd(session);
   }, [router]);
 
   return (

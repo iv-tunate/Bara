@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { getUserSession, getUserId, getUserType } from "@/utils/tokenManager";
-
+import { PageGaurd } from "@/app/hooks/pageguard";
 export default function SavedScriptsPage() {
   const router = useRouter();
 
@@ -18,6 +18,8 @@ export default function SavedScriptsPage() {
      router.push("/auth/login");
      return;
    }
+
+   PageGaurd(session);
 
    const type = getUserType();
    console.log("User role:", type);
