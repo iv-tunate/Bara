@@ -97,7 +97,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Section 3 */}
+        {/* Section 3 => Collaboration Paths */}
         <div>
           <div className="mx-auto max-w-6xl">
             <h3 className="text-4xl font-semibold mt-10 pl-3">
@@ -106,7 +106,7 @@ export default function HomePage() {
 
             {/* Writer Path */}
             <div>
-              <h4 className="text-3xl font-semibold mt-10 pl-6">Writers</h4>
+              <h4 className="text-3xl font-semibold mt-10 pl-6 text-red-900">Writers</h4>
               {/* Path Grids */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 mb-10">
                 {/* Card 1 */}
@@ -144,7 +144,7 @@ export default function HomePage() {
 
             {/* Producer Path */}
             <div>
-              <h4 className="text-3xl font-semibold mt-10 pl-6">Producers</h4>
+              <h4 className="text-3xl font-semibold mt-10 pl-6 text-red-900">Producers</h4>
               {/* Path Grids */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 mb-10">
                 {/* Card 1 */}
