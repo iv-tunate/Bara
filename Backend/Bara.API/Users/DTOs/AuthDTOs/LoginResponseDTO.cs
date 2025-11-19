@@ -32,6 +32,8 @@
         public string? AccessToken { get; set; }
 
         public bool IsProfileSetupComplete { get; set; }
+        public bool IsVerified { get; set; }
+        public string VerificationStatus { get; set; }
         public string Role { get; set; }
     }
 

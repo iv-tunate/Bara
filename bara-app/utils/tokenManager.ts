@@ -7,6 +7,8 @@ export interface UserSession {
   wrongLoginAttempts?: number;
   profileComplete: boolean;
   createdAt?: number;
+  isVerified: boolean;
+  VerificationStatus: string;
 }
 
 const TOKEN_KEY = "user_session";
@@ -20,7 +22,7 @@ export function setUserSession(session: UserSession): void {
 
     localStorage.setItem(USER_ID_KEY, session.userId);
     localStorage.setItem(USER_TYPE_KEY, session.userType);
-
+    localStorage.setItem("VerificationStatus", session.isVerified ? "Verified" : "NotVerified");
     const sessionDetails = sessionStorage.getItem(TOKEN_KEY);
     console.log("User Session Details", sessionDetails);
   } catch (error) {

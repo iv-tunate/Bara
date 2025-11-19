@@ -72,6 +72,8 @@ function VerifyEmailPageContent() {
           wrongLoginAttempts: data.data.wrongLoginAttempts,
           profileComplete: data.data.isProfileSetupComplete,
           createdAt: Date.now() - 2 * 60 * 1000,
+          isVerified: data.data.isVerified,
+          VerificationStatus: data.data.verificationStatus,
         });
 
         if (userType === "writer" || userType === "producer") {

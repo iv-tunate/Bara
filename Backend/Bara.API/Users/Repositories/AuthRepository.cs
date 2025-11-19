@@ -48,18 +48,21 @@ namespace Bara.API.Users.Repositories
             try
             {
                 var validationErrors = new List<string>();
-                var user = await dbContext.AuthProfiles.FirstOrDefaultAsync(u => u.Email.ToLower() == email);
-                if (user == null)
+                var userProfile = await dbContext.Users.Select(x => new { x.AuthProfile, x.VerificationStatus, x.Email }).FirstOrDefaultAsync(u => u.Email.ToLower() == email);
+                if (userProfile == null)
                 {
                     return ResponseDetail<LoginResponseDTO>.Failed("Login unsuccessful...Email or password is invalid");
                 }
+                var user = userProfile.AuthProfile;
                 var response = new LoginResponseDTO
                 {
                     Email = authReqBody.Email,
                     Name = user.FullName,
                     UserId = user.UserId,
                     IsProfileSetupComplete = user.IsProfileSetupComplete,
-                    Role = user.Role
+                    Role = user.Role,
+                    IsVerified = user.IsVerified,
+                    VerificationStatus = userProfile.VerificationStatus.ToString()
                 };
                 var confirmPassword = BCrypt.Net.BCrypt.Verify(authReqBody.Password, user.Password);
                 if (!confirmPassword)
@@ -229,19 +232,22 @@ namespace Bara.API.Users.Repositories
         {
             try
             {
-                var user = await dbContext.AuthProfiles.FirstOrDefaultAsync(x => x.Email == email);
-
-                if (user == null)
+                var userProfile = await dbContext.Users.Select(x => new { x.AuthProfile, x.VerificationStatus, x.Email }).FirstOrDefaultAsync(u => u.Email.ToLower() == email);
+                if (userProfile == null)
                 {
+                    logger.LogInformation($"Email verification for user with email: {email} failed because email doesn't exist");
                     return ResponseDetail<LoginResponseDTO>.Failed($"Operation can not be completed because user does not exist", 404);
                 }
+                var user = userProfile.AuthProfile;
                 var response = new LoginResponseDTO
                 {
                     Email = email,
                     Name = user.FullName,
                     UserId = user.UserId,
                     IsProfileSetupComplete = user.IsProfileSetupComplete,
-                    Role = user.Role
+                    Role = user.Role,
+                    IsVerified = user.IsVerified,
+                    VerificationStatus = userProfile.VerificationStatus.ToString()
                 };
                 if (user.IsEmailVerified)
                 {
@@ -265,6 +271,7 @@ namespace Bara.API.Users.Repositories
                     user.LastLoginAt = DateTimeOffset.UtcNow;
                     user.ModifiedAt = DateTimeOffset.UtcNow;
                     user.IsEmailVerified = true;
+
                     user.ModifiedAt = DateTimeOffset.UtcNow;
                     cache.Remove(cacheKey);
 
@@ -286,12 +293,14 @@ namespace Bara.API.Users.Repositories
         {
             try
             {
-                var user = await dbContext.AuthProfiles.FirstOrDefaultAsync(x => x.Email == loginDetails.Email);
-                if (user == null)
+
+                var userProfile = await dbContext.Users.Select(x => new { x.AuthProfile, x.VerificationStatus, x.Email }).FirstOrDefaultAsync(u => u.Email.ToLower() == loginDetails.Email);
+                if (userProfile == null)
                 {
-                    logger.LogInformation($"login for user with email: {loginDetails.Email} failed because email doesn't exist");
-                    return ResponseDetail<LoginResponseDTO>.Failed($"{loginDetails.Email} is invalid or doesn't exist", 400, "Bad Request");
+                    return ResponseDetail<LoginResponseDTO>.Failed("Login unsuccessful...Email or password is invalid");
                 }
+                var user = userProfile.AuthProfile;
+
                 var response = new LoginResponseDTO
                 {
                     Email = loginDetails.Email,
@@ -299,7 +308,9 @@ namespace Bara.API.Users.Repositories
                     UserId = user.UserId,
                     WrongLoginAttempts = user.LoginAttempts,
                     IsProfileSetupComplete = user.IsProfileSetupComplete,
-                    Role = user.Role
+                    Role = user.Role,
+                    IsVerified = user.IsVerified,
+                    VerificationStatus = userProfile.VerificationStatus.ToString()
                 };
 
                 var cacheKey = $"User_Login_Token_{user.UserId}";
