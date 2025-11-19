@@ -76,7 +76,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Section 2 */}
+        {/* Section 2 => writers and producers */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-10 md:gap-2 ">
           <div className="bg-[#FFEDEE] px-10 md:px-40 py-10 md:py-15 flex flex-col items-start justify-center gap-5">
             <h2 className="text-3xl font-semibold">For Writers</h2>
@@ -106,7 +106,9 @@ export default function HomePage() {
 
             {/* Writer Path */}
             <div>
-              <h4 className="text-3xl font-semibold mt-10 pl-6 text-red-900">Writers</h4>
+              <h4 className="text-3xl font-semibold mt-10 pl-6 text-red-900">
+                Writers
+              </h4>
               {/* Path Grids */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 mb-10">
                 {/* Card 1 */}
@@ -144,7 +146,9 @@ export default function HomePage() {
 
             {/* Producer Path */}
             <div>
-              <h4 className="text-3xl font-semibold mt-10 pl-6 text-red-900">Producers</h4>
+              <h4 className="text-3xl font-semibold mt-10 pl-6 text-red-900">
+                Producers
+              </h4>
               {/* Path Grids */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 mb-10">
                 {/* Card 1 */}
@@ -220,7 +224,7 @@ export default function HomePage() {
           />
         </div>
 
-        {/* Section 5 */}
+        {/* Section 5 => Bara Bridge */}
         <div className="bg-[url('/Mask-group.png')] bg-[#FFEDEE] bg-auto bg-no-repeat bg-right flex flex-col gap-5 py-10 px-7">
           <div className="w-full max-w-3xl py-7 px-25 items-center justify-center">
             <h5 className="text-5xl font-semibold">
@@ -237,11 +241,8 @@ export default function HomePage() {
             </button>
           </div>
         </div>
-
-        {/* Section 6 => Footer */}
-
-        {/* DO NOT TOUCH THIS */}
       </div>
+      {/* Footer Here */}
       <Footer />
     </main>
   );
