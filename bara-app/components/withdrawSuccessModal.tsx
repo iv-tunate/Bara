@@ -16,24 +16,24 @@ export default function WithdrawSuccessModal({
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50 px-4">
       {/* Modal Card */}
-      <div className="bg-white w-full max-w-4xl rounded-md p-16 py-35 flex flex-col items-center text-center">
+      <div className="bg-white w-full max-w-2xl rounded-md p-16 py-35 flex flex-col items-center text-center">
         {/* Success Icon */}
         <div className="flex items-center justify-center mb-4">
           <Image
             src="/withdraw-succ.svg"
             alt="Success"
-            width={80}
-            height={80}
+            width={60}
+            height={60}
           />
         </div>
 
         {/* Title */}
-        <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+        <h2 className="text-xl font-semibold text-[#333740] mb-2">
           Payout successful!
         </h2>
 
         {/* Subtitle */}
-        <p className="text-gray-600 mb-10">
+        <p className="text-[#333740] mb-4 text-sm">
           ₦250,000 has been sent to your bank account
         </p>
 
@@ -43,14 +43,14 @@ export default function WithdrawSuccessModal({
 
           <button
             onClick={onClose}
-            className="w-full bg-red-900 hover:bg-red-800 text-white py-3 rounded-sm text-md transition"
+            className="w-full bg-red-900 hover:bg-red-800 text-white py-3 rounded-sm text-md transition cursor-pointer flex items-center justify-center gap-3"
           >
             View Bara wallet
           </button>
 
           {/* Go Home */}
           <Link href="/" className="w-full">
-            <button className="w-full border border-red-900 text-red-900 py-3 rounded-sm text-md flex items-center justify-center gap-3 hover:bg-red-50 transition">
+            <button className="w-full border border-red-900 text-red-900 py-3 rounded-sm text-md flex items-center justify-center gap-3 hover:bg-red-50 transition cursor-pointer">
               <Image src="/Home.svg" alt="Home" width={20} height={20} />
               Go home
             </button>

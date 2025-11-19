@@ -65,8 +65,8 @@ export default function WalletPage() {
     <main className="min-h-screen bg-white">
       <DashboardNavbar />
 
-      <div className="max-w-4xl mx-auto px-4 md:px-10 lg:px-10 py-4 flex flex-col gap-10">
-        <h2 className="text-4xl font-semibold">Bara wallet</h2>
+      <div className="max-w-2xl mx-auto px-4 md:px-10 lg:px-10 py-4 flex flex-col gap-10">
+        <h2 className="text-xl font-semibold">Bara wallet</h2>
 
         {/* Balance Card */}
         <div className="flex flex-col items-left justify-start bg-[#FFEDEE] bg-[url('/whisk-bg.png')] bg-contain bg-no-repeat bg-right py-5 px-7 rounded-md gap-10">
@@ -74,10 +74,10 @@ export default function WalletPage() {
             <Image src="/Money.svg" alt="Close" width={20} height={20} />
             <p className="font-semibold">Available Balance</p>
           </div>
-          <h2 className="font-semibold text-4xl">NGN 600,000.00</h2>
+          <h2 className="font-semibold text-2xl">NGN 600,000.00</h2>
           <button
             onClick={() => setModalOpen(true)}
-            className="rounded-md bg-[#810306] px-4 py-2 text-white hover:bg-[#810306]/70 transition w-fit"
+            className="rounded-md bg-[#810306] px-4 py-2 text-white hover:bg-[#810306]/70 transition w-fit cursor-pointer"
           >
             Withdraw Funds
           </button>
@@ -86,21 +86,21 @@ export default function WalletPage() {
         {/* Summary */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Total earnings */}
-          <div className="bg-white border border-2 border-gray-800/20 rounded-xl p-4 flex flex-col gap-3">
+          <div className="bg-white  border-2 border-gray-800/20 rounded-xl p-4 flex flex-col gap-3">
             <div className=" flex flex-row gap-3">
               {/* <Image src="/earned-arrow.svg" alt="arrow" width={20} height={20} /> */}
-              <p className="text-md">Total earnings so far</p>
+              <p className="text-md font-medium">Total earnings so far</p>
             </div>
-            <p className="text-2xl font-semibold">NGN 2, 018, 500.00</p>
+            <p className="text-xl font-semibold">NGN 2, 018, 500.00</p>
           </div>
 
           {/* Amount withdrawn */}
-          <div className="bg-white border border-2 border-gray-800/20 rounded-xl p-4 flex flex-col gap-3">
+          <div className="bg-white  border-2 border-gray-800/20 rounded-xl p-4 flex flex-col gap-3">
             <div className=" flex flex-row gap-3">
               {/* <img src="/Lock_light.svg" alt="lock" width={20} height={20} /> */}
-              <p className="text-md">Amount withdrawn</p>
+              <p className="text-md font-medium">Amount withdrawn</p>
             </div>
-            <p className="text-2xl font-semibold">NGN 230, 000.00</p>
+            <p className="text-xl font-semibold">NGN 230, 000.00</p>
           </div>
         </div>
 
@@ -115,10 +115,12 @@ export default function WalletPage() {
             >
               <div className="flex flex-row justify-between gap-5">
                 <div className="flex flex-row gap-5">
-                  <img
+                  <Image
                     src={transaction.avatar}
                     alt="avatar"
-                    className="w-10 h-10 rounded-full object-cover"
+                    width={40}
+                    height={40}
+                    className="rounded-full object-cover"
                   />
                   <div>
                     <p

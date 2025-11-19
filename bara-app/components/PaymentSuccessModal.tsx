@@ -13,7 +13,7 @@ export default function PaymentSuccessModal({
     <div className="fixed inset-0 z-50">
       {/* overlay */}
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0  bg-black bg-opacity-40 backdrop-blur-sm"
         onClick={onClose}
       ></div>
 
