@@ -87,7 +87,7 @@ function RegisterPageContent() {
         localStorage.setItem("userType", userType);
         if (response.ok) {
           setShowSuccess(true);
-          console.log("Navigating to verify-email with email:", email);
+          //console.log("Navigating to verify-email with email:", email);
           setTimeout(() => {
             if (email && email.trim()) {
               router.push(

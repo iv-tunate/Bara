@@ -24,7 +24,7 @@ export function setUserSession(session: UserSession): void {
     localStorage.setItem(USER_TYPE_KEY, session.userType);
     localStorage.setItem("VerificationStatus", session.isVerified ? "Verified" : "NotVerified");
     const sessionDetails = sessionStorage.getItem(TOKEN_KEY);
-    console.log("User Session Details", sessionDetails);
+   // console.log("User Session Details", sessionDetails);
   } catch (error) {
     console.error("Failed to store user session:", error);
   }
@@ -45,7 +45,7 @@ export function updateUserSession(updates: Partial<UserSession>): void {
       localStorage.setItem(USER_TYPE_KEY, updatedSession.userType);
     }
 
-    console.log("User session updated:", updatedSession);
+    //console.log("User session updated:", updatedSession);
   } catch (error) {
     console.error("Failed to update user session:", error);
   }
@@ -134,7 +134,7 @@ export function isTokenExpired(token: string): boolean {
 export function getAuthHeader(): Record<string, string> {
   const token = getAccessToken();
 
-  console.log("Token", token);
+  //console.log("Token", token);
   if (!token) return {};
 
   return {

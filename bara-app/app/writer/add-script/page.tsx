@@ -270,7 +270,7 @@ export default function AddScriptPage() {
 
       if (res?.success) {
         toast.success("Script added successfully");
-        router.push(`/writer/profile/${userId}`);
+        router.push(`/writer/profile`);
       } else {
         if (
           res?.statusCode === 401 ||

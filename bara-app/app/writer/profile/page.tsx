@@ -35,7 +35,7 @@ export default function WriterProfile() {
         const res = await api.getWriterProfile(writerId as string);
         if (res?.data?.data) {
           const fresh = res.data.data;
-          console.log("Fresh data:", fresh);
+          //console.log("Fresh data:", fresh);
           //localStorage.setItem(cacheKey, JSON.stringify(fresh));
           setProfileData(fresh);
         }

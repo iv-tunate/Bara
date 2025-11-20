@@ -48,7 +48,7 @@ namespace Bara.API.Users.Repositories
             try
             {
                 var validationErrors = new List<string>();
-                var userProfile = await dbContext.Users.Select(x => new { x.AuthProfile, x.VerificationStatus, x.Email }).FirstOrDefaultAsync(u => u.Email.ToLower() == email);
+                var userProfile = await dbContext.Users.Select(x => new { x.AuthProfile, x.VerificationStatus, x.Email }).FirstOrDefaultAsync(u => u.Email == email);
                 if (userProfile == null)
                 {
                     return ResponseDetail<LoginResponseDTO>.Failed("Login unsuccessful...Email or password is invalid");
@@ -194,7 +194,7 @@ namespace Bara.API.Users.Repositories
         {
             try
             {
-                var user = await dbContext.AuthProfiles.Select(x => new { x.Email, x.UserId }).FirstOrDefaultAsync(x => x.Email == email);
+                var user = await dbContext.AuthProfiles.Select(x => new { x.Email, x.UserId }).FirstOrDefaultAsync(x => x.Email == email.ToLower());
                 var token = RandomNumberGenerator.GetInt32(100000, 999999);
                 if (user == null)
                 {
@@ -232,7 +232,7 @@ namespace Bara.API.Users.Repositories
         {
             try
             {
-                var userProfile = await dbContext.Users.Select(x => new { x.AuthProfile, x.VerificationStatus, x.Email }).FirstOrDefaultAsync(u => u.Email.ToLower() == email);
+                var userProfile = await dbContext.Users.Select(x => new { x.AuthProfile, x.VerificationStatus, x.Email }).FirstOrDefaultAsync(u => u.Email == email.ToLower());
                 if (userProfile == null)
                 {
                     logger.LogInformation($"Email verification for user with email: {email} failed because email doesn't exist");
@@ -294,7 +294,7 @@ namespace Bara.API.Users.Repositories
             try
             {
 
-                var userProfile = await dbContext.Users.Select(x => new { x.AuthProfile, x.VerificationStatus, x.Email }).FirstOrDefaultAsync(u => u.Email.ToLower() == loginDetails.Email);
+                var userProfile = await dbContext.Users.Select(x => new { x.AuthProfile, x.VerificationStatus, x.Email }).FirstOrDefaultAsync(u => u.Email == loginDetails.Email.ToLower());
                 if (userProfile == null)
                 {
                     return ResponseDetail<LoginResponseDTO>.Failed("Login unsuccessful...Email or password is invalid");

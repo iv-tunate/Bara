@@ -39,8 +39,8 @@ export async function apiRequest<T = any>(
   if (requireAuth) {
     const authHeaders = getAuthHeader();
     Object.assign(requestHeaders, authHeaders);
-    console.log("authHeaders", authHeaders);
-    console.log("requestHeaders", requestHeaders);
+    // console.log("authHeaders", authHeaders);
+    // console.log("requestHeaders", requestHeaders);
   }
 
   if (skipNgrokWarning) {

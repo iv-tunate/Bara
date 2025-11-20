@@ -382,7 +382,7 @@ export default function ScriptPage() {
             profileImage="/writer.png"
             portfolioLink="https://timothy-edwards.com/works"
             onViewProfile={() => {
-              console.log("View profile clicked!");
+             // console.log("View profile clicked!");
             }}
           />
         </div>

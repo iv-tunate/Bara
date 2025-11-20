@@ -34,8 +34,7 @@ export default function ChangePhotoModal({
   };
 
   const handleSave = () => {
-    // 🔥 You can send selectedImage to your backend or state here
-    console.log("Saved image:", selectedImage);
+   // console.log("Saved image:", selectedImage);
     setIsEditing(false);
     onClose();
   };

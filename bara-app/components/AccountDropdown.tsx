@@ -184,7 +184,7 @@ export default function AccountDropdown({ onClose }: Props) {
       <div className="py-2">
         {userData?.userType === "Writer" && (
           <Link
-            href={`/writer/profile/${userData.userId}`}
+            href={`/writer/profile`}
             onClick={onClose}
             className="flex items-center px-4 py-2 text-sm text-[#333740] hover:bg-[#F5F5F5] transition-colors"
           >

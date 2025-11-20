@@ -77,16 +77,17 @@ namespace Bara.API.Users.Repositories
                 var verificationMail = MailNotifications.RegistrationConfirmationMailNotification(detail.Email, token.ToString());
 
                 User user;
+                var email = detail.Email.ToLower();
                 if (detail.Type == Role.Writer)
                 {
                     Writer writerProfile = new Writer
                     {
-                        Email = detail.Email,
+                        Email = email,
                         Type = detail.Type,
                         VerificationStatus = detail.Type == Role.Admin ? VerificationStatus.Approved : VerificationStatus.Pending,
                         AuthProfile = new AuthProfile
                         {
-                            Email = detail.Email,
+                            Email = email,
                             Password = BCrypt.Net.BCrypt.HashPassword(detail.Password),
                             Role = detail.Type.ToString(),
                         },
@@ -99,12 +100,12 @@ namespace Bara.API.Users.Repositories
                 {
                     Producer producerProfile = new Producer
                     {
-                        Email = detail.Email,
+                        Email = email,
                         Type = detail.Type,
                         VerificationStatus = detail.Type == Role.Admin ? VerificationStatus.Approved : VerificationStatus.Pending,
                         AuthProfile = new AuthProfile
                         {
-                            Email = detail.Email,
+                            Email = email,
                             Password = BCrypt.Net.BCrypt.HashPassword(detail.Password),
                             Role = detail.Type.ToString(),
                         },
@@ -116,12 +117,12 @@ namespace Bara.API.Users.Repositories
                 {
                     user = new User
                     {
-                        Email = detail.Email,
+                        Email = email,
                         Type = detail.Type,
                         VerificationStatus = detail.Type == Role.Admin ? VerificationStatus.Approved : VerificationStatus.Pending,
                         AuthProfile = new AuthProfile
                         {
-                            Email = detail.Email,
+                            Email = email,
                             Password = BCrypt.Net.BCrypt.HashPassword(detail.Password),
                             Role = detail.Type.ToString(),
                             IsVerified = detail.Type == Role.Admin

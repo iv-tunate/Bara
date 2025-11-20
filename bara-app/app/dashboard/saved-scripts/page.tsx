@@ -12,7 +12,7 @@ export default function SavedScriptsPage() {
 
  useEffect(() => {
    const session = getUserSession();
-   console.log("Session:", session);
+   //console.log("Session:", session);
 
    if (!session) {
      router.push("/auth/login");
@@ -22,7 +22,7 @@ export default function SavedScriptsPage() {
    PageGaurd(session);
 
    const type = getUserType();
-   console.log("User role:", type);
+  // console.log("User role:", type);
    setUserType(getUserType()?.toLowerCase() || "");
  }, [router]);
 

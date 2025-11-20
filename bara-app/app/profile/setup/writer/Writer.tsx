@@ -106,11 +106,11 @@ export default function WriterProfilePage() {
     setUploading(true);
     try {
       const user = {
-       
         name: `${formData.firstName} ${formData.lastName}`,
         id: localStorage.getItem("userId") || "temp",
       };
 
+      //debugger;
       const uploadResult = await uploadImage(file, "Writer", user);
 
       setProfileImageUrl(uploadResult.url);
@@ -227,7 +227,7 @@ export default function WriterProfilePage() {
               form.append(`Experiences[${index}].EndDate`, exp.endDate);
           });
         }
-        debugger;
+        //debugger;
         const userId = localStorage.getItem("userId");
         const res = await api.createWriter(form, userId as string);
         //  console.log("Response Data:", res.data);
@@ -237,12 +237,12 @@ export default function WriterProfilePage() {
             profileComplete: true,
             name: `${res.data.data.name}`,
           });
-          router.push(`/writer/profile/${userId}`);
+          router.push(`/writer/profile`);
           return;
         } else if (res.data.statusCode === 409) {
           toast.error(res.data.message);
           setTimeout(() => {
-            router.push(`/writer/profile/${userId}`);
+            router.push(`/writer/profile`);
           }, 1500);
           return;
         } else {

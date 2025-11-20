@@ -19,7 +19,7 @@ export default function GenreDropdown({ onChange }: GenreDropdownProps) {
     async function fetchGenres() {
       try {
         const response = await api.getGenres();
-       console.log(response);
+       //console.log(response);
         setGenres(response.data.data || []);
       } catch (error) {
         console.error("Failed to load genres:", error);
