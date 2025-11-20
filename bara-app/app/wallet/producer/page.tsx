@@ -91,7 +91,7 @@ export default function WalletPage() {
             className="rounded-md bg-[#810306] px-4 py-2 text-white hover:bg-red-800 w-fit cursor-pointer transition-all duration-300 ease-in-out
               hover:scale-105"
           >
-            Withdraw Funds
+            Fund Wallet
           </button>
         </div>
 

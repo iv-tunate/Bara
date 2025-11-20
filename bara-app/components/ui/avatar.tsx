@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import Image, { ImageProps } from "next/image";
 
 const Avatar = React.forwardRef<
   HTMLDivElement,
@@ -18,16 +19,19 @@ const Avatar = React.forwardRef<
 ));
 Avatar.displayName = "Avatar";
 
-const AvatarImage = React.forwardRef<
-  HTMLImageElement,
-  React.ImgHTMLAttributes<HTMLImageElement>
->(({ className, ...props }, ref) => (
-  <img
-    ref={ref}
-    className={cn("aspect-square h-full w-full object-cover", className)}
-    {...props}
-  />
-));
+const AvatarImage = React.forwardRef<HTMLImageElement, ImageProps>(
+  function AvatarImage({ className, alt = "", ...props }) {
+    return (
+      <Image
+        alt={alt}
+        width={40}
+        height={40}
+        className={cn("aspect-square object-cover", className)}
+        {...props}
+      />
+    );
+  }
+);
 AvatarImage.displayName = "AvatarImage";
 
 const AvatarFallback = React.forwardRef<
