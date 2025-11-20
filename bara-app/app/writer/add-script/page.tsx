@@ -428,6 +428,7 @@ export default function AddScriptPage() {
                 type="number"
                 value={price}
                 //min={minAllowed.toFixed(2)}
+                // defaultValue={minAllowed.toFixed(2)}
                 onChange={handlePriceChange}
                 placeholder={`Min ${minAllowed.toFixed(2)} ${currency}`}
                 className="w-full border border-[#ABADB2] rounded-md px-3 py-2 text-sm"

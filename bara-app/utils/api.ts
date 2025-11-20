@@ -57,12 +57,20 @@ export async function apiRequest<T = any>(
 
     const contentType = response.headers.get("content-type");
 
-    let responseData;
-    try {
-      responseData = await response.json();
-    } catch (parseError) {
-      throw new Error("Invalid JSON response from server");
-    }
+   let responseData: any = null;
+  
+   try {
+     if (contentType.includes("application/json")) {
+       responseData = await response.json();
+     } else if (contentType.includes("text/")) {
+       responseData = await response.text();
+     } else {
+       responseData = null;
+     }
+   } catch (parseError) {
+     console.warn("Failed to parse response:", parseError);
+     responseData = null;
+   }
 
     if (response.ok) {
       return {
@@ -138,6 +146,8 @@ const API_ENDPOINTS = {
   SCRIPT_BY_ID: (scriptId: string) => `/api/script/${scriptId}`,
   INITIATE_SCRIPT_TRANSACTION: (producerId: string) =>
     `/api/producers/${producerId}/scripts/transactions:initiate`,
+  SCRIPTS_BY_WRITER: (writerId: string, pageNumber: number, pageSize: number) =>
+    `/api/scripts/writer/${writerId}/${pageNumber}/${pageSize}`,
 };
 
 export const api = {
@@ -219,7 +229,6 @@ export const api = {
     });
   },
 
-  // Dashboard API methods
   getAllScripts: async (pageNumber: number = 1, pageSize: number = 10) => {
     const response = await apiRequest(
       `${BASE_URL}${API_ENDPOINTS.SCRIPTS(pageNumber, pageSize)}`,
@@ -255,14 +264,14 @@ export const api = {
     );
   },
 
-  searchScripts: async (
-    searchTerm: string,
+  getScriptsByWriterId: async (
+    writerId: string,
     pageNumber: number,
     pageSize: number
   ) => {
-    return apiRequest(
-      `${BASE_URL}${API_ENDPOINTS.SEARCH_SCRIPTS(
-        searchTerm,
+    return await apiRequest(
+      `${BASE_URL}${API_ENDPOINTS.SCRIPTS_BY_WRITER(
+        writerId,
         pageNumber,
         pageSize
       )}`,
@@ -317,7 +326,6 @@ export const api = {
     });
   },
 
-  // Wallet API methods
   async getWalletBalance(userId: string) {
     return apiRequest(`${BASE_URL}${API_ENDPOINTS.WALLET_BALANCE(userId)}`, {
       method: "GET",

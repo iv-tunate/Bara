@@ -80,7 +80,7 @@ namespace Bara.API.Scripts.Controllers
         /// or 500 Internal Server Error in case of unexpected server issues.
         /// </returns>
 
-        [Authorize(Roles = "Writer, Admin")]
+        [Authorize(Roles = "Writer, Admin, Producer")]
         [HttpGet("scripts/writer/{writerId}/{pageNumber}/{pageSize}")]
         public async Task<IActionResult> GetScriptsByWriterId(Guid writerId, int pageNumber, int pageSize)
         {

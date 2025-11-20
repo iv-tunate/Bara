@@ -1,13 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import EditWriterProfileModal from "@/components/EditWriterProfile";
 import ChangePhotoModal from "@/components/ChangeProfileModal";
 import { api } from "@/utils/api";
 import { downloadImage } from "@/utils/upload";
 import { Writer } from "@/models/user";
+import { Script, Genre } from "@/models/script";
+import Link from "next/link";
 export default function WriterProfile() {
   const [copied, setCopied] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -17,9 +19,19 @@ export default function WriterProfile() {
 
   const [profileData, setProfileData] = useState<Writer | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
+ const [currentPage, setCurrentPage] = useState(1);
+ const [scriptsLoading, setScriptsLoading] = useState(false);
+  const [error, setError] = useState("");
+   const [scripts, setScripts] = useState<Script[]>([]);
+    const [totalPages, setTotalPages] = useState(1);
 
-  const writerId = localStorage.getItem("userId");
+  const [writerId, setWriterId] = useState<string | null>(null);
 
+  useEffect(() => {
+    const id = localStorage.getItem("userId");
+    setWriterId(id);
+  }, []);
+const pageSize = 10;
   useEffect(() => {
     async function fetchProfile() {
       setIsLoading(true);
@@ -48,6 +60,39 @@ export default function WriterProfile() {
 
     fetchProfile();
   }, [writerId]);
+
+    const fetchScripts = useCallback(async () => {
+      setScriptsLoading(true);
+      setError("");
+
+      try {
+        const response = await api.getScriptsByWriterId(
+          writerId as string,
+          currentPage,
+          pageSize
+        );
+
+        if (response.success && response.data) {
+          setScripts(response.data.data || []);
+          setTotalPages(response.totalPages || 1);
+        } else {
+          setError(response.message || "Failed to load scripts");
+          setScripts([]);
+        }
+      } catch (error) {
+        console.error("Error fetching scripts:", error);
+        setError("An unexpected error occurred");
+        setScripts([]);
+      } finally {
+        setIsLoading(false);
+        setScriptsLoading(false);
+      }
+    }, [writerId, currentPage]);
+
+useEffect(() => {
+  fetchScripts();
+}, [fetchScripts]);
+
 
   useEffect(() => {
     async function loadImage() {
@@ -187,7 +232,9 @@ export default function WriterProfile() {
                     </a>
                     <div className="relative">
                       <button
-                        onClick={() => handleCopy(profileData.portfolioUrl as string)}
+                        onClick={() =>
+                          handleCopy(profileData.portfolioUrl as string)
+                        }
                         className="p-1 rounded cursor-pointer"
                       >
                         <Image
@@ -222,37 +269,122 @@ export default function WriterProfile() {
           </div>
         </section>
 
-        <section className="border border-[#ABADB2] rounded-lg p-6 mb-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-[#22242A]">Experience</h2>
-          </div>
+        <section className="border border-[#ABADB2] rounded-lg p-6 mb-6 shadow-sm flex justify-between gap-4 flex-col">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-[#22242A]">
+                Experience(s)
+              </h2>
+            </div>
 
-          <div className="space-y-4">
-            {profileData.experiences?.length ? (
-              profileData.experiences.map((exp: any) => (
-                <div key={exp.id}>
-                  <h3 className="text-sm font-medium text-[#333740]">
-                    {exp.organization} • {exp.project}
-                  </h3>
-                  <p className="text-xs text-[#333740]">{exp.description}</p>
-                  <p className="flex items-center gap-1 text-xs text-[#858990] mt-1">
-                    <Image
-                      src="/calendar.png"
-                      alt="Calendar"
-                      width={12}
-                      height={12}
-                    />
-                    {new Date(exp.startDate).toLocaleDateString()} –
-                    {exp.isCurrent
-                      ? " present"
-                      : ` ${new Date(exp.endDate).toLocaleDateString()}`}
-                  </p>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-gray-500">No experiences added yet.</p>
-            )}
+            <div className="space-y-4">
+              {profileData.experiences?.length ? (
+                profileData.experiences.map((exp: any) => (
+                  <div key={exp.id}>
+                    <h3 className="text-sm font-medium text-[#333740]">
+                      {exp.organization} • {exp.project}
+                    </h3>
+                    <p className="text-xs text-[#333740]">{exp.description}</p>
+                    <p className="flex items-center gap-1 text-xs text-[#858990] mt-1">
+                      <Image
+                        src="/calendar.png"
+                        alt="Calendar"
+                        width={12}
+                        height={12}
+                      />
+                      {new Date(exp.startDate).toLocaleDateString()} –
+                      {exp.isCurrent
+                        ? " present"
+                        : ` ${new Date(exp.endDate).toLocaleDateString()}`}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-gray-500">
+                  No experiences added yet.
+                </p>
+              )}
+            </div>
           </div>
+        </section>
+        <section className="border border-[#ABADB2] rounded-lg p-6 mb-6 shadow-sm">
+            {scriptsLoading? (
+                  <div className="flex justify-center items-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#800000]"></div>
+                  </div>
+                ) : scripts.length < 1 ? (
+                  <div className="text-center py-12">
+                    <div className="mb-4">
+                      <svg
+                        className="mx-auto h-12 w-12 text-gray-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                    </div>
+                    <p className="text-gray-500">
+                    You have not uploaded any scripts
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 items-start">
+                    {scripts.map((script) => (
+                      <div
+                        key={script.id}
+                        className={`group relative border border-[#ABADB2] rounded-md bg-white shadow-sm transition-all duration-300 overflow-hidden h-[360px] hover:h-[430px] hover:shadow-md hover:bg-[#f9f9f9]`}
+                      >
+                        <div className="relative">
+                          <Image
+                            src={script.image || "/flowery.png"}
+                            alt={script.title}
+                            width={400}
+                            height={250}
+                            className="w-full h-48 object-cover"
+                          />
+                          <span className="absolute top-3 left-3 bg-[#FFEDEE] text-[#810306] text-xs px-2 py-1 rounded border border-[#810306]">
+                            {script.genre}
+                          </span>
+                          <button
+                            type="button"
+                            className="absolute top-3 right-3"
+                            title="Save script"
+                          >
+                            <Image src="/save.png" alt="Save" width={20} height={20} />
+                          </button>
+                        </div>
+        
+                        <div className="p-4 flex flex-col gap-2">
+                          <h3 className="text-base font-bold text-[#22242A]">
+                            {script.title}
+                          </h3>
+                          <p className="text-sm text-[#333740] leading-snug">
+                            {script.synopsis}
+                          </p>
+                          <p className="text-base font-semibold text-[#333740]">
+                            {script.currencySymbol}
+                            {script.price.toLocaleString()}
+                          </p>
+        
+                          <Link href={`/dashboard/scripts/${script.id}`}>
+                            <button
+                              type="button"
+                              className="mt-2 w-full bg-[#800000] text-white py-2 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                            >
+                              See more
+                            </button>
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
         </section>
 
         <ChangePhotoModal

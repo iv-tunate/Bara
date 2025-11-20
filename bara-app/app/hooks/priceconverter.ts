@@ -12,10 +12,10 @@ const FALLBACK_RATES: Record<Currency, number> = {
 };
 
 interface UseMinPriceReturn {
-  minAllowed: number; 
-  rate: number; 
-  fetchError: string | null; 
-  resError: string | null; 
+  minAllowed: number;
+  rate: number;
+  fetchError: string | null;
+  resError: string | null;
   loading: boolean;
   validatePrice: (price: number) => boolean;
 }
@@ -44,18 +44,21 @@ export function useMinPrice(
 
       setLoading(true);
       try {
-        const res = await fetch(
-          `https://api.exchangeratesapi.io/v1/convert?from=NGN&to=${currency}&amount=${minInNaira}&access_key=${process.env.NEXT_PUBLIC_EXCHANGEAPI_KEY}`,
-          { headers: { Accept: "application/json" } }
-        );
+        const url = `https://v6.exchangerate-api.com/v6/${process.env.NEXT_PUBLIC_EXCHANGEAPI_KEY}/pair/NGN/${currency}/${minInNaira}`;
+        const res = await fetch(url, {
+          headers: { Accept: "application/json" },
+        });
         const data = await res.json();
 
-        if (!data.success || typeof data.result !== "number") {
+        if (
+          data.result !== "success" ||
+          typeof data.conversion_result !== "number"
+        ) {
           throw new Error("Invalid API response");
         }
 
-        setRate(data.info.rate); 
-        setMinAllowed(data.result); 
+        setRate(data.conversion_rate);
+        setMinAllowed(data.conversion_result);
         setFetchError(null);
       } catch (e) {
         console.error("Failed to fetch exchange rate, using fallback:", e);
