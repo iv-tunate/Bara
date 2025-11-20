@@ -3,6 +3,7 @@
 import Navbar from "@/components/Navbar";
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import CompleteProfileNav from "@/components/CompleteProfileNav";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { getUserSession } from "@/utils/tokenManager";
@@ -65,12 +66,14 @@ export default function HomePage() {
 
               {/* Buttons */}
               <div className="mt-5 flex flex-col md:flex-row items-center justify-center gap-6">
-                <button className="bg-red-900 hover:bg-red-800 text-white px-10 py-2 rounded-md text-md transition">
-                  Create account
-                </button>
-                <button className="border border-red-900 text-red-900 px-10 py-2 rounded-md text-md hover:bg-red-50/30 transition">
-                  Explore Bara
-                </button>
+                <a
+                  href="/dashboard"
+                  className="border border-[#810306] text-[#810306] font-medium px-12 py-3 rounded-sm text-center
+             transition-all duration-300 ease-in-out
+              hover:scale-105"
+                >
+                  Explore for free
+                </a>
               </div>
             </div>
           </div>
@@ -97,22 +100,25 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Section 3 => Collaboration Paths */}
+        {/* Section 3 Collaboration Paths */}
         <div>
           <div className="mx-auto max-w-6xl">
             <h3 className="text-4xl font-semibold mt-10 pl-3">
-              Your Path To <span className="text-red-900">Collaboration</span>
+              Your Path To <span className="text-[#810306]">Collaboration</span>
             </h3>
 
             {/* Writer Path */}
             <div>
-              <h4 className="text-3xl font-semibold mt-10 pl-6 text-red-900">
+              <h4 className="text-3xl font-semibold mt-10 pl-6 text-[#810306]">
                 Writers
               </h4>
               {/* Path Grids */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 mb-10">
                 {/* Card 1 */}
-                <div className="w-full bg-[url('/01.png')] bg-[#FFEDEE] bg-auto bg-no-repeat bg-top-left flex flex-col items-center justify-center gap-5 px-15 py-10 rounded-md">
+                <div
+                  className="w-full bg-[url('/01.png')] bg-[#FFEDEE] bg-auto bg-no-repeat bg-top-left flex flex-col items-center justify-center gap-5 px-15 py-10 rounded-md  transition-all duration-300 ease-in-out
+              hover:scale-105"
+                >
                   <h3 className="text-3xl font-semibold">
                     Upload and set price
                   </h3>
@@ -122,7 +128,10 @@ export default function HomePage() {
                   </p>
                 </div>
                 {/* Card 2 */}
-                <div className="w-full bg-[url('/02.png')] bg-[#FFEDEE] bg-auto bg-no-repeat bg-top-left flex flex-col items-center justify-center gap-5 px-15 py-10 rounded-md">
+                <div
+                  className="w-full bg-[url('/02.png')] bg-[#FFEDEE] bg-auto bg-no-repeat bg-top-left flex flex-col items-center justify-center gap-5 px-15 py-10 rounded-md transition-all duration-300 ease-in-out
+              hover:scale-105"
+                >
                   <h3 className="text-3xl font-semibold">
                     NDA-protected previews
                   </h3>
@@ -132,7 +141,10 @@ export default function HomePage() {
                   </p>
                 </div>
                 {/* Card 3 */}
-                <div className="w-full bg-[url('/03.png')] bg-[#FFEDEE] bg-auto bg-no-repeat bg-top-left flex flex-col items-center justify-center gap-5 px-15 py-10 rounded-md">
+                <div
+                  className="w-full bg-[url('/03.png')] bg-[#FFEDEE] bg-auto bg-no-repeat bg-top-left flex flex-col items-center justify-center gap-5 px-15 py-10 rounded-md transition-all duration-300 ease-in-out
+              hover:scale-105"
+                >
                   <h3 className="text-3xl font-semibold">
                     Get paid after confirmation
                   </h3>
@@ -146,13 +158,16 @@ export default function HomePage() {
 
             {/* Producer Path */}
             <div>
-              <h4 className="text-3xl font-semibold mt-10 pl-6 text-red-900">
+              <h4 className="text-3xl font-semibold mt-10 pl-6 text-[#810306]">
                 Producers
               </h4>
               {/* Path Grids */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 mb-10">
                 {/* Card 1 */}
-                <div className="w-full bg-[url('/01.png')] bg-[#FFEDEE] bg-auto bg-no-repeat bg-top-left flex flex-col items-center justify-center gap-5 px-15 py-10 rounded-md">
+                <div
+                  className="w-full bg-[url('/01.png')] bg-[#FFEDEE] bg-auto bg-no-repeat bg-top-left flex flex-col items-center justify-center gap-5 px-15 py-10 rounded-md transition-all duration-300 ease-in-out
+              hover:scale-105"
+                >
                   <h3 className="text-3xl font-semibold">
                     Explore and sign NDA
                   </h3>
@@ -162,7 +177,10 @@ export default function HomePage() {
                   </p>
                 </div>
                 {/* Card 2 */}
-                <div className="w-full bg-[url('/02.png')] bg-[#FFEDEE] bg-auto bg-no-repeat bg-top-left flex flex-col items-center justify-center gap-5 px-15 py-10 rounded-md">
+                <div
+                  className="w-full bg-[url('/02.png')] bg-[#FFEDEE] bg-auto bg-no-repeat bg-top-left flex flex-col items-center justify-center gap-5 px-15 py-10 rounded-md transition-all duration-300 ease-in-out
+              hover:scale-105"
+                >
                   <h3 className="text-3xl font-semibold">
                     Make payment for script
                   </h3>
@@ -172,7 +190,10 @@ export default function HomePage() {
                   </p>
                 </div>
                 {/* Card 3 */}
-                <div className="w-full bg-[url('/03.png')] bg-[#FFEDEE] bg-auto bg-no-repeat bg-top-left flex flex-col items-center justify-center gap-5 px-15 py-10 rounded-md">
+                <div
+                  className="w-full bg-[url('/03.png')] bg-[#FFEDEE] bg-auto bg-no-repeat bg-top-left flex flex-col items-center justify-center gap-5 px-15 py-10 rounded-md transition-all duration-300 ease-in-out
+              hover:scale-105"
+                >
                   <h3 className="text-3xl font-semibold">
                     Review script and confirmm
                   </h3>
@@ -226,23 +247,31 @@ export default function HomePage() {
 
         {/* Section 5 => Bara Bridge */}
         <div className="bg-[url('/Mask-group.png')] bg-[#FFEDEE] bg-auto bg-no-repeat bg-right flex flex-col gap-5 py-10 px-7">
-          <div className="w-full max-w-3xl py-7 px-25 items-center justify-center">
-            <h5 className="text-5xl font-semibold">
-              <span className="text-red-900">BARA</span> bridges the gap between
-              visionary writers and forward-thinking producers
+          <div className="w-full max-w-2xl py-7 px-25 items-center justify-center">
+            <h5 className="text-4xl font-semibold">
+              <span className="text-[#810306]">BARA</span> bridges the gap
+              between visionary writers and forward-thinking producers
             </h5>
           </div>
           <div className="flex flex-row gap-8 py-5 px-25">
-            <button className="bg-red-900 hover:bg-red-800 text-white px-10 py-4 rounded-md text-sm transition">
+            <Link
+              href="/auth/register?type=Producer"
+              className="bg-[#810306] hover:bg-red-800 text-white px-10 py-4 rounded-md text-sm   transition-all duration-300 ease-in-out
+              hover:scale-105"
+            >
               I am a Producer
-            </button>
-            <button className="bg-red-900 hover:bg-red-800 text-white px-10 py-4 rounded-md text-sm transition">
+            </Link>
+            <Link
+              href="/auth/register?type=Writer"
+              className="bg-[#810306] hover:bg-red-800 text-white px-10 py-4 rounded-md text-sm   transition-all duration-300 ease-in-out
+              hover:scale-105"
+            >
               I am a Writer
-            </button>
+            </Link>
           </div>
         </div>
       </div>
-      {/* Footer Here */}
+      {/* Footer  */}
       <Footer />
     </main>
   );
