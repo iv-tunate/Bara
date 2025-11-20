@@ -11,7 +11,7 @@ import toast from "react-hot-toast";
 import AiImageGeneratorModal from "@/components/AiImageModal";
 import ImageCatalogModal from "@/components/ImageCatalogModal";
 import { uploadImage } from "@/utils/upload";
-import { PageGaurd } from "@/app/hooks/pageguard";
+import { usePageGuard } from "@/app/hooks/usepageguard";
 const IPDealOptions = [
   { label: "Writer retains all rights", value: "WriterRetainsRights" },
   { label: "Producer retains all rights", value: "ProducerRetainsRights" },
@@ -76,16 +76,15 @@ export default function AddScriptPage() {
   const scriptInputRef = useRef<HTMLInputElement | null>(null);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
 
-
+  const session = getUserSession();
+  usePageGuard(session);
   useEffect(() => {
-    const session = getUserSession();
     if (!session) {
       router.push("/auth/login");
       return;
     }
-      setRole(session.userType);
-      setUserId(session.userId);
-      PageGaurd(session);
+    setRole(session.userType);
+    setUserId(session.userId);
     (async () => {
       try {
         const res = await api.getGenres();
@@ -97,11 +96,11 @@ export default function AddScriptPage() {
     })();
   }, []);
 
-    useEffect(() => {
-      return () => {
-        if (mediaPreviewUrl) URL.revokeObjectURL(mediaPreviewUrl);
-      };
-    }, [mediaPreviewUrl]);
+  useEffect(() => {
+    return () => {
+      if (mediaPreviewUrl) URL.revokeObjectURL(mediaPreviewUrl);
+    };
+  }, [mediaPreviewUrl]);
   const handleBrowseScript = () => scriptInputRef.current?.click();
   const handleBrowseImage = () => imageInputRef.current?.click();
 
@@ -126,6 +125,7 @@ export default function AddScriptPage() {
 
       setMediaUploading(true);
 
+      debugger;
       const result = await uploadImage(file, "Writer", user);
 
       setMediaUrl(result.url);
@@ -143,10 +143,10 @@ export default function AddScriptPage() {
   const handleScriptChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 100 * 1024) {
-      toast.error("Image too large. Maximum allowed size is 100KB.");
-      return;
-    }
+    // if (file.size > 100 * 1024) {
+    //   toast.error("Image too large. Maximum allowed size is 100KB.");
+    //   return;
+    // }
     const ext = file.name.split(".").pop()?.toLowerCase();
     if (!["pdf", "doc", "docx"].includes(ext)) {
       toast.error("Only PDF, DOC, DOCX allowed");
@@ -257,9 +257,10 @@ export default function AddScriptPage() {
       fd.append("OwnershipRights", ownership);
       fd.append("File", scriptFile);
       if (copyrightNumber) {
-        fd.append("CopyrightRegistrationNumber", copyrightNumber);
+        fd.append("CopyrightNumber", copyrightNumber);
       }
-
+      fd.append("ImageUrl", mediaUrl)
+      fd.append("ImagePublicId", mediaPublicId)
       //  console.log("FormData contents:");
       //  for (let pair of fd.entries()) {
       //    console.log(pair[0], pair[1]);

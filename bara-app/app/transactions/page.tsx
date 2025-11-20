@@ -6,7 +6,7 @@ import DashboardNavbar from "@/components/DashboardNavbar";
 import { getUserSession } from "@/utils/tokenManager";
 import { api } from "@/utils/api";
 import { Transaction } from "@/models/transaction";
-import { PageGaurd } from "@/app/hooks/pageguard";
+import { usePageGuard } from "@/app/hooks/usepageguard";
 
 export default function TransactionsPage() {
   const router = useRouter();
@@ -17,15 +17,15 @@ export default function TransactionsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const pageSize = 10;
 
+  const session = getUserSession();
+  usePageGuard(session);
   useEffect(() => {
-    const session = getUserSession();
     if (!session) {
       router.push("/auth/login");
       return;
     }
-    PageGaurd(session);
     loadTransactions(session.userId, currentPage);
-  }, [router, currentPage]);
+  }, [router, session, currentPage]);
 
   const loadTransactions = async (userId: string, page: number) => {
     try {
@@ -33,7 +33,7 @@ export default function TransactionsPage() {
       setError("");
 
       const response = await api.getUserTransactions(userId, page, pageSize);
-      
+
       if (response.success && response.data) {
         setTransactions(response.data);
         setTotalPages(Math.ceil((response.totalCount || 0) / pageSize));
@@ -114,11 +114,15 @@ export default function TransactionsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <DashboardNavbar />
-      
+
       <div className="max-w-6xl mx-auto px-6 py-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-[#22242A]">Transaction History</h1>
-          <p className="text-gray-600 mt-1">View all your payment transactions and wallet activities</p>
+          <h1 className="text-2xl font-bold text-[#22242A]">
+            Transaction History
+          </h1>
+          <p className="text-gray-600 mt-1">
+            View all your payment transactions and wallet activities
+          </p>
         </div>
 
         {error && (
@@ -130,11 +134,26 @@ export default function TransactionsPage() {
         <div className="bg-white rounded-lg shadow-sm border">
           {transactions.length === 0 ? (
             <div className="text-center py-12">
-              <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              <svg
+                className="w-16 h-16 text-gray-400 mx-auto mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
               </svg>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No transactions yet</h3>
-              <p className="text-gray-500">Your transaction history will appear here once you start making payments</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No transactions yet
+              </h3>
+              <p className="text-gray-500">
+                Your transaction history will appear here once you start making
+                payments
+              </p>
             </div>
           ) : (
             <>
@@ -143,16 +162,29 @@ export default function TransactionsPage() {
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b">
                     <tr>
-                      <th className="text-left py-3 px-6 font-medium text-gray-700">Date</th>
-                      <th className="text-left py-3 px-6 font-medium text-gray-700">Type</th>
-                      <th className="text-left py-3 px-6 font-medium text-gray-700">Amount</th>
-                      <th className="text-left py-3 px-6 font-medium text-gray-700">Status</th>
-                      <th className="text-left py-3 px-6 font-medium text-gray-700">Reference</th>
+                      <th className="text-left py-3 px-6 font-medium text-gray-700">
+                        Date
+                      </th>
+                      <th className="text-left py-3 px-6 font-medium text-gray-700">
+                        Type
+                      </th>
+                      <th className="text-left py-3 px-6 font-medium text-gray-700">
+                        Amount
+                      </th>
+                      <th className="text-left py-3 px-6 font-medium text-gray-700">
+                        Status
+                      </th>
+                      <th className="text-left py-3 px-6 font-medium text-gray-700">
+                        Reference
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {transactions.map((transaction) => (
-                      <tr key={transaction.id} className="border-b hover:bg-gray-50">
+                      <tr
+                        key={transaction.id}
+                        className="border-b hover:bg-gray-50"
+                      >
                         <td className="py-4 px-6">
                           <div>
                             <div className="text-sm font-medium text-gray-900">
@@ -167,12 +199,17 @@ export default function TransactionsPage() {
                         </td>
                         <td className="py-4 px-6">
                           <span className="text-sm text-gray-900">
-                            {getTransactionTypeDisplay(transaction.transactionType)}
+                            {getTransactionTypeDisplay(
+                              transaction.transactionType
+                            )}
                           </span>
                         </td>
                         <td className="py-4 px-6">
                           <span className="text-sm font-medium text-gray-900">
-                            {formatCurrency(transaction.amount, transaction.currencySymbol)}
+                            {formatCurrency(
+                              transaction.amount,
+                              transaction.currencySymbol
+                            )}
                           </span>
                         </td>
                         <td className="py-4 px-6">
@@ -198,11 +235,16 @@ export default function TransactionsPage() {
               {/* Mobile Cards */}
               <div className="md:hidden">
                 {transactions.map((transaction) => (
-                  <div key={transaction.id} className="p-4 border-b last:border-b-0">
+                  <div
+                    key={transaction.id}
+                    className="p-4 border-b last:border-b-0"
+                  >
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <div className="font-medium text-gray-900">
-                          {getTransactionTypeDisplay(transaction.transactionType)}
+                          {getTransactionTypeDisplay(
+                            transaction.transactionType
+                          )}
                         </div>
                         <div className="text-sm text-gray-500">
                           {formatDate(transaction.createdAt)}
@@ -210,7 +252,10 @@ export default function TransactionsPage() {
                       </div>
                       <div className="text-right">
                         <div className="font-medium text-gray-900">
-                          {formatCurrency(transaction.amount, transaction.currencySymbol)}
+                          {formatCurrency(
+                            transaction.amount,
+                            transaction.currencySymbol
+                          )}
                         </div>
                         <span
                           className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
@@ -237,7 +282,9 @@ export default function TransactionsPage() {
                   <div className="flex gap-2">
                     <button
                       type="button"
-                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.max(1, prev - 1))
+                      }
                       disabled={currentPage === 1}
                       className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -245,7 +292,9 @@ export default function TransactionsPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                      }
                       disabled={currentPage === totalPages}
                       className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >

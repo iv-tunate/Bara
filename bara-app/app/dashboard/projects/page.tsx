@@ -4,19 +4,14 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { getUserSession } from "@/utils/tokenManager";
-import { PageGaurd } from "@/app/hooks/pageguard";
+import { usePageGuard } from "@/app/hooks/usepageguard";
 
 export default function ProjectsPage() {
   const router = useRouter();
+  const session = getUserSession();
+  usePageGuard(session);
 
-  useEffect(() => {
-    const session = getUserSession();
-    if (!session) {
-      router.push("/auth/login");
-      return;
-    }
-        PageGaurd(session);
-  }, [router]);
+
 
   return (
     <main className="min-h-screen bg-white">

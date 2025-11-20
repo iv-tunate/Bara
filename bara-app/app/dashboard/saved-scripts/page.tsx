@@ -1,30 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { getUserSession, getUserId, getUserType } from "@/utils/tokenManager";
-import { PageGaurd } from "@/app/hooks/pageguard";
+import { usePageGuard } from "@/app/hooks/usepageguard";
 export default function SavedScriptsPage() {
   const router = useRouter();
 
   const [userType, setUserType] = useState<string>("");
+  const session = getUserSession();
+  //console.log("Session:", session);
+  usePageGuard(session);
+  useEffect(() => {
 
- useEffect(() => {
-   const session = getUserSession();
-   //console.log("Session:", session);
-
-   if (!session) {
-     router.push("/auth/login");
-     return;
-   }
-
-   PageGaurd(session);
-
-   const type = getUserType();
-  // console.log("User role:", type);
-   setUserType(getUserType()?.toLowerCase() || "");
- }, [router]);
+    const type = getUserType();
+    // console.log("User role:", type);
+    setUserType(getUserType()?.toLowerCase() || "");
+  }, [router]);
 
   const handleBrowse = () => {
     if (!userType) {
@@ -32,7 +25,7 @@ export default function SavedScriptsPage() {
       router.push("/auth/login");
       return;
     }
-    router.push(`/dashboard/${userType}`);
+    router.push(`/dashboard`);
   };
 
   return (

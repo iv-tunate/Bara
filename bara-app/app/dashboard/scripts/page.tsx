@@ -9,7 +9,7 @@ import PaymentSuccessModal from "@/components/PaymentSuccessModal";
 import { getUserSession } from "@/utils/tokenManager";
 import { api } from "@/utils/api";
 import { Script, ownershipLabels } from "@/models/script";
-import { PageGaurd } from "@/app/hooks/pageguard";
+import { usePageGuard } from "@/app/hooks/usepageguard";
 
 export default function ScriptPage() {
   const router = useRouter();
@@ -27,16 +27,13 @@ export default function ScriptPage() {
   const scriptLink = script
     ? `${window.location.origin}/dashboard/scripts?scriptId=${script.id}`
     : "";
+    const session = getUserSession();
+    usePageGuard(session);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const session = getUserSession();
-        if (!session) {
-          router.push("/auth/login");
-          return;
-        }
-    PageGaurd(session);
+      
         const urlParams = new URLSearchParams(window.location.search);
         const scriptId = urlParams.get("scriptId");
 
@@ -382,7 +379,7 @@ export default function ScriptPage() {
             profileImage="/writer.png"
             portfolioLink="https://timothy-edwards.com/works"
             onViewProfile={() => {
-             // console.log("View profile clicked!");
+              // console.log("View profile clicked!");
             }}
           />
         </div>

@@ -5,19 +5,20 @@ import Image from "next/image";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import WithdrawFunds from "@/components/WithdrawFunds";
 import { getUserSession } from "@/utils/tokenManager";
-import { PageGaurd } from "@/app/hooks/pageguard";
+import { usePageGuard } from "@/app/hooks/usepageguard";
 
 export default function WalletPage() {
   const [isModalOpen, setModalOpen] = useState(false);
-  
+
+  const userSession = getUserSession();
+  usePageGuard(userSession);
   
   const user = {
     name: userSession?.name,
     email: userSession?.email,
     userId: userSession?.userId,
     profileStatus: userSession?.profileComplete,
-
-  }
+  };
   const transactions = [
     {
       id: 1,
