@@ -18,7 +18,7 @@ export default function TransactionsPage() {
   const pageSize = 10;
 
   const session = getUserSession();
-  usePageGuard(session);
+  usePageGuard();
   useEffect(() => {
     if (!session) {
       router.push("/auth/login");

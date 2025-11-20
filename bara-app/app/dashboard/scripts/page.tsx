@@ -28,7 +28,7 @@ export default function ScriptPage() {
     ? `${window.location.origin}/dashboard/scripts?scriptId=${script.id}`
     : "";
     const session = getUserSession();
-    usePageGuard(session);
+    usePageGuard();
 
   useEffect(() => {
     async function loadData() {
@@ -127,13 +127,6 @@ export default function ScriptPage() {
 
   const handlePayment = async () => {
     if (!script) return;
-
-    const session = getUserSession();
-    if (!session) {
-      router.push("/auth/login");
-      return;
-    }
-
     setIsProcessingPayment(true);
     setError("");
 

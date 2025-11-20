@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import Image from "next/image";
 import BackButton from "@/components/BackButton";
-import { getUserSession } from "@/utils/tokenManager";
+import { getUserSession, getUserId, getUserType } from "@/utils/tokenManager";
 import { api } from "@/utils/api";
 import toast from "react-hot-toast";
 import AiImageGeneratorModal from "@/components/AiImageModal";
@@ -78,13 +78,11 @@ export default function AddScriptPage() {
   const scriptInputRef = useRef<HTMLInputElement | null>(null);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
 
-
-  const session = getUserSession();
-  usePageGuard(session);
+  usePageGuard();
   useEffect(() => {
   
-    setRole(session.userType);
-    setUserId(session.userId);
+    setRole(getUserType());
+    setUserId(getUserId());
     (async () => {
       try {
         const res = await api.getGenres();

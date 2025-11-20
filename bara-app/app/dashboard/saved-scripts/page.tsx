@@ -9,9 +9,8 @@ export default function SavedScriptsPage() {
   const router = useRouter();
 
   const [userType, setUserType] = useState<string>("");
-  const session = getUserSession();
-  //console.log("Session:", session);
-  usePageGuard(session);
+  //const session = getUserSession();
+  usePageGuard();
   useEffect(() => {
 
     const type = getUserType();

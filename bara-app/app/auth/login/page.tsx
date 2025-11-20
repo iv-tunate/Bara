@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import EyeToggle from "@/components/EyeToggle";
 import { api } from "@/utils/api";
@@ -22,72 +22,75 @@ export default function LoginPage() {
   const [resendCooldown, setResendCooldown] = useState(0);
   const [loginVerificationState, setLoginVerificationState] =
     useState<boolean>(true);
+    
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
   const resendVerificationTokenUrl =
     process.env.NEXT_PUBLIC_RESEND_VERIFICATION_TOKEN;
+
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialReturnUrl = searchParams.get("returnUrl") || "/dashboard";
+  const [returnUrl, setReturnUrl] = useState(initialReturnUrl);
 
   const canLogin = email.trim() !== "" && password.trim() !== "";
 
- const handleLogin = async (e: React.FormEvent) => {
-   e.preventDefault();
-   setIsLoading(true);
-   setError("");
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
-   try {
-     const deviceFingerprint = generateDeviceFingerprint();
+    try {
+      const deviceFingerprint = generateDeviceFingerprint();
 
-     const request = await api.login({
-       Email: email,
-       Password: password,
-       LoginDevice: deviceFingerprint,
-     });
+      const request = await api.login({
+        Email: email,
+        Password: password,
+        LoginDevice: deviceFingerprint,
+      });
 
-     const response = request.data?.data;
+      const response = request.data?.data;
 
-     if (request.success && response) {
-       if (!response.accessToken) {
-         setNeedsVerification(true);
-         toast.success(
-           "Please verify your login. A code has been sent to your email."
-         );
-         return; 
-       }
-       setUserSession({
-         userId: response.userId,
-         email: response.email,
-         name: response.name,
-         userType: response.role,
-         accessToken: response.accessToken,
-         wrongLoginAttempts: response.wrongLoginAttempts,
-         profileComplete: response.isProfileSetupComplete,
-         createdAt: Date.now() - 2 * 60 * 1000,
-         isVerified: response.isVerified,
-         VerificationStatus: response.verificationStatus
-       });
+      if (request.success && response) {
+        if (!response.accessToken) {
+          setNeedsVerification(true);
+          toast.success(
+            "Please verify your login. A code has been sent to your email."
+          );
+          return;
+        }
+        setUserSession({
+          userId: response.userId,
+          email: response.email,
+          name: response.name,
+          userType: response.role,
+          accessToken: response.accessToken,
+          wrongLoginAttempts: response.wrongLoginAttempts,
+          profileComplete: response.isProfileSetupComplete,
+          createdAt: Date.now() - 2 * 60 * 1000,
+          isVerified: response.isVerified,
+          VerificationStatus: response.verificationStatus,
+        });
 
-       if (!response.isProfileSetupComplete) {
-         router.push(`/profile/setup/${response.role.toLowerCase()}`);
-       } else {
-         router.push("/dashboard");
-       }
-       
-     } else {
-       const errorMessage =
-         request.message || "Login failed. Please try again.";
-       setError(errorMessage);
-       toast.error(errorMessage);
-     }
-   } catch (error) {
-     console.error("Login error:", error);
-     const errorMessage = "An unexpected error occurred. Please try again.";
-     setError(errorMessage);
-     toast.error(errorMessage);
-   } finally {
-     setIsLoading(false);
-   }
- };
-
+        if (!response.isProfileSetupComplete) {
+          router.push(`/profile/setup/${response.role.toLowerCase()}`);
+        } else {
+          router.push(returnUrl);
+        }
+      } else {
+        const errorMessage =
+          request.message || "Login failed. Please try again.";
+        setError(errorMessage);
+        toast.error(errorMessage);
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      const errorMessage = "An unexpected error occurred. Please try again.";
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleVerifyLogin = async () => {
     if (!verificationToken.trim()) {
@@ -133,7 +136,7 @@ export default function LoginPage() {
           //router.push(`/dashboard`);
           //}
         } else {
-          router.push("/dashboard");
+          router.push(returnUrl);
         }
       } else {
         const errorMessage =

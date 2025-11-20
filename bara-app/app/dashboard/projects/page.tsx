@@ -8,10 +8,8 @@ import { usePageGuard } from "@/app/hooks/usepageguard";
 
 export default function ProjectsPage() {
   const router = useRouter();
-  const session = getUserSession();
-  usePageGuard(session);
-
-
+  //const session = getUserSession();
+  usePageGuard();
 
   return (
     <main className="min-h-screen bg-white">

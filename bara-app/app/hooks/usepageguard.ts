@@ -1,20 +1,16 @@
-"use client";
-
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { UserSession } from "../../utils/tokenManager";
-export function usePageGuard(session: UserSession | null) {
+import { getUserSession } from "@/utils/tokenManager";
+
+export function usePageGuard() {
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
+    const session = getUserSession();
     if (!session) {
-      router.push("/auth/login");
-      return;
+      const encoded = encodeURIComponent(pathname);
+      router.replace(`/auth/login?returnUrl=${encoded}`);
     }
-
-    if (!session.profileComplete) {
-      router.push(`/profile/setup/${session.userType}`);
-      return;
-    }
-  }, [session, router]);
+  }, [router, pathname]);
 }
