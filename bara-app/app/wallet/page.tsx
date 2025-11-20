@@ -88,7 +88,7 @@ export default function WalletPage() {
           <h2 className="font-semibold text-2xl">NGN 600,000.00</h2>
           <button
             onClick={() => setModalOpen(true)}
-            className="rounded-md bg-[#810306] px-4 py-2 text-white hover:bg-red-800 transition w-fit cursor-pointer transition-all duration-300 ease-in-out
+            className="rounded-md bg-[#810306] px-4 py-2 text-white hover:bg-red-800 w-fit cursor-pointer transition-all duration-300 ease-in-out
               hover:scale-105"
           >
             Fund Wallet
