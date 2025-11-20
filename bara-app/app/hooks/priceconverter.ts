@@ -12,12 +12,12 @@ const FALLBACK_RATES: Record<Currency, number> = {
 };
 
 interface UseMinPriceReturn {
-  minAllowed: number;
-  rate: number;
-  resError: string | null;
-  validatePrice: (price: number) => boolean;
-  fetchError: string | null;
+  minAllowed: number; 
+  rate: number; 
+  fetchError: string | null; 
+  resError: string | null; 
   loading: boolean;
+  validatePrice: (price: number) => boolean;
 }
 
 export function useMinPrice(
@@ -26,9 +26,11 @@ export function useMinPrice(
   price?: number
 ): UseMinPriceReturn {
   const [rate, setRate] = useState<number>(FALLBACK_RATES[currency]);
-  const [minAllowed, setMinAllowed] = useState<number>(minInNaira * rate);
-  const [resError, setError] = useState<string | null>(null);
+  const [minAllowed, setMinAllowed] = useState<number>(
+    currency === "NAIRA" ? minInNaira : minInNaira * FALLBACK_RATES[currency]
+  );
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [resError, setResError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
@@ -41,25 +43,28 @@ export function useMinPrice(
       }
 
       setLoading(true);
-      debugger;
       try {
         const res = await fetch(
-          `https://api.exchangeratesapi.io/v1/convert?from=NGN&to=${currency}&amount=1&${process.env.NEXT_PUBLIC_EXCHANGEAPI_KEY}`
+          `https://api.exchangeratesapi.io/v1/convert?from=NGN&to=${currency}&amount=${minInNaira}&access_key=${process.env.NEXT_PUBLIC_EXCHANGEAPI_KEY}`,
+          { headers: { Accept: "application/json" } }
         );
         const data = await res.json();
-        if (!data.success || !data.info?.rate)
-          throw new Error("Invalid API response");
 
-        const liveRate = data.info.rate;
-        setRate(liveRate);
-        setMinAllowed(minInNaira * liveRate);
+        if (!data.success || typeof data.result !== "number") {
+          throw new Error("Invalid API response");
+        }
+
+        setRate(data.info.rate); 
+        setMinAllowed(data.result); 
         setFetchError(null);
       } catch (e) {
-        console.error("Failed to fetch rate, using fallback:", e);
+        console.error("Failed to fetch exchange rate, using fallback:", e);
         const fallbackRate = FALLBACK_RATES[currency];
         setRate(fallbackRate);
         setMinAllowed(minInNaira * fallbackRate);
-        setFetchError("Could not fetch live exchange rate; using fallback.");
+        setFetchError(
+          "Could not fetch live exchange rate; using fallback conversion."
+        );
       } finally {
         setLoading(false);
       }
@@ -71,21 +76,21 @@ export function useMinPrice(
   useEffect(() => {
     if (price !== undefined) {
       if (price < minAllowed) {
-        setError(`Minimum allowed is ${minAllowed.toFixed(2)} ${currency}`);
+        setResError(`Minimum allowed is ${minAllowed.toFixed(2)} ${currency}`);
       } else {
-        setError(null);
+        setResError(null);
       }
     }
   }, [price, minAllowed, currency]);
 
   const validatePrice = (value: number) => {
     if (value < minAllowed) {
-      setError(`Minimum allowed is ${minAllowed.toFixed(2)} ${currency}`);
+      setResError(`Minimum allowed is ${minAllowed.toFixed(2)} ${currency}`);
       return false;
     }
-    setError(null);
+    setResError(null);
     return true;
   };
 
-  return { minAllowed, rate, resError, validatePrice, fetchError, loading };
+  return { minAllowed, rate, fetchError, resError, loading, validatePrice };
 }

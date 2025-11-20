@@ -7,8 +7,8 @@ import toast from "react-hot-toast";
 const OPTIONS = [
   { label: "National identity number (NIN)", value: "NIN" },
   { label: "Bank verification number (BVN)", value: "BVN" },
-  { label: "International passport", value: "INTERNATIONAL_PASSPORT" },
-  { label: "Driver’s license", value: "DRIVERS_LICENSE" },
+  // { label: "International passport", value: "INTERNATIONAL_PASSPORT" },
+  // { label: "Driver’s license", value: "DRIVERS_LICENSE" },
 ];
 
 interface IdentityFormProps {
@@ -32,7 +32,7 @@ export default function IdentityVerificationForm({
 }: IdentityFormProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-const [verificationType, setVerificationType] = useState<string>("");
+  const [verificationType, setVerificationType] = useState<string>("");
 
   const handleSelect = (optionValue: string) => {
     setVerificationType(optionValue);

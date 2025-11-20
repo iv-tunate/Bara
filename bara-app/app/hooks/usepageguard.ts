@@ -12,5 +12,9 @@ export function usePageGuard() {
       const encoded = encodeURIComponent(pathname);
       router.replace(`/auth/login?returnUrl=${encoded}`);
     }
+    if (!session.profileComplete) {
+      router.push(`/profile/setup/${session.userType}`);
+      return;
+    }
   }, [router, pathname]);
 }

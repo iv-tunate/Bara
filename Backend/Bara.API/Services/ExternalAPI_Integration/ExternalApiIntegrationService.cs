@@ -1,7 +1,5 @@
 ﻿using Bara.API.Services;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using System.Net.Http.Json;
 using System.Text;
 
 namespace Services.ExternalAPI_Integration
@@ -97,7 +95,7 @@ namespace Services.ExternalAPI_Integration
         {
             try
             {
-                var url = $"https://ipinfo.io/lite/me?token={token}";
+                var url = $"https://api.ipinfo.io/lite/8.8.8.8?token={token}";
                 var response = await httpClient.CreateClient().GetFromJsonAsync<IpInfoResponse>(url);
 
                 if (response == null || string.IsNullOrWhiteSpace(response.Ip))
