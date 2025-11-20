@@ -12,6 +12,8 @@ import AiImageGeneratorModal from "@/components/AiImageModal";
 import ImageCatalogModal from "@/components/ImageCatalogModal";
 import { uploadImage } from "@/utils/upload";
 import { usePageGuard } from "@/app/hooks/usepageguard";
+import { useMinPrice, Currency } from "@/app/hooks/priceconverter";
+
 const IPDealOptions = [
   { label: "Writer retains all rights", value: "WriterRetainsRights" },
   { label: "Producer retains all rights", value: "ProducerRetainsRights" },
@@ -76,13 +78,11 @@ export default function AddScriptPage() {
   const scriptInputRef = useRef<HTMLInputElement | null>(null);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
 
+
   const session = getUserSession();
   usePageGuard(session);
   useEffect(() => {
-    if (!session) {
-      router.push("/auth/login");
-      return;
-    }
+  
     setRole(session.userType);
     setUserId(session.userId);
     (async () => {
@@ -95,6 +95,14 @@ export default function AddScriptPage() {
       }
     })();
   }, []);
+
+  debugger;
+  const { minAllowed, resError, validatePrice, fetchError, loading } =
+    useMinPrice(
+      currency,
+      200000,
+      typeof price === "number" ? price : undefined
+    );
 
   useEffect(() => {
     return () => {
@@ -125,7 +133,7 @@ export default function AddScriptPage() {
 
       setMediaUploading(true);
 
-      debugger;
+      
       const result = await uploadImage(file, "Writer", user);
 
       setMediaUrl(result.url);
@@ -160,26 +168,6 @@ export default function AddScriptPage() {
 
     setScriptFile(file);
   };
-
-  //const handleImageChange = (e) => {
-  //   const file = e.target.files?.[0];
-  //   if (!file) return;
-
-  //   if (
-  //     !["image/png", "image/jpeg", "image/jpg", "image/webp"].includes(
-  //       file.type
-  //     )
-  //   ) {
-  //     toast.error("Only PNG, JPEG, JPG, WEBP allowed");
-  //     return;
-  //   }
-
-  //   setMediaFile(file);
-  //   if (mediaPreviewUrl) {
-  //     URL.revokeObjectURL(mediaPreviewUrl);
-  //   }
-  //   setMediaPreviewUrl(URL.createObjectURL(file));
-  // };
 
   const handleCatalogSelect = async (url, name) => {
     try {
@@ -221,6 +209,11 @@ export default function AddScriptPage() {
     isOriginal &&
     agreeCommission;
 
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseFloat(e.target.value);
+    setPrice(isNaN(val) ? "" : val);
+    if (!isNaN(val)) validatePrice(val);
+  };
   const handleSubmit = async () => {
     if (!isFormComplete) {
       toast.error("Complete all required fields");
@@ -259,13 +252,13 @@ export default function AddScriptPage() {
       if (copyrightNumber) {
         fd.append("CopyrightNumber", copyrightNumber);
       }
-      fd.append("ImageUrl", mediaUrl)
-      fd.append("ImagePublicId", mediaPublicId)
+      fd.append("ImageUrl", mediaUrl);
+      fd.append("ImagePublicId", mediaPublicId);
       //  console.log("FormData contents:");
       //  for (let pair of fd.entries()) {
       //    console.log(pair[0], pair[1]);
       //  }
-
+      debugger;
       const res = await api.addScript(fd, userId);
       console.log("Add script response:", res);
 
@@ -273,13 +266,9 @@ export default function AddScriptPage() {
         toast.success("Script added successfully");
         router.push(`/writer/profile`);
       } else {
-        if (
-          res?.statusCode === 401 ||
-          res?.message?.toLowerCase().includes("unauthorized") ||
-          res?.message?.toLowerCase().includes("token")
-        ) {
-          toast.error("Session expired. Please login again");
-          router.push("/auth/login");
+        if (res?.statusCode === 400) {
+          toast.error(res?.message);
+          return;
         } else {
           toast.error(res?.message ?? "Error uploading script");
         }
@@ -421,8 +410,6 @@ export default function AddScriptPage() {
             </select>
           </div>
         </div>
-
-        {/* Price + Registration */}
         <div className="grid md:grid-cols-2 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium mb-1">Price</label>
@@ -442,11 +429,15 @@ export default function AddScriptPage() {
               <input
                 type="number"
                 value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="Enter amount"
-                className="flex-1 border border-[#ABADB2] rounded-md px-3 py-2 text-sm"
+                //min={minAllowed.toFixed(2)}
+                onChange={handlePriceChange}
+                placeholder={`Min ${minAllowed.toFixed(2)} ${currency}`}
+                className="w-full border border-[#ABADB2] rounded-md px-3 py-2 text-sm"
               />
             </div>
+            <small className="text-gray-500">
+              Minimum price allowed is {minAllowed.toFixed(2)} {currency}
+            </small>
           </div>
 
           {isRegistered && (

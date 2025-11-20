@@ -11,7 +11,7 @@ export default function WalletPage() {
   const [isModalOpen, setModalOpen] = useState(false);
 
   const userSession = getUserSession();
-  usePageGuard(userSession);
+  //usePageGuard(userSession);
   
   const user = {
     name: userSession?.name,

@@ -23,7 +23,7 @@ export function setUserSession(session: UserSession): void {
     localStorage.setItem(USER_ID_KEY, session.userId);
     localStorage.setItem(USER_TYPE_KEY, session.userType);
     localStorage.setItem("VerificationStatus", session.isVerified ? "Verified" : "NotVerified");
-    const sessionDetails = sessionStorage.getItem(TOKEN_KEY);
+  //  const sessionDetails = sessionStorage.getItem(TOKEN_KEY);
    // console.log("User Session Details", sessionDetails);
   } catch (error) {
     console.error("Failed to store user session:", error);
@@ -52,6 +52,7 @@ export function updateUserSession(updates: Partial<UserSession>): void {
 }
 
 export function getUserSession(): UserSession | null {
+  if (typeof window === "undefined") return null; 
   try {
     const sessionData = sessionStorage.getItem(TOKEN_KEY);
     if (!sessionData) return null;
@@ -59,7 +60,6 @@ export function getUserSession(): UserSession | null {
     const session = JSON.parse(sessionData);
     if (Date.now() - session.createdAt > SESSION_MAX_AGE) {
       clearUserSession();
-      //console.warn("Session ended automatically... Please proceed to login");
       return null;
     }
     return session as UserSession;
