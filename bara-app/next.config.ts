@@ -27,6 +27,9 @@ const nextConfig: NextConfig = {
     ],
     domains: ["res.cloudinary.com"],
   },
+  generateBuildId: async () => {
+    return `build-${Date.now()}`;
+  },
 };
 
 export default nextConfig;

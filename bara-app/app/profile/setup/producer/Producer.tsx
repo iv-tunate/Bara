@@ -8,7 +8,6 @@ import LocationForm from "@/components/LocationForm";
 import IdentityVerificationForm from "@/components/IdentityVerificationForm";
 import { api } from "@/utils/api";
 import { getUserId } from "@/utils/tokenManager";
-//import "react-phone-input-2/lib/style.css";
 import { uploadImage } from "@/utils/upload";
 import { updateUserSession, getUserSession } from "@/utils/tokenManager";
 import toast from "react-hot-toast";
