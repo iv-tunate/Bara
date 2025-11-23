@@ -14,7 +14,7 @@ import Navbar from "@/components/Navbar";
 import CompleteProfileNav from "@/components/CompleteProfileNav";
 import { Button } from "@/components/ui/button";
 import Pagination from "@/components/Pagination";
-import { downloadImage } from "@/utils/upload";
+import {ScriptGrid} from "@/components/Script";
 export default function DashboardPage() {
   const [scripts, setScripts] = useState<Script[]>([]);
   const [selectedGenres, setSelectedGenres] = useState<Genre[]>([]);
@@ -27,10 +27,7 @@ export default function DashboardPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [profileState, setProfileState] = useState(false);
-  const [imageLoading, setImageLoading] = useState(true);
-  const [image, setImage] = useState<string | null>(null);
-
-  const router = useRouter();
+  
   const pageSize = 16;
 
   useEffect(() => {
@@ -51,68 +48,49 @@ export default function DashboardPage() {
     setProfileState(true);
   }, []);
 
-  const fetchScripts = async () => {
-    setIsLoading(true);
-    setError("");
+ const fetchScripts = async (page = currentPage, append = false) => {
+   setIsLoading(true);
+   setError("");
 
-    try {
-      let response;
+   try {
+     let response;
+     if (searchTerm.trim()) {
+       response = await api.searchScripts(searchTerm, page, pageSize);
+     } else if (selectedGenres.length > 0) {
+       response = await api.getScriptsByGenre(
+         selectedGenres[0].id,
+         page,
+         pageSize
+       );
+     } else {
+       response = await api.getAllScripts(page, pageSize);
+     }
 
-      if (searchTerm.trim()) {
-        response = await api.searchScripts(searchTerm, currentPage, pageSize);
-      } else if (selectedGenres.length > 0) {
-        response = await api.getScriptsByGenre(
-          selectedGenres[0].id,
-          currentPage,
-          pageSize
-        );
-      } else {
-        response = await api.getAllScripts(currentPage, pageSize);
-        console.log("Scripts", response);
-      }
+     if (response.success && response.data) {
+       setScripts((prev) =>
+         append
+           ? [...prev, ...(response.data.data || [])]
+           : response.data.data || []
+       );
+       setTotalPages(response.totalPages || 1);
+     } else {
+       setError(response.message || "Failed to load scripts");
+       if (!append) setScripts([]);
+     }
+   } catch (error) {
+     console.error(error);
+     setError("An unexpected error occurred");
+     if (!append) setScripts([]);
+   } finally {
+     setIsLoading(false);
+   }
+ };
 
-      if (response.success && response.data) {
-        setScripts(response.data.data || []);
-        setTotalPages(response.totalPages || 1);
-      } else {
-        setError(response.message || "Failed to load scripts");
-        setScripts([]);
-      }
-    } catch (error) {
-      console.error("Error fetching scripts:", error);
-      setError("An unexpected error occurred");
-      setScripts([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   useEffect(() => {
     fetchScripts();
   }, [currentPage, selectedGenres, searchTerm]);
 
-  useEffect(() => {
-    async function loadImage() {
-      if (!scripts?.imagePublicId && !scripts?.imageUrl) {
-        setImageLoading(false);
-        return;
-      }
-
-      try {
-        const imageContent = await downloadImage(
-          scripts?.imageUrl || scripts?.imagePublicId,
-          "cloudinary"
-        );
-        setImage(imageContent);
-      } catch (error) {
-        console.error("Failed to load image:", error);
-      } finally {
-        setImageLoading(false);
-      }
-    }
-
-    if (scripts) loadImage();
-  }, [scripts]);
 
   const handleGenreChange = (genres: Genre[]) => {
     setSelectedGenres(genres);
@@ -217,7 +195,7 @@ export default function DashboardPage() {
         )}
       </div>
       <section className="max-w-7xl mx-auto px-4 py-6 pb-24">
-        {isLoading ? (
+        {isLoading && scripts.length === 0 ? (
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#800000]"></div>
           </div>
@@ -252,67 +230,28 @@ export default function DashboardPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 items-start">
-            {scripts.map((script) => (
-              <div
-                key={script.id}
-                className="group relative border border-[#ABADB2] rounded-md bg-white shadow-sm transition-all duration-500 overflow-hidden min-h-[460px] hover:min-h-[530px] hover:shadow-md hover:bg-[#f9f9f9]"
-              >
-                <div className="relative">
-                  <Image
-                    src={image || "/flowery.png"}
-                    alt={script.title}
-                    width={400}
-                    height={250}
-                    className="w-full h-48 object-cover"
-                  />
+          <>
+            <ScriptGrid
+              scripts={scripts.slice(0, 36)}
+              isLoading={isLoading}
+              hasMore={currentPage < totalPages && scripts.length < 36}
+              onLoadMore={async () => {
+                setIsLoading(true);
+                await fetchScripts(currentPage + 1, true); 
+                setCurrentPage((p) => p + 1);
+                setIsLoading(false);
+              }}
+            />
 
-                  <span className="absolute top-3 left-3 bg-[#FFEDEE] text-[#810306] text-xs px-2 py-1 rounded border border-[#810306]">
-                    {script.genre}
-                  </span>
-
-                  <button
-                    type="button"
-                    className="absolute top-3 right-3"
-                    title="Save script"
-                  >
-                    <Image src="/save.png" alt="Save" width={20} height={20} />
-                  </button>
-                </div>
-
-                <div className="p-4 flex flex-col gap-2">
-                  <h3 className="text-base font-bold text-[#22242A]">
-                    {script.title}
-                  </h3>
-
-                  {/* FIXED SYNOPSIS HEIGHT */}
-                  <p className="text-sm text-[#333740] leading-snug line-clamp-2 min-h-[9rem]">
-                    {script.synopsis}
-                  </p>
-
-                  <p className="text-base font-semibold text-[#333740]">
-                    {script.currencySymbol}
-                    {script.price.toLocaleString()}
-                  </p>
-
-                  <Link href={`/dashboard/scripts/${script.id}`}>
-                    <button
-                      type="button"
-                      className="mt-2 w-full bg-[#800000] text-white py-2 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                    >
-                      See more
-                    </button>
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
+            {scripts.length > 36 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={(page) => setCurrentPage(page)}
+              />
+            )}
+          </>
         )}
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={(page) => setCurrentPage(page)}
-        />
       </section>
     </main>
   );

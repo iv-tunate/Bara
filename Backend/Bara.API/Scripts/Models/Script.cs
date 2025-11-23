@@ -1,5 +1,6 @@
 ﻿using Bara.API.Scripts.Enums;
 using Bara.API.Utilities.Models;
+using Newtonsoft.Json;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -131,6 +132,12 @@ namespace Bara.API.Scripts.Models
         /// <summary>
         /// 
         /// </summary>
+        [JsonIgnore]
         public List<Genre> Genres { get; set; }
+
+        [NotMapped]
+        public List<Genre> Genre => Genres;
+
+        public bool IsPremiumScript { get; set; }
     }
 }

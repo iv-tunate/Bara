@@ -58,6 +58,7 @@ namespace Bara.API.DataContext
                     .HasMany(s => s.Genres)
                     .WithMany(g => g.Scripts)
                     .UsingEntity(j => j.ToTable("ScriptGenres"));
+            modelBuilder.Entity<Script>().HasIndex(x => x.IsPremiumScript);
             //modelBuilder.Entity<Genre>().HasData(new List<Genre>
             //    {
             //        new() { Id = Guid.NewGuid(), Name = "Drama", Description = "Character-driven stories exploring emotion, conflict, and realism." },

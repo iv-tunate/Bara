@@ -264,6 +264,23 @@ export const api = {
     );
   },
 
+  searchScripts: async(
+    searchTerm:string,
+     pageNumber: number,
+    pageSize: number
+  ) => {
+       return await apiRequest(
+      `${BASE_URL}${API_ENDPOINTS.SEARCH_SCRIPTS(
+        searchTerm,
+        pageNumber,
+        pageSize
+      )}`,
+      {
+        method: "GET",
+        requireAuth: true,
+      }
+    );
+  },
   getScriptsByWriterId: async (
     writerId: string,
     pageNumber: number,

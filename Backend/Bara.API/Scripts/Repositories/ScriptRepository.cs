@@ -52,7 +52,7 @@ namespace Bara.API.Scripts.Repositories
         {
             try
             {
-                var writer = await dbContext.Writers.Select(x => new { x.Id, x.FirstName, x.LastName, x.AuthProfile.IsVerified }).FirstOrDefaultAsync(x => x.Id == writerId);
+                var writer = await dbContext.Writers.Select(x => new { x.Id, x.FirstName, x.LastName, x.AuthProfile.IsVerified, x.IsPremiumMember }).FirstOrDefaultAsync(x => x.Id == writerId);
                 if (writer is null)
                 {
                     return ResponseDetail<Script>.Failed($"Writer with profileId {writerId} does not exist");
@@ -122,39 +122,15 @@ namespace Bara.API.Scripts.Repositories
                     WriterId = writerId,
                     WriterName = $"{writer.FirstName}-{writer.LastName}",
                     Path = $"{uploadScriptResponse.PublicId}",
-                    Url = $"{uploadScriptResponse.Url}"
+                    Url = $"{uploadScriptResponse.Url}",
+                    IsPremiumScript = writer.IsPremiumMember
                 };
 
                 await dbContext.Scripts.AddAsync(newScriptDetail);
                 await dbContext.SaveChangesAsync();
 
-                var cacheEntryOptions = new MemoryCacheEntryOptions
-                {
-                    AbsoluteExpiration = DateTimeOffset.UtcNow.AddMinutes(10),
-                    SlidingExpiration = TimeSpan.FromMinutes(5),
-                };
-
-                var allScriptsCache = memoryCache.TryGetValue<List<Script>>(ALL_SCRIPTS_CACHE_KEY, out var allScripts);
-
-                if (allScripts is not null)
-                {
-                    allScripts.Add(newScriptDetail);
-                }
-                else
-                {
-                    memoryCache.Set(ALL_SCRIPTS_CACHE_KEY, new List<Script> { newScriptDetail }, cacheEntryOptions);
-                }
-
-                var writerCacheKey = $"Writer_{writerId}_Scripts";
-                var writerScriptsCache = memoryCache.TryGetValue<List<Script>>(writerCacheKey, out var writerScripts);
-                if (writerScripts is not null)
-                {
-                    writerScripts.Add(newScriptDetail);
-                }
-                else
-                {
-                    memoryCache.Set(writerCacheKey, new List<Script> { newScriptDetail }, cacheEntryOptions);
-                }
+                memoryCache.Remove(ALL_SCRIPTS_CACHE_KEY);
+                memoryCache.Remove($"Writer_{writerId}_Scripts");
 
                 return ResponseDetail<Script>.Successful(newScriptDetail, "Script added successfully", 201);
             }
@@ -260,19 +236,14 @@ namespace Bara.API.Scripts.Repositories
                 memoryCache.TryGetValue<List<Script>>(ALL_SCRIPTS_CACHE_KEY, out var allScripts);
                 if (allScripts == null)
                 {
-                    var writer = await dbContext.Writers.Select(x => new
-                    {
-                        PremiumStatus = x.IsPremiumMember,
-                        x.Scripts,
-                        x.CreatedAt,
-                        x.AuthProfile,
-                    }).ToListAsync();
 
-                    allScripts = writer
-                                .OrderByDescending(x => x.PremiumStatus)
+                    allScripts = await dbContext.Scripts
+                                .Include(x => x.Genres)
+                                .Where(x => x.Status == ScriptStatus.Available)
+                                .OrderBy(x => x.IsPremiumScript)
                                 .ThenByDescending(x => x.CreatedAt)
-                                .SelectMany(x => x.Scripts.Where(x => x.Status == ScriptStatus.Available))
-                                .ToList();
+                                .AsNoTracking()
+                                .ToListAsync();
 
                     var cacheOptions = new MemoryCacheEntryOptions()
                         .SetAbsoluteExpiration(TimeSpan.FromMinutes(10))
@@ -311,8 +282,10 @@ namespace Bara.API.Scripts.Repositories
                 if (cachedScripts is null)
                 {
                     cachedScripts = await dbContext.Scripts
+                                                    .Include(x => x.Genres)
                                                     .Where(x => x.WriterId == writerId && x.Status != ScriptStatus.Deleted)
                                                     .OrderByDescending(x => x.CreatedAt)
+                                                    .AsNoTracking()
                                                     .ToListAsync();
                     var cacheOptions = new MemoryCacheEntryOptions()
                        .SetAbsoluteExpiration(TimeSpan.FromMinutes(10))
@@ -936,12 +909,13 @@ namespace Bara.API.Scripts.Repositories
                         return ResponseDetail<List<Script>>.Failed("Genre not found", 404, "Invalid genre ID");
                     }
 
-                    var scriptsQuery = dbContext.Writers
-                        .OrderByDescending(w => w.IsPremiumMember)
+                    var scriptsQuery = dbContext.Scripts
+                        .Include(x => x.Genres)
+                        .OrderBy(w => w.IsPremiumScript)
                         .ThenByDescending(w => w.CreatedAt)
-                        .SelectMany(w => w.Scripts)
                         .Where(s => s.Status == ScriptStatus.Available)
-                        .Where(s => s.Genres.Any(g => g.Id == genreId));
+                        .Where(s => s.Genres.Any(g => g.Id == genreId))
+                        .AsNoTracking();
 
                     var totalCount = await scriptsQuery.CountAsync();
 
@@ -994,21 +968,15 @@ namespace Bara.API.Scripts.Repositories
                 memoryCache.TryGetValue<List<Script>>(cacheKey, out var cachedScripts);
                 if (cachedScripts == null)
                 {
-                    var writer = await dbContext.Writers.Select(x => new
-                    {
-                        PremiumStatus = x.IsPremiumMember,
-                        x.Scripts,
-                        x.CreatedAt,
-                        x.AuthProfile,
-                    }).ToListAsync();
-
-                    cachedScripts = writer
-                                    .OrderByDescending(x => x.PremiumStatus)
+                    cachedScripts = await dbContext.Scripts
+                                    .Include(x => x.Genres)
+                                    .OrderBy(x => x.IsPremiumScript)
                                     .ThenByDescending(x => x.CreatedAt)
-                                    .SelectMany(x => x.Scripts.Where(s => s.Status == ScriptStatus.Available &&
+                                    .Where(s => s.Status == ScriptStatus.Available &&
                                                                           (s.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                                                                           s.Synopsis.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))))
-                                    .ToList();
+                                                                           s.Synopsis.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)))
+                                    .AsNoTracking()
+                                    .ToListAsync();
 
                     var cacheOptions = new MemoryCacheEntryOptions()
                         .SetAbsoluteExpiration(TimeSpan.FromMinutes(5))
@@ -1042,7 +1010,7 @@ namespace Bara.API.Scripts.Repositories
         {
             try
             {
-                var genres = await dbContext.Genres.OrderBy(x => x.Name).ToListAsync();
+                var genres = await dbContext.Genres.OrderBy(x => x.Name).AsNoTracking().ToListAsync();
                 return ResponseDetail<List<Genre>>.Successful(genres);
             }
             catch (Exception ex)
