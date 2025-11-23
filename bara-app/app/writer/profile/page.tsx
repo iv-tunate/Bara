@@ -36,20 +36,22 @@ const pageSize = 10;
     async function fetchProfile() {
       setIsLoading(true);
       try {
-        // const cacheKey = `User_${writerId}`;
-        // const cached = localStorage.getItem(cacheKey);
-
-        // if (cached) {
-        //   const cachedData = JSON.parse(cached);
-        //   setProfileData(cachedData);
-        // }
+        const cacheKey = `User_${writerId}`;
+        const cached = localStorage.getItem(cacheKey);
+        const verificationStatus = localStorage.getItem('VerificationStatus')
+        if (cached) {
+          const cachedData = JSON.parse(cached);
+         setProfileData(cachedData);
+         }
 
         const res = await api.getWriterProfile(writerId as string);
         if (res?.data?.data) {
-          const fresh = res.data.data;
-          //console.log("Fresh data:", fresh);
-          //localStorage.setItem(cacheKey, JSON.stringify(fresh));
-          setProfileData(fresh);
+          const userData = res.data.data;
+
+          if(verificationStatus === "Verified"){
+            localStorage.setItem(cacheKey, JSON.stringify(userData));
+          }
+          setProfileData(userData);
         }
       } catch (error) {
         console.error("Error fetching writer profile:", error);
