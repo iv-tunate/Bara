@@ -13,20 +13,20 @@ namespace Bara.API.Scripts.Interfaces
         /// <param name="scriptId">The ID of the script to retrieve.</param>
         /// <param name="writerId">The ID of the writer ID who owns the script.</param>
         /// <returns>The script detail with the specified script ID and writer ID, or null if not found.</returns>
-        Task<ResponseDetail<Script>> GetScriptById(Guid scriptId, Guid? writerId);
+        Task<ResponseDetail<ScriptDTO>> GetScriptById(Guid scriptId, Guid? writerId);
 
         /// <summary>
         /// Retrieves all scripts details associated with a specific writer.
         /// </summary>
         /// <param name="writerId">The ID of the writer whose scripts are to be retrieved.</param>
         /// <returns>A list of scripts details associated with the specified writer.</returns>
-        Task<ResponseDetail<List<Script>>> GetScriptsByWriterId(Guid writerId, int pageNumber, int pageSize);
+        Task<ResponseDetail<List<ScriptDTO>>> GetScriptsByWriterId(Guid writerId, int pageNumber, int pageSize);
 
         /// <summary>
         /// Retrieves all scripts details
         /// </summary>
         /// <returns>A list of scripts details</returns>
-        Task<ResponseDetail<List<Script>>> GetScripts(int pageNumber, int pageSize);
+        Task<ResponseDetail<List<ScriptDTO>>> GetScripts(int pageNumber, int pageSize);
 
         /// <summary>
         /// Retrieves the actual script
@@ -41,7 +41,7 @@ namespace Bara.API.Scripts.Interfaces
         /// <param name="scriptDetails">Represents the details of the script </param>
         /// <param name="writerId">Represents the id of the writer</param>
         /// <returns>A script</returns>
-        Task<ResponseDetail<Script>> AddScript(PostScriptDetailDTO scriptDetails, Guid writerId);
+        Task<ResponseDetail<ScriptDTO>> AddScript(PostScriptDetailDTO scriptDetails, Guid writerId);
 
         /// <summary>
         /// Updates a script.
@@ -98,7 +98,7 @@ namespace Bara.API.Scripts.Interfaces
         /// <param name="pageNumber">The page number for pagination</param>
         /// <param name="pageSize">The number of items per page</param>
         /// <returns>A paginated list of scripts in the specified genre</returns>
-        Task<ResponseDetail<List<Script>>> GetScriptsByGenre(Guid genre, int pageNumber, int pageSize);
+        Task<ResponseDetail<List<ScriptDTO>>> GetScriptsByGenre(Guid genre, int pageNumber, int pageSize);
 
         /// <summary>
         /// Searches scripts by title, description, or genre with pagination.
@@ -107,7 +107,7 @@ namespace Bara.API.Scripts.Interfaces
         /// <param name="pageNumber">The page number for pagination</param>
         /// <param name="pageSize">The number of items per page</param>
         /// <returns>A paginated list of scripts matching the search criteria</returns>
-        Task<ResponseDetail<List<Script>>> SearchScripts(string searchTerm, int pageNumber, int pageSize);
+        Task<ResponseDetail<List<ScriptDTO>>> SearchScripts(string searchTerm, int pageNumber, int pageSize);
 
         /// <summary>
         /// Fetches all available genres.

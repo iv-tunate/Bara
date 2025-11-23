@@ -48,18 +48,18 @@ namespace Bara.API.Scripts.Repositories
             this.chatService = chatService;
             this.logHelper = logHelper;
         }
-        public async Task<ResponseDetail<Script>> AddScript(PostScriptDetailDTO scriptDetails, Guid writerId)
+        public async Task<ResponseDetail<ScriptDTO>> AddScript(PostScriptDetailDTO scriptDetails, Guid writerId)
         {
             try
             {
                 var writer = await dbContext.Writers.Select(x => new { x.Id, x.FirstName, x.LastName, x.AuthProfile.IsVerified, x.IsPremiumMember }).FirstOrDefaultAsync(x => x.Id == writerId);
                 if (writer is null)
                 {
-                    return ResponseDetail<Script>.Failed($"Writer with profileId {writerId} does not exist");
+                    return ResponseDetail<ScriptDTO>.Failed($"Writer with profileId {writerId} does not exist");
                 }
                 if (writer.IsVerified is false)
                 {
-                    return ResponseDetail<Script>.Failed($"You can't access this resource yet because your account has not been verified", 403, "Forbidden");
+                    return ResponseDetail<ScriptDTO>.Failed($"You can't access this resource yet because your account has not been verified", 403, "Forbidden");
                 }
 
                 var script = scriptDetails.File;
@@ -78,7 +78,7 @@ namespace Bara.API.Scripts.Repositories
                 var scriptFormatIsAcceptable = allowedExtensions.Contains(scriptExtension) && allowedMimeTypes.Contains(script.ContentType);
                 if (!scriptFormatIsAcceptable)
                 {
-                    return ResponseDetail<Script>.Failed($"An invalid script format was uploaded. The allowed extensions are: " +
+                    return ResponseDetail<ScriptDTO>.Failed($"An invalid script format was uploaded. The allowed extensions are: " +
                                                                     $"{string.Join(", ", allowedExtensions)}...\n" +
                                                                     $"Allowed mime types are: {string.Join(", ", allowedMimeTypes)}", 415, "Invalid File Type");
                 }
@@ -86,7 +86,7 @@ namespace Bara.API.Scripts.Repositories
                 var scriptExceedsLimit = script.Length > sizeLimit;
                 if (scriptExceedsLimit)
                 {
-                    return ResponseDetail<Script>.Failed($"Script exceeds limit of {sizeLimit}", 413, "File Limit Exceeded");
+                    return ResponseDetail<ScriptDTO>.Failed($"Script exceeds limit of {sizeLimit}", 413, "File Limit Exceeded");
                 }
 
                 var userDirectoryName = $"{writer.FirstName ?? "test"}_{writer.LastName ?? "test"}-{writerId}";
@@ -94,7 +94,7 @@ namespace Bara.API.Scripts.Repositories
                 if (uploadScriptResponse == null || !uploadScriptResponse.Success)
                 {
                     logger.LogError($"An error occured while uploading the script titled {scriptDetails.Title} for {writer.FirstName} {writer.LastName}");
-                    return ResponseDetail<Script>.Failed($"An error occured while uploading the script", 500, "Umexpected Error");
+                    return ResponseDetail<ScriptDTO>.Failed($"An error occured while uploading the script", 500, "Umexpected Error");
                 }
 
                 var genres = await dbContext.Genres
@@ -102,7 +102,7 @@ namespace Bara.API.Scripts.Repositories
                         .ToListAsync();
                 if (!genres.Any())
                 {
-                    return ResponseDetail<Script>.Failed("Invalid genres selected.");
+                    return ResponseDetail<ScriptDTO>.Failed("Invalid genres selected.");
                 }
                 var newScriptDetail = new Script
                 {
@@ -132,12 +132,41 @@ namespace Bara.API.Scripts.Repositories
                 memoryCache.Remove(ALL_SCRIPTS_CACHE_KEY);
                 memoryCache.Remove($"Writer_{writerId}_Scripts");
 
-                return ResponseDetail<Script>.Successful(newScriptDetail, "Script added successfully", 201);
+                var responseScript = new ScriptDTO
+                {
+                    Id = newScriptDetail.Id,
+                    Title = newScriptDetail.Title,
+                    Logline = newScriptDetail.Logline,
+                    Synopsis = newScriptDetail.Synopsis,
+                    Price = newScriptDetail.Price,
+                    CurrencySymbol = newScriptDetail.CurrencySymbol,
+                    Currency = newScriptDetail.Currency,
+                    IsScriptRegistered = newScriptDetail.IsScriptRegistered,
+                    RegistrationBody = newScriptDetail.RegistrationBody,
+                    ImageUrl = newScriptDetail.ImageUrl,
+                    ImagePublicId = newScriptDetail.ImagePublicId,
+                    CopyrightNumber = newScriptDetail.CopyrightNumber,
+                    OwnershipRights = newScriptDetail.OwnershipRights,
+                    ProofUrl = newScriptDetail.ProofUrl,
+                    WriterId = newScriptDetail.WriterId,
+                    WriterName = newScriptDetail.WriterName,
+                    Status = newScriptDetail.Status,
+                    IsPremiumScript = newScriptDetail.IsPremiumScript,
+                    CreatedAt = newScriptDetail.CreatedAt,
+
+                    Genre = genres.Select(g => new GenreDTO
+                    {
+                        Id = g.Id,
+                        Name = g.Name,
+                        Description = g.Description
+                    }).ToList()
+                };
+                return ResponseDetail<ScriptDTO>.Successful(responseScript, "Script added successfully", 201);
             }
             catch (Exception ex)
             {
                 logger.LogError($"An exception was thrown while adding a script, \nException: {ex.GetType().Name}\n Base Exception: {ex.GetBaseException().GetType().Name}", $"Exception Code: {ex.HResult}");
-                return ResponseDetail<Script>.Failed("Your request cannot be completed at this time... Please try again later", 500, "Unexpected error");
+                return ResponseDetail<ScriptDTO>.Failed("Your request cannot be completed at this time... Please try again later", 500, "Unexpected error");
             }
         }
 
@@ -189,61 +218,142 @@ namespace Bara.API.Scripts.Repositories
             }
         }
 
-        public async Task<ResponseDetail<Script>> GetScriptById(Guid scriptId, Guid? writerId)
+        public async Task<ResponseDetail<ScriptDTO>> GetScriptById(Guid scriptId, Guid? writerId)
         {
             try
             {
-                Script script;
+                ScriptDTO script;
 
                 if (writerId.HasValue)
                 {
                     var writerCacheKey = $"Writer_{writerId}_Scripts";
-                    memoryCache.TryGetValue<List<Script>>(writerCacheKey, out var writerScriptsList);
+                    memoryCache.TryGetValue<List<ScriptDTO>>(writerCacheKey, out var writerScriptsList);
                     if (writerScriptsList is not null)
                     {
                         script = writerScriptsList.FirstOrDefault(x => x.Id == scriptId);
                         if (script is not null)
                         {
-                            return ResponseDetail<Script>.Successful(script);
+                            return ResponseDetail<ScriptDTO>.Successful(script);
                         }
                     }
 
-                    script = await dbContext.Scripts.FirstOrDefaultAsync(x => x.Id == scriptId && x.WriterId == writerId);
+                    script = await dbContext.Scripts.Include(x => x.Genres).Select(s => new ScriptDTO
+                    {
+                        Id = s.Id,
+                        Title = s.Title,
+                        Logline = s.Logline,
+                        Synopsis = s.Synopsis,
+                        Price = s.Price,
+                        CurrencySymbol = s.CurrencySymbol,
+                        Currency = s.Currency,
+                        IsScriptRegistered = s.IsScriptRegistered,
+                        RegistrationBody = s.RegistrationBody,
+                        ImageUrl = s.ImageUrl,
+                        ImagePublicId = s.ImagePublicId,
+                        CopyrightNumber = s.CopyrightNumber,
+                        OwnershipRights = s.OwnershipRights,
+                        ProofUrl = s.ProofUrl,
+                        WriterId = s.WriterId,
+                        WriterName = s.WriterName,
+                        Status = s.Status,
+                        IsPremiumScript = s.IsPremiumScript,
+                        CreatedAt = s.CreatedAt,
+                        Genre = s.Genres.Select(g => new GenreDTO
+                        {
+                            Id = g.Id,
+                            Name = g.Name,
+                        }).ToList() ?? new List<GenreDTO>()
+                    }).FirstOrDefaultAsync(x => x.Id == scriptId && x.WriterId == writerId);
                 }
                 else
                 {
-                    script = await dbContext.Scripts.FindAsync(scriptId);
+                    script = await dbContext.Scripts.Include(x => x.Genres).Select(s => new ScriptDTO
+                    {
+                        Id = s.Id,
+                        Title = s.Title,
+                        Logline = s.Logline,
+                        Synopsis = s.Synopsis,
+                        Price = s.Price,
+                        CurrencySymbol = s.CurrencySymbol,
+                        Currency = s.Currency,
+                        IsScriptRegistered = s.IsScriptRegistered,
+                        RegistrationBody = s.RegistrationBody,
+                        ImageUrl = s.ImageUrl,
+                        ImagePublicId = s.ImagePublicId,
+                        CopyrightNumber = s.CopyrightNumber,
+                        OwnershipRights = s.OwnershipRights,
+                        ProofUrl = s.ProofUrl,
+                        WriterId = s.WriterId,
+                        WriterName = s.WriterName,
+                        Status = s.Status,
+                        IsPremiumScript = s.IsPremiumScript,
+                        CreatedAt = s.CreatedAt,
+                        Genre = s.Genres.Select(g => new GenreDTO
+                        {
+                            Id = g.Id,
+                            Name = g.Name,
+                        }).ToList() ?? new List<GenreDTO>()
+                    }).FirstOrDefaultAsync(x => x.Id == scriptId);
                 }
 
                 if (script == null)
                 {
-                    return ResponseDetail<Script>.Failed($"Script not found", 404, "Not Found");
+                    return ResponseDetail<ScriptDTO>.Failed($"Script not found", 404, "Not Found");
                 }
 
-                return ResponseDetail<Script>.Successful(script);
+                return ResponseDetail<ScriptDTO>.Successful(script);
             }
             catch (Exception ex)
             {
                 logger.LogError($"An exception was thrown while script... \nException: {ex.GetType().Name}\n Base Exception: {ex.GetBaseException().GetType().Name}", $"Exception Code: {ex.HResult}");
-                return ResponseDetail<Script>.Failed("Your request cannot be completed at this time... Please try again later", 500, "Unexpected error");
+                return ResponseDetail<ScriptDTO>.Failed("Your request cannot be completed at this time... Please try again later", 500, "Unexpected error");
             }
         }
 
-        public async Task<ResponseDetail<List<Script>>> GetScripts(int pageNumber, int pageSize)
+        public async Task<ResponseDetail<List<ScriptDTO>>> GetScripts(int pageNumber, int pageSize)
         {
             try
             {
-                memoryCache.TryGetValue<List<Script>>(ALL_SCRIPTS_CACHE_KEY, out var allScripts);
+                memoryCache.TryGetValue<List<ScriptDTO>>(ALL_SCRIPTS_CACHE_KEY, out var allScripts);
                 if (allScripts == null)
                 {
 
-                    allScripts = await dbContext.Scripts
+                    var scriptData = await dbContext.Scripts
                                 .Include(x => x.Genres)
                                 .Where(x => x.Status == ScriptStatus.Available)
                                 .OrderBy(x => x.IsPremiumScript)
                                 .ThenByDescending(x => x.CreatedAt)
                                 .AsNoTracking()
                                 .ToListAsync();
+
+                    allScripts = scriptData.Select(s => new ScriptDTO
+                    {
+                        Id = s.Id,
+                        Title = s.Title,
+                        Logline = s.Logline,
+                        Synopsis = s.Synopsis,
+                        Price = s.Price,
+                        CurrencySymbol = s.CurrencySymbol,
+                        Currency = s.Currency,
+                        IsScriptRegistered = s.IsScriptRegistered,
+                        RegistrationBody = s.RegistrationBody,
+                        ImageUrl = s.ImageUrl,
+                        ImagePublicId = s.ImagePublicId,
+                        CopyrightNumber = s.CopyrightNumber,
+                        OwnershipRights = s.OwnershipRights,
+                        ProofUrl = s.ProofUrl,
+                        WriterId = s.WriterId,
+                        WriterName = s.WriterName,
+                        Status = s.Status,
+                        IsPremiumScript = s.IsPremiumScript,
+                        CreatedAt = s.CreatedAt,
+                        Genre = s.Genres.Select(g => new GenreDTO
+                        {
+                            Id = g.Id,
+                            Name = g.Name,
+                            Description = g.Description
+                        }).ToList() ?? new List<GenreDTO>()
+                    }).ToList();
 
                     var cacheOptions = new MemoryCacheEntryOptions()
                         .SetAbsoluteExpiration(TimeSpan.FromMinutes(10))
@@ -261,32 +371,62 @@ namespace Bara.API.Scripts.Repositories
 
                 if (totalCount < 1)
                 {
-                    return ResponseDetail<List<Script>>.SuccessfulPaginatedResponse(paginatedScripts, totalCount, totalPages, pageNumber, "No available script(s)", 204);
+                    return ResponseDetail<List<ScriptDTO>>.SuccessfulPaginatedResponse(paginatedScripts, totalCount, totalPages, pageNumber, "No available script(s)", 204);
                 }
 
-                return ResponseDetail<List<Script>>.SuccessfulPaginatedResponse(paginatedScripts, totalCount, totalPages, pageNumber);
+                return ResponseDetail<List<ScriptDTO>>.SuccessfulPaginatedResponse(paginatedScripts, totalCount, totalPages, pageNumber);
             }
             catch (Exception ex)
             {
                 logger.LogError($"An exception {ex.GetType().Name} while fetching scripts...\n Base Exception{ex.GetBaseException().GetType().Name}", $"Exception Code: {ex.HResult}");
-                return ResponseDetail<List<Script>>.Failed("Your request cannot be completed at this time... Please try again later", 500, "Unexpected error");
+                return ResponseDetail<List<ScriptDTO>>.Failed("Your request cannot be completed at this time... Please try again later", 500, "Unexpected error");
             }
         }
 
-        public async Task<ResponseDetail<List<Script>>> GetScriptsByWriterId(Guid writerId, int pageNumber, int pageSize)
+        public async Task<ResponseDetail<List<ScriptDTO>>> GetScriptsByWriterId(Guid writerId, int pageNumber, int pageSize)
         {
             try
             {
                 var cacheKey = $"Writer_{writerId}'s_Scripts";
-                memoryCache.TryGetValue<List<Script>>(cacheKey, out var cachedScripts);
+                memoryCache.TryGetValue<List<ScriptDTO>>(cacheKey, out var cachedScripts);
                 if (cachedScripts is null)
                 {
-                    cachedScripts = await dbContext.Scripts
+                    var scriptData = await dbContext.Scripts
                                                     .Include(x => x.Genres)
                                                     .Where(x => x.WriterId == writerId && x.Status != ScriptStatus.Deleted)
                                                     .OrderByDescending(x => x.CreatedAt)
                                                     .AsNoTracking()
                                                     .ToListAsync();
+
+                    cachedScripts = scriptData.Select(s => new ScriptDTO
+                    {
+                        Id = s.Id,
+                        Title = s.Title,
+                        Logline = s.Logline,
+                        Synopsis = s.Synopsis,
+                        Price = s.Price,
+                        CurrencySymbol = s.CurrencySymbol,
+                        Currency = s.Currency,
+                        IsScriptRegistered = s.IsScriptRegistered,
+                        RegistrationBody = s.RegistrationBody,
+                        ImageUrl = s.ImageUrl,
+                        ImagePublicId = s.ImagePublicId,
+                        CopyrightNumber = s.CopyrightNumber,
+                        OwnershipRights = s.OwnershipRights,
+                        ProofUrl = s.ProofUrl,
+                        WriterId = s.WriterId,
+                        WriterName = s.WriterName,
+                        Status = s.Status,
+                        IsPremiumScript = s.IsPremiumScript,
+                        CreatedAt = s.CreatedAt,
+                        Genre = s.Genres.Select(g => new GenreDTO
+                        {
+                            Id = g.Id,
+                            Name = g.Name,
+                            Description = g.Description
+                        }).ToList() ?? new List<GenreDTO>()
+                    }).ToList();
+
                     var cacheOptions = new MemoryCacheEntryOptions()
                        .SetAbsoluteExpiration(TimeSpan.FromMinutes(10))
                        .SetSlidingExpiration(TimeSpan.FromMinutes(5));
@@ -295,7 +435,7 @@ namespace Bara.API.Scripts.Repositories
 
                 if (cachedScripts is null)
                 {
-                    return ResponseDetail<List<Script>>.Failed($"Writer with Id: {writerId} does not exist", 400, "Invalid User");
+                    return ResponseDetail<List<ScriptDTO>>.Failed($"Writer with Id: {writerId} does not exist", 400, "Invalid User");
                 }
 
                 var totalCount = cachedScripts.Count;
@@ -307,15 +447,15 @@ namespace Bara.API.Scripts.Repositories
 
                 if (totalCount < 1)
                 {
-                    return ResponseDetail<List<Script>>.SuccessfulPaginatedResponse(paginatedResult, totalCount, totalPages, pageNumber, "You have no script(s)", 204);
+                    return ResponseDetail<List<ScriptDTO>>.SuccessfulPaginatedResponse(paginatedResult, totalCount, totalPages, pageNumber, "You have no script(s)", 204);
                 }
 
-                return ResponseDetail<List<Script>>.SuccessfulPaginatedResponse(paginatedResult, totalCount, totalPages, pageNumber, "Scripts retrieved successfully");
+                return ResponseDetail<List<ScriptDTO>>.SuccessfulPaginatedResponse(paginatedResult, totalCount, totalPages, pageNumber, "Scripts retrieved successfully");
             }
             catch (Exception ex)
             {
                 logger.LogError($"An exception {ex.InnerException} was thrown while retrieving scripts for writer: {writerId}... \nBase Exception{ex.GetBaseException().GetType().Name}", $"Exception Code: {ex.HResult}");
-                return ResponseDetail<List<Script>>.Failed("Your request cannot be completed at this time... Please try again later", 500, "Unexpected error");
+                return ResponseDetail<List<ScriptDTO>>.Failed("Your request cannot be completed at this time... Please try again later", 500, "Unexpected error");
             }
         }
 
@@ -895,18 +1035,18 @@ namespace Bara.API.Scripts.Repositories
             }
         }
 
-        public async Task<ResponseDetail<List<Script>>> GetScriptsByGenre(Guid genreId, int pageNumber, int pageSize)
+        public async Task<ResponseDetail<List<ScriptDTO>>> GetScriptsByGenre(Guid genreId, int pageNumber, int pageSize)
         {
             try
             {
                 var cacheKey = $"Scripts_Genre_{genreId}";
 
-                if (!memoryCache.TryGetValue<(List<Script> scripts, int totalCount)>(cacheKey, out var cachedData))
+                if (!memoryCache.TryGetValue<(List<ScriptDTO> scripts, int totalCount)>(cacheKey, out var cachedData))
                 {
                     var genreExists = await dbContext.Genres.AnyAsync(x => x.Id == genreId);
                     if (!genreExists)
                     {
-                        return ResponseDetail<List<Script>>.Failed("Genre not found", 404, "Invalid genre ID");
+                        return ResponseDetail<List<ScriptDTO>>.Failed("Genre not found", 404, "Invalid genre ID");
                     }
 
                     var scriptsQuery = dbContext.Scripts
@@ -920,9 +1060,37 @@ namespace Bara.API.Scripts.Repositories
                     var totalCount = await scriptsQuery.CountAsync();
 
                     var scripts = await scriptsQuery
+                        .Include(s => s.Genres)
+                        .Select(s => new ScriptDTO
+                        {
+                            Id = s.Id,
+                            Title = s.Title,
+                            Logline = s.Logline,
+                            Synopsis = s.Synopsis,
+                            Price = s.Price,
+                            CurrencySymbol = s.CurrencySymbol,
+                            Currency = s.Currency,
+                            IsScriptRegistered = s.IsScriptRegistered,
+                            RegistrationBody = s.RegistrationBody,
+                            ImageUrl = s.ImageUrl,
+                            ImagePublicId = s.ImagePublicId,
+                            CopyrightNumber = s.CopyrightNumber,
+                            OwnershipRights = s.OwnershipRights,
+                            ProofUrl = s.ProofUrl,
+                            WriterId = s.WriterId,
+                            WriterName = s.WriterName,
+                            Status = s.Status,
+                            IsPremiumScript = s.IsPremiumScript,
+                            CreatedAt = s.CreatedAt,
+                            Genre = s.Genres.Select(g => new GenreDTO
+                            {
+                                Id = g.Id,
+                                Name = g.Name,
+                            }).ToList() ?? new List<GenreDTO>()
+                        })
                         .Skip((pageNumber - 1) * pageSize)
                         .Take(pageSize)
-                        .Include(s => s.Genres)
+
                         .ToListAsync();
 
                     cachedData = (scripts, totalCount);
@@ -938,7 +1106,7 @@ namespace Bara.API.Scripts.Repositories
 
                 if (cachedData.totalCount < 1)
                 {
-                    return ResponseDetail<List<Script>>.SuccessfulPaginatedResponse(
+                    return ResponseDetail<List<ScriptDTO>>.SuccessfulPaginatedResponse(
                         cachedData.scripts,
                         cachedData.totalCount,
                         totalPages,
@@ -947,7 +1115,7 @@ namespace Bara.API.Scripts.Repositories
                         204);
                 }
 
-                return ResponseDetail<List<Script>>.SuccessfulPaginatedResponse(
+                return ResponseDetail<List<ScriptDTO>>.SuccessfulPaginatedResponse(
                     cachedData.scripts,
                     cachedData.totalCount,
                     totalPages,
@@ -957,18 +1125,18 @@ namespace Bara.API.Scripts.Repositories
             catch (Exception ex)
             {
                 logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"fetching scripts by genre {genreId}");
-                return ResponseDetail<List<Script>>.Failed("Your request failed", 500, "Unexpected error");
+                return ResponseDetail<List<ScriptDTO>>.Failed("Your request failed", 500, "Unexpected error");
             }
         }
-        public async Task<ResponseDetail<List<Script>>> SearchScripts(string searchTerm, int pageNumber, int pageSize)
+        public async Task<ResponseDetail<List<ScriptDTO>>> SearchScripts(string searchTerm, int pageNumber, int pageSize)
         {
             try
             {
                 var cacheKey = $"Scripts_Search_{searchTerm}";
-                memoryCache.TryGetValue<List<Script>>(cacheKey, out var cachedScripts);
+                memoryCache.TryGetValue<List<ScriptDTO>>(cacheKey, out var cachedScripts);
                 if (cachedScripts == null)
                 {
-                    cachedScripts = await dbContext.Scripts
+                    var scriptData = await dbContext.Scripts
                                     .Include(x => x.Genres)
                                     .OrderBy(x => x.IsPremiumScript)
                                     .ThenByDescending(x => x.CreatedAt)
@@ -977,6 +1145,35 @@ namespace Bara.API.Scripts.Repositories
                                                                            s.Synopsis.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)))
                                     .AsNoTracking()
                                     .ToListAsync();
+
+                    cachedScripts = scriptData.Select(s => new ScriptDTO
+                    {
+                        Id = s.Id,
+                        Title = s.Title,
+                        Logline = s.Logline,
+                        Synopsis = s.Synopsis,
+                        Price = s.Price,
+                        CurrencySymbol = s.CurrencySymbol,
+                        Currency = s.Currency,
+                        IsScriptRegistered = s.IsScriptRegistered,
+                        RegistrationBody = s.RegistrationBody,
+                        ImageUrl = s.ImageUrl,
+                        ImagePublicId = s.ImagePublicId,
+                        CopyrightNumber = s.CopyrightNumber,
+                        OwnershipRights = s.OwnershipRights,
+                        ProofUrl = s.ProofUrl,
+                        WriterId = s.WriterId,
+                        WriterName = s.WriterName,
+                        Status = s.Status,
+                        IsPremiumScript = s.IsPremiumScript,
+                        CreatedAt = s.CreatedAt,
+                        Genre = s.Genres.Select(g => new GenreDTO
+                        {
+                            Id = g.Id,
+                            Name = g.Name,
+                            Description = g.Description
+                        }).ToList() ?? new List<GenreDTO>()
+                    }).ToList();
 
                     var cacheOptions = new MemoryCacheEntryOptions()
                         .SetAbsoluteExpiration(TimeSpan.FromMinutes(5))
@@ -994,15 +1191,15 @@ namespace Bara.API.Scripts.Repositories
 
                 if (totalCount < 1)
                 {
-                    return ResponseDetail<List<Script>>.SuccessfulPaginatedResponse(paginatedScripts, totalCount, totalPages, pageNumber, $"No scripts found for '{searchTerm}'", 204);
+                    return ResponseDetail<List<ScriptDTO>>.SuccessfulPaginatedResponse(paginatedScripts, totalCount, totalPages, pageNumber, $"No scripts found for '{searchTerm}'", 204);
                 }
 
-                return ResponseDetail<List<Script>>.SuccessfulPaginatedResponse(paginatedScripts, totalCount, totalPages, pageNumber, "Scripts retrieved successfully");
+                return ResponseDetail<List<ScriptDTO>>.SuccessfulPaginatedResponse(paginatedScripts, totalCount, totalPages, pageNumber, "Scripts retrieved successfully");
             }
             catch (Exception ex)
             {
                 logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"searching scripts with term {searchTerm}");
-                return ResponseDetail<List<Script>>.Failed("Your request failed", 500, "Unexpected error");
+                return ResponseDetail<List<ScriptDTO>>.Failed("Your request failed", 500, "Unexpected error");
             }
         }
 

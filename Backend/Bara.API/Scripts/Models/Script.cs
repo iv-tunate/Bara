@@ -135,9 +135,6 @@ namespace Bara.API.Scripts.Models
         [JsonIgnore]
         public List<Genre> Genres { get; set; }
 
-        [NotMapped]
-        public List<Genre> Genre => Genres;
-
         public bool IsPremiumScript { get; set; }
     }
 }
