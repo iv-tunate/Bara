@@ -5,13 +5,11 @@ on:
     branches: [main, dev]
     paths:
       - "Backend/**"
-      - "bara-app/**"
       - ".github/workflows/**"
   pull_request:
     branches: [main, dev]
     paths:
       - "Backend/**"
-      - "bara-app/**"
 
 jobs:
   # Filter which parts of the codebase changed
@@ -29,8 +27,6 @@ jobs:
             backend:
               - 'Backend/**'
               - '.github/workflows/**'
-            frontend:
-              - 'bara-app/**'
 
   # Build and test backend
   build-backend:
