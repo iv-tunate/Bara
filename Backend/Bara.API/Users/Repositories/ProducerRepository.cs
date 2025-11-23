@@ -73,6 +73,7 @@ namespace Bara.API.Users.Repositories
                 producer.Type = Role.Producer;
                 producer.AuthProfile.FullName = $"{producerDetailDTO.FirstName} {producerDetailDTO.LastName}".ToUpperInvariant();
                 producer.AuthProfile.IsProfileSetupComplete = true;
+                producer.CompanyOrStudio = producerDetailDTO.Company;
                 producer.Address = new Address
                 {
                     City = producerDetailDTO.AddressDetail.City.ToUpperInvariant(),
@@ -147,6 +148,7 @@ namespace Bara.API.Users.Repositories
                     ProfileImagePublicId = producer.ProfileImagePublicId,
                     ProfileImageUrl = producer.ProfileImageUrl,
                     PortfolioUrl = producer.PortfolioUrl,
+                    Company = producer.CompanyOrStudio
                 };
 
                 // --------------------  COMMIT TRANSACTION --------------------
@@ -229,6 +231,7 @@ namespace Bara.API.Users.Repositories
                                         PhoneNumber = x.PhoneNumber,
                                         TimeModified = x.TimeModified,
                                         VerificationStatus = x.VerificationStatus,
+                                        Company = x.CompanyOrStudio
                                     }).FirstOrDefaultAsync(x => x.Id == producerId);
                 if (producer is null)
                 {

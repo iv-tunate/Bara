@@ -98,6 +98,8 @@ namespace Bara.API.Users.Models
         /// </summary>
         public Role Type { get; set; }
 
+        [DataType(DataType.Text), MaxLength(150)]
+        public string CompanyOrStudio { get; set; } = string.Empty;
         /// <summary>
         /// 
         /// </summary>

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Bara.API.DataContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Bara.API.DataContext.Migrations
 {
     [DbContext(typeof(BaraContext))]
-    partial class BaraContextModelSnapshot : ModelSnapshot
+    [Migration("20251123160355_Add Company property to user")]
+    partial class AddCompanypropertytouser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

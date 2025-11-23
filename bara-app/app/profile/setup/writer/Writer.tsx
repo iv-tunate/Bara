@@ -75,6 +75,33 @@ export default function WriterProfilePage() {
     verificationNumber: "",
     file: null as File | null,
   });
+
+  //This use effect ensures only a writer with an active session can access this page...You can comment out if you're still building
+  //But do not forget to uncomment it
+  useEffect(() => {
+    const user = getUserSession();
+    if (user === null) {
+      router.push("/auth/login");
+      return;
+    }
+    else if (
+      user.userType.toLowerCase() === "producer" &&
+      !user.profileComplete
+    ) {
+      router.push("/profile/setup/producer");
+    } else if (
+      user.userType.toLowerCase() === "producer" &&
+      user.profileComplete
+    ) {
+      router.push("/dashboard"); // This is a place holder for now because i'm not sure producer's have a page. 
+    } else if (
+      user.userType.toLowerCase() === "writer" &&
+      user.profileComplete
+    ) {
+      router.push("/writer/profile");
+    }
+  });
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [activeTab]);
@@ -232,7 +259,7 @@ export default function WriterProfilePage() {
         const res = await api.createWriter(form, userId as string);
         //  console.log("Response Data:", res.data);
         if (res.data.isSuccess && res.data.statusCode === 201) {
-          toast.success("Writer profile created!");
+          toast.success("Writer profile setup complete!");
           updateUserSession({
             profileComplete: true,
             name: `${res.data.data.name}`,
@@ -261,7 +288,7 @@ export default function WriterProfilePage() {
     if (activeTab === "personal") setActiveTab("location");
     else if (activeTab === "location") setActiveTab("identity");
     else if (activeTab === "identity") {
-     // router.push("/writer/dashboard");
+      // router.push("/writer/dashboard");
     }
   };
 
@@ -269,7 +296,7 @@ export default function WriterProfilePage() {
     <div className="fixed inset-0 bg-[#1a0000] bg-opacity-80 flex items-center justify-center z-50 p-2 overflow-auto">
       <form
         onSubmit={handleSubmit}
-        className="bg-white rounded-lg shadow-lg p-3 md:p-10 w-full max-w-3xl max-h-screen overflow-y-auto flex flex-col space-y-1 "
+        className="bg-white rounded-lg shadow-lg p-3 md:p-6 w-full max-w-3xl max-h-screen overflow-y-auto flex flex-col space-y-1 "
       >
         <div className="">
           <Logo />

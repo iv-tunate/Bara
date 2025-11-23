@@ -37,6 +37,7 @@ namespace Bara.API.Users.DTOs.ProducerDTOs
         public string ProfileImageUrl { get; init; }
         public string ProfileImagePublicId { get; init; }
         public string PortfolioUrl { get; set; }
+        public string Company { get; set; } = string.Empty;
         /// <summary>
         /// The email address of the producer.
         /// </summary>

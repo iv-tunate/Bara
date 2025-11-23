@@ -1,4 +1,4 @@
-name: Bara CI
+name: Bara CI/CD
 
 on:
   push:
@@ -6,153 +6,259 @@ on:
     paths:
       - "Backend/**"
       - "bara-app/**"
-      - ".github/workflows/ci.yml"
+      - ".github/workflows/**"
   pull_request:
-    branches: ["main"]
+    branches: [main, dev]
     paths:
       - "Backend/**"
       - "bara-app/**"
-      - ".github/workflows/ci.yml"
 
 jobs:
+  # Filter which parts of the codebase changed
   paths-filter:
     runs-on: ubuntu-latest
     outputs:
-      should-build-backend: ${{ steps.paths-filter.outputs.backend }}
-      should-build-frontend: ${{ steps.paths-filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
     steps:
-      - uses: actions/checkout@v3
-      - id: paths-filter
-        uses: dorny/paths-filter@v2
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
         with:
           filters: |
             backend:
               - 'Backend/**'
+              - '.github/workflows/**'
             frontend:
               - 'bara-app/**'
 
+  # Build and test backend
   build-backend:
-    name: Build Backend
+    name: Build & Test Backend
     runs-on: ubuntu-latest
     needs: paths-filter
-    if: ${{ needs.paths-filter.outputs.should-build-backend == 'true' }}
+    if: needs.paths-filter.outputs.backend == 'true'
 
     env:
       DOTNET_NOLOGO: true
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
 
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v3
+      - uses: actions/checkout@v4
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-      #   - name: Install dependencies
-      #     run: sudo apt-get install -y libssl-dev
-      - name: Build Backend
-        run: dotnet build Backend/Backend.sln
-  #     - name: Login to Docker Hub
-  #       uses: docker/login-action@v2
-  #       with:
-  #         username: ${{ secrets.DOCKER_USERNAME }}
-  #         password: ${{ secrets.DOCKER_PASSWORD }}
-  #     - name: Set image tag
-  #       id: vars
+
+      - name: Restore dependencies
+        working-directory: Backend
+        run: dotnet restore
+
+      - name: Build
+        working-directory: Backend
+        run: dotnet build --no-restore --configuration Release
+
+      # Uncomment when you have tests
+      # - name: Run tests
+      #   working-directory: Backend
+      #   run: dotnet test --no-build --configuration Release --verbosity normal
+
+  # Build and push Docker image
+  build-docker:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: [paths-filter, build-backend]
+    if: |
+      needs.paths-filter.outputs.backend == 'true' && 
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Determine environment
+        id: env
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "ENV=production" >> $GITHUB_OUTPUT
+            echo "TAG=latest" >> $GITHUB_OUTPUT
+          else
+            echo "ENV=staging" >> $GITHUB_OUTPUT
+            echo "TAG=dev" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./Backend
+          push: true
+          tags: |
+            fortunateomonuwa/bara-backend:${{ steps.env.outputs.TAG }}
+            fortunateomonuwa/bara-backend:${{ github.sha }}
+          cache-from: type=registry,ref=fortunateomonuwa/bara-backend:buildcache
+          cache-to: type=registry,ref=fortunateomonuwa/bara-backend:buildcache,mode=max
+
+      - name: Create .env file
+        run: echo "${{ secrets.ENV_CONTENT }}" > .env
+
+      - name: Test Docker image locally
+        run: |
+          docker run -d \
+            --name bara-test \
+            --env-file .env \
+            -p 8080:8080 \
+            fortunateomonuwa/bara-backend:${{ steps.env.outputs.TAG }}
+          
+          echo "Waiting for container to start..."
+          sleep 30
+          
+          echo "=== Container Status ==="
+          docker ps -a
+          
+          echo "=== Container Logs ==="
+          docker logs bara-test
+          
+          echo "=== Health Check ==="
+          curl -f http://localhost:8080/health/basic_health_check || exit 1
+          
+          docker stop bara-test
+          docker rm bara-test
+
+  # Deploy to Render (Staging)
+  deploy-staging:
+    name: Deploy to Staging (Render)
+    runs-on: ubuntu-latest
+    needs: [build-docker]
+    if: github.ref == 'refs/heads/dev'
+    steps:
+      - name: Trigger Render Deploy
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.RENDER_STAGING_DEPLOY_HOOK }}")
+          if [ $response -eq 200 ] || [ $response -eq 201 ]; then
+            echo "✅ Staging deployment triggered successfully"
+          else
+            echo "❌ Staging deployment failed with status $response"
+            exit 1
+          fi
+
+      - name: Wait for deployment
+        run: |
+          echo "⏳ Waiting for deployment to complete..."
+          sleep 60
+
+      - name: Verify deployment
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://your-staging-app.onrender.com/health/basic_health_check)
+          if [ $response -eq 200 ]; then
+            echo "✅ Staging deployment verified successfully"
+          else
+            echo "⚠️ Staging health check returned status $response"
+          fi
+
+  # Deploy to Render (Production)
+  # deploy-production:
+  #   name: Deploy to Production (Render)
+  #   runs-on: ubuntu-latest
+  #   needs: [build-docker]
+  #   if: github.ref == 'refs/heads/main'
+  #   environment:
+  #     name: production
+  #     url: https://barastories.com
+
+  #   steps:
+  #     - name: Trigger Render Deploy
   #       run: |
-  #         if [ "${{ github.ref_name }}" = "main" ]; then
-  #           echo "TAG=latest" >> $GITHUB_ENV
-  #           echo "tag=latest" >> $GITHUB_OUTPUT
-  #         elif [ "${{ github.ref_name }}" = "dev" ]; then
-  #           echo "TAG=dev" >> $GITHUB_ENV
-  #           echo "tag=dev" >> $GITHUB_OUTPUT
+  #         response=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.RENDER_PRODUCTION_DEPLOY_HOOK }}")
+  #         if [ $response -eq 200 ] || [ $response -eq 201 ]; then
+  #           echo "✅ Production deployment triggered successfully"
   #         else
-  #           echo "TAG=${{ github.ref_name }}" >> $GITHUB_ENV
-  #           echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+  #           echo "❌ Production deployment failed with status $response"
+  #           exit 1
   #         fi
 
-  #     - name: Build Docker image
-  #       working-directory: Backend
-  #       run: docker build -t fortunateomonuwa/bara-backend:${{ steps.vars.outputs.tag }} .
-
-  #     - name: Push Docker image to Docker Hub
-  #       run: docker push fortunateomonuwa/bara-backend:${{ steps.vars.outputs.tag }}
-
-  #     - name: Create .env file
+  #     - name: Wait for deployment
   #       run: |
-  #         cat <<EOF > .env
-  #         ConnectionStrings__Connection=${{ secrets.CONNECTION }}
-  #         Secrets__JwtSickRit=${{ secrets.JWT_SECRET }}
-  #         Secrets__CloudinaryAPISecret=${{ secrets.CLOUDINARY_API_SECRET }}
-  #         Secrets__CloudinaryAPIKEY=${{ secrets.CLOUDINARY_API_KEY }}
-  #         Secrets__CloudinaryURL=${{ secrets.CLOUDINARY_URL }}
-  #         Secrets__CloudinaryName=${{ secrets.CLOUDINARY_NAME }}
-  #         Secrets__CloudinaryFolderName=${{ secrets.CLOUDINARY_FOLDER_NAME }}
-  #         Secrets__YouVerifyTestAPIKEY=${{ secrets.YOUVERIFY_TEST_API_KEY }}
-  #         Secrets__YouVerifyLiveAPIKEY=${{ secrets.YOUVERIFY_LIVE_API_KEY }}
-  #         Secrets__YouVerifyWebhookSigningSecret=${{ secrets.YOUVERIFY_WEBHOOK_SIGNING_SECRET }}
-  #         Secrets__SendGridApiKey=${{ secrets.SENDGRID_API_KEY }}
-  #         Secrets__PaystackSecret=${{ secrets.PAYSTACK_SECRET }}
-  #         Secrets__PaystackPublic=${{ secrets.PAYSTACK_PUBLIC }}
-  #         Secrets__IpInfoKey=${{ secrets.IPINFO_KEY }}
-  #         Secrets__RabbitMqHost=${{ secrets.RABBITMQ_HOST }}
-  #         Secrets__RabbitMqPort=${{ secrets.RABBITMQ_PORT }}
-  #         Secrets__RabbitMqUsername=${{ secrets.RABBITMQ_USERNAME }}
-  #         Secrets__RabbitMqPassword=${{ secrets.RABBITMQ_PASSWORD }}
-  #         AppSettings_Sender=${{ secrets.SENDER }}
-  #         AppSettings__SenderName=${{ secrets.SENDER_NAME }}
-  #         AppSettings__YouVerifyBaseUrl=${{ secrets.YOUVERIFY_BASE_URL }}
-  #         AppSettings__CloudinaryBaseURL=${{ secrets.CLOUDINARY_BASE_URL }}
-  #         AppSettings__CloudinaryStoragePath=${{ secrets.CLOUDINARY_STORAGE_PATH }}
-  #         AppSettings__YouVerify_BVN_VerificationUrl=${{ secrets.YOUVERIFY_BVN_VERIFICATION_URL }}
-  #         AppSettings__YouVerify_Drivers_License_VerificationUrl=${{ secrets.YOUVERIFY_DRIVERS_LICENSE_VERIFICATION_URL }}
-  #         AppSettings__YouVerify_NIN_VerificationUrl=${{ secrets.YOUVERIFY_NIN_VERIFICATION_URL }}
-  #         AppSettings__YouVerify_International_Passport_VerificationUrl=${{ secrets.YOUVERIFY_INTERNATIONAL_PASSPORT_VERIFICATION_URL }}
-  #         EOF
+  #         echo "⏳ Waiting for deployment to complete..."
+  #         sleep 90
 
-  #     - name: Run container
+  #     - name: Verify deployment
   #       run: |
-  #         docker run -d \
-  #           --name bara-backend \
-  #           --env-file .env \
-  #           -p 8080:8080 \
-  #           fortunateomonuwa/bara-backend:${{ steps.vars.outputs.tag }}
+  #         response=$(curl -s -o /dev/null -w "%{http_code}" https://barastories.com/health/basic_health_check)
+  #         if [ $response -eq 200 ]; then
+  #           echo "✅ Production deployment verified successfully"
+  #         else
+  #           echo "⚠️ Production health check returned status $response"
+  #           exit 1
+  #         fi
 
-  #     - name: Wait for app and show container status
-  #       run: |
-  #         sleep 30
-  #         docker ps
-  #         docker logs bara-backend
-
-  #     - name: Debug container and network
-  #       run: |
-  #         echo "=== Container Status ==="
-  #         docker ps -a
-  #         echo "=== Container Logs ==="
-  #         docker logs bara-backend
-  #         echo "=== Network Check ==="
-  #         docker port bara-backend
-  #         echo "=== Process Check ==="
-  #         netstat -tulpn | grep :8080 || echo "No process listening on 8080"
-  #         echo "=== Container Inspection ==="
-  #         docker inspect bara-backend --format='{{.State.Status}}'
-  #         docker inspect bara-backend --format='{{.State.Health.Status}}' || echo "No health check defined"
-
-  #     - name: Run health check
-  #       run: |
-  #         echo "=== Testing health endpoints ==="
-  #         echo "Basic health check:"
-  #         curl -s http://localhost:8080/health/basic_health_check
-  #         echo -e "\n=== Detailed health check ==="
-  #         curl -s http://localhost:8080/health/detailed | jq . || curl -s http://localhost:8080/health/detailed
-
-  # deploy-to-render:
-  #   needs: [paths-filter, build-backend]
-  #   if: needs.paths-filter.outputs.should-build-backend == 'true'
+  # Deploy to Digital Ocean (Future - Commented)
+  # deploy-digitalocean:
+  #   name: Deploy to Production (DigitalOcean)
   #   runs-on: ubuntu-latest
+  #   needs: [build-docker]
+  #   if: github.ref == 'refs/heads/main'
+  #   environment:
+  #     name: production-do
+  #     url: https://your-app.digitalocean.com
+  #
   #   steps:
-  #     - name: Deploy to Staging
-  #       if: github.ref == 'refs/heads/dev'
-  #       run: curl -X POST ${{ secrets.BACKEND_STAGING_DEPLOY_HOOK }}
-  #     - name: Deploy to Production
-  #       if: github.ref == 'refs/heads/main'
-  #       run: curl -X POST ${{ secrets.BACKEND_PRODUCTION_DEPLOY_HOOK }}
+  #     - name: Deploy to DigitalOcean App Platform
+  #       uses: digitalocean/app_action@v1
+  #       with:
+  #         app_name: bara-backend
+  #         token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+  #         images: '[
+  #           {
+  #             "name": "bara-backend",
+  #             "repository": "fortunateomonuwa/bara-backend",
+  #             "tag": "latest"
+  #           }
+  #         ]'
+  #
+  #     - name: Verify DigitalOcean deployment
+  #       run: |
+  #         sleep 60
+  #         response=$(curl -s -o /dev/null -w "%{http_code}" https://your-app.digitalocean.com/health/basic_health_check)
+  #         if [ $response -eq 200 ]; then
+  #           echo "✅ DigitalOcean deployment verified"
+  #         else
+  #           echo "❌ DigitalOcean deployment verification failed"
+  #           exit 1
+  #         fi
+
+  # Build frontend (if needed in future)
+  # build-frontend:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+    needs: paths-filter
+    if: needs.paths-filter.outputs.frontend == 'true'
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: bara-app/package-lock.json
+
+      - name: Install dependencies
+        working-directory: bara-app
+        run: npm ci
+
+      - name: Build
+        working-directory: bara-app
+        run: npm run build
+
+      # Frontend typically auto-deploys via Vercel/Netlify
+      # Add manual deployment steps here if needed

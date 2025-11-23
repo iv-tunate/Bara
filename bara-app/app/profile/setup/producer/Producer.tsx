@@ -58,6 +58,30 @@ export default function ProducerProfilePage() {
     verificationNumber: "",
     file: null as File | null,
   });
+
+  useEffect(() => {
+    const user = getUserSession();
+    if (user === null) {
+      router.push("auth/login");
+      return;
+    } else if (
+      user.userType.toLowerCase() === "writer" &&
+      !user.profileComplete
+    ) {
+      router.push("/profile/setup/writer");
+    } else if (
+      user.userType.toLowerCase() === "writer" &&
+      user.profileComplete
+    ) {
+      router.push("/writer/profile");
+    } else if (
+      user.userType.toLowerCase() === "producer" &&
+      user.profileComplete
+    ) {
+      router.push("/dashboard");
+    }
+  });
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [activeTab]);
@@ -199,12 +223,20 @@ export default function ProducerProfilePage() {
       const response = await api.createProducer(form, userId);
 
       if (response.success) {
-        router.push("/dashboard-producer");
+        toast.success("Producer profile setup complete!");
+        router.push("/dashboard");
+
+        updateUserSession({
+          profileComplete: true,
+          name: `${response.data.data.name}`,
+        });
+        return;
       } else {
         setError(
-          response.message ||
+          response.data.message ||
             "Failed to create producer profile. Please try again."
         );
+        return;
       }
     } catch (error) {
       console.error("Producer profile creation error:", error);
@@ -218,7 +250,7 @@ export default function ProducerProfilePage() {
     if (activeTab === "personal") setActiveTab("location");
     else if (activeTab === "location") setActiveTab("identity");
     else if (activeTab === "identity") {
-     // router.push("/writer/dashboard");
+      // router.push("/writer/dashboard");
     }
   };
 
@@ -226,7 +258,7 @@ export default function ProducerProfilePage() {
     <div className="fixed inset-0 bg-[#1a0000] bg-opacity-80 flex items-center justify-center z-50 p-4 h-full overflow-auto">
       <form
         onSubmit={handleSubmit}
-        className="bg-white rounded-lg shadow-lg p-10 w-full max-w-3xl space-y-2"
+        className="bg-white rounded-lg shadow-lg p-3 md:p-6 w-full max-w-3xl max-h-screen overflow-y-auto flex flex-col space-y-1"
       >
         <Logo />
 
