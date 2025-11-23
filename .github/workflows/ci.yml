@@ -5,13 +5,11 @@ on:
     branches: [main, dev]
     paths:
       - "Backend/**"
-      - "bara-app/**"
       - ".github/workflows/**"
   pull_request:
     branches: [main, dev]
     paths:
       - "Backend/**"
-      - "bara-app/**"
 
 jobs:
   # Filter which parts of the codebase changed
@@ -29,8 +27,6 @@ jobs:
             backend:
               - 'Backend/**'
               - '.github/workflows/**'
-            frontend:
-              - 'bara-app/**'
 
   # Build and test backend
   build-backend:
@@ -59,7 +55,6 @@ jobs:
         working-directory: Backend
         run: dotnet build --no-restore --configuration Release
 
-      # Uncomment when you have tests
       # - name: Run tests
       #   working-directory: Backend
       #   run: dotnet test --no-build --configuration Release --verbosity normal
@@ -130,7 +125,7 @@ jobs:
     steps:
       - name: Trigger Render Deploy
         run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.RENDER_STAGING_DEPLOY_HOOK }}")
+          response=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.BACKEND_STAGING_DEPLOY_HOOK }}")
           if [ $response -eq 200 ] || [ $response -eq 201 ]; then
             echo "✅ Staging deployment triggered successfully"
           else
