@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Logo from "@/components/Logo";
 import Image from "next/image";
@@ -8,11 +8,12 @@ import LocationForm from "@/components/LocationForm";
 import IdentityVerificationForm from "@/components/IdentityVerificationForm";
 import { api } from "@/utils/api";
 import { getUserId } from "@/utils/tokenManager";
-import {
-  createProducerFormData,
-  validateProducerData,
-  type ProducerFormData,
-} from "@/utils/profileFormData";
+import "react-phone-input-2/lib/style.css";
+import { uploadImage } from "@/utils/upload";
+import { updateUserSession, getUserSession } from "@/utils/tokenManager";
+import toast from "react-hot-toast";
+import PhoneInput from "react-phone-input-2";
+import LoadingButton from "@/components/LoadingButton";
 
 type TabType = "personal" | "location" | "identity";
 
@@ -21,19 +22,28 @@ export default function ProducerProfilePage() {
   const [activeTab, setActiveTab] = useState<TabType>("personal");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [profileImageUrl, setProfileImageUrl] = useState("");
+  const [profileImagePublicId, setProfileImagePublicId] = useState("");
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(
+    null
+  );
+  const [uploading, setUploading] = useState(false);
 
-  // Personal info state
+  const [loading, setLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     firstName: "",
-    lastName: "",
     middleName: "",
-    phoneNumber: "",
-    dateOfBirth: "",
-    gender: "" as "MALE" | "FEMALE" | "OTHER" | "",
+    lastName: "",
+    portfolioLink: "",
     bio: "",
+    phone: "",
+    dateOfBirth: "",
+    gender: "",
+    company: "",
   });
 
-  // Location state
   const [locationForm, setLocationForm] = useState({
     country: "Nigeria",
     state: "",
@@ -43,17 +53,14 @@ export default function ProducerProfilePage() {
     additionalDetails: "",
   });
 
-  // Identity verification state
   const [identityForm, setIdentityForm] = useState({
-    documentType: "" as
-      | "BVN"
-      | "NIN"
-      | "DRIVERS_LICENSE"
-      | "INTERNATIONAL_PASSPORT"
-      | "",
+    documentType: "",
     verificationNumber: "",
     file: null as File | null,
   });
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [activeTab]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -79,6 +86,67 @@ export default function ProducerProfilePage() {
     }
   };
 
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleProfileImageChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setProfileImage(file);
+    setProfileImagePreview(URL.createObjectURL(file));
+
+    setUploading(true);
+    try {
+      const user = {
+        name: `${formData.firstName} ${formData.lastName}`,
+        id: localStorage.getItem("userId") || "temp",
+      };
+
+      //debugger;
+      const uploadResult = await uploadImage(file, "Writer", user);
+
+      setProfileImageUrl(uploadResult.url);
+      setProfileImagePublicId(uploadResult.publicId || "");
+
+      toast.success("Profile image uploaded successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to upload profile image");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const isPersonalInfoComplete = Boolean(
+    formData.firstName &&
+      formData.lastName &&
+      formData.phone &&
+      formData.dateOfBirth &&
+      formData.gender &&
+      formData.bio
+  );
+
+  const isLocationInfoComplete = Boolean(
+    locationForm.country &&
+      locationForm.state &&
+      locationForm.city &&
+      locationForm.postalCode &&
+      locationForm.street
+  );
+
+  const isIdentityInfoComplete = Boolean(
+    identityForm.documentType &&
+      identityForm.file &&
+      identityForm.verificationNumber
+  );
+
+  const isCurrentStepComplete =
+    (activeTab === "personal" && isPersonalInfoComplete) ||
+    (activeTab === "location" && isLocationInfoComplete) ||
+    (activeTab === "identity" && isIdentityInfoComplete);
+
   const submitProducerProfile = async () => {
     setIsLoading(true);
     setError("");
@@ -91,37 +159,44 @@ export default function ProducerProfilePage() {
         return;
       }
 
-      const profileData: ProducerFormData = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        middleName: formData.middleName,
-        phoneNumber: formData.phoneNumber,
-        dateOfBirth: formData.dateOfBirth,
-        gender: formData.gender as "MALE" | "FEMALE" | "OTHER",
-        bio: formData.bio,
-        street: locationForm.street,
-        city: locationForm.city,
-        state: locationForm.state,
-        country: locationForm.country,
-        postalCode: locationForm.postalCode,
-        additionalDetails: locationForm.additionalDetails,
-        documentType: identityForm.documentType as
-          | "BVN"
-          | "NIN"
-          | "DRIVERS_LICENSE"
-          | "INTERNATIONAL_PASSPORT",
-        verificationNumber: identityForm.verificationNumber,
-        documentFile: identityForm.file!,
-      };
+      const form = new FormData();
 
-      const validationErrors = validateProducerData(profileData);
-      if (validationErrors.length > 0) {
-        setError(validationErrors.join(", "));
-        return;
+      form.append("FirstName", formData.firstName);
+      form.append("LastName", formData.lastName);
+      form.append("MiddleName", formData.middleName || "none");
+      form.append("PhoneNumber", formData.phone);
+      form.append("Gender", formData.gender);
+      form.append("Bio", formData.bio || "");
+      form.append("Company", formData.company);
+      form.append("DateOfBirth", formData.dateOfBirth);
+      // form.append("IsPremiumMember", "false");
+      form.append("AddressDetail.Street", locationForm.street || "");
+      form.append("AddressDetail.City", locationForm.city || "");
+      form.append("AddressDetail.State", locationForm.state || "");
+      form.append("AddressDetail.Country", locationForm.country || "Nigeria");
+      form.append("AddressDetail.PostalCode", locationForm.postalCode || "");
+      form.append("PortfolioUrl", formData.portfolioLink || "");
+      form.append(
+        "AddressDetail.AdditionalDetails",
+        locationForm.additionalDetails || "no additional details"
+      );
+      form.append("VerificationDocument.Type", identityForm.documentType);
+      form.append(
+        "VerificationDocument.VerificationNumber",
+        identityForm.verificationNumber
+      );
+      form.append(
+        "VerificationDocument.Document",
+        identityForm.file!,
+        identityForm.file!.name
+      );
+
+      if (profileImageUrl) {
+        form.append("ProfileImageUrl", profileImageUrl);
+        form.append("ProfileImagePublicId", profileImagePublicId);
       }
 
-      const formDataToSubmit = createProducerFormData(profileData);
-      const response = await api.createProducer(formDataToSubmit, userId);
+      const response = await api.createProducer(form, userId);
 
       if (response.success) {
         router.push("/dashboard-producer");
@@ -140,40 +215,15 @@ export default function ProducerProfilePage() {
   };
 
   const handleSkip = () => {
-    if (activeTab === "personal") {
-      setActiveTab("location");
-    } else if (activeTab === "location") {
-      setActiveTab("identity");
-    } else {
-      router.push("/dashboard");
+    if (activeTab === "personal") setActiveTab("location");
+    else if (activeTab === "location") setActiveTab("identity");
+    else if (activeTab === "identity") {
+     // router.push("/writer/dashboard");
     }
   };
 
-  const isPersonalInfoComplete =
-    formData.firstName &&
-    formData.lastName &&
-    formData.phoneNumber &&
-    formData.dateOfBirth &&
-    formData.gender;
-
-  const isLocationInfoComplete =
-    locationForm.country &&
-    locationForm.state &&
-    locationForm.city &&
-    locationForm.street;
-
-  const isIdentityInfoComplete =
-    identityForm.documentType &&
-    identityForm.verificationNumber &&
-    identityForm.file;
-
-  const isCurrentStepComplete =
-    (activeTab === "personal" && isPersonalInfoComplete) ||
-    (activeTab === "location" && isLocationInfoComplete) ||
-    (activeTab === "identity" && isIdentityInfoComplete);
-
   return (
-    <div className="fixed inset-0 bg-[#1a0000] bg-opacity-80 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-[#1a0000] bg-opacity-80 flex items-center justify-center z-50 p-4 h-full overflow-auto">
       <form
         onSubmit={handleSubmit}
         className="bg-white rounded-lg shadow-lg p-10 w-full max-w-3xl space-y-2"
@@ -220,34 +270,144 @@ export default function ProducerProfilePage() {
         {/* Form Sections */}
         {activeTab === "personal" && (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="flex flex-col">
                 <label className="text-sm font-semibold text-[#22242A] mb-1">
-                  First name
+                  First Name
                 </label>
                 <input
                   type="text"
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleChange}
-                  className="border border-[#ABADB2] p-3 rounded-md"
+                  className="border border-[#ABADB2] p-2 rounded-md w-full"
                 />
               </div>
 
               <div className="flex flex-col">
                 <label className="text-sm font-semibold text-[#22242A] mb-1">
-                  Last name
+                  Last Name
                 </label>
                 <input
                   type="text"
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleChange}
-                  className="border border-[#ABADB2] p-3 rounded-md"
+                  className="border border-[#ABADB2] p-2 rounded-md w-full"
                 />
               </div>
 
-              <div className="flex flex-col md:col-span-2">
+              <div className="flex flex-col">
+                <label className="text-sm font-semibold text-[#22242A] mb-1">
+                  Middle Name (optional)
+                </label>
+                <input
+                  type="text"
+                  name="middleName"
+                  value={formData.middleName}
+                  onChange={handleChange}
+                  className="border border-[#ABADB2] p-2 rounded-md w-full"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block mb-1 text-sm font-semibold text-[#22242A]">
+                Upload your profile picture
+              </label>
+
+              {profileImage ? (
+                <div className="border-2 border-dashed border-[#ABADB2] rounded-md p-4 bg-[#F5F5F5]">
+                  <div className="flex flex-col items-center space-y-3">
+                    <Image
+                      src="/checkring.png"
+                      alt="Upload complete"
+                      width={32}
+                      height={32}
+                    />
+                    <span className="text-sm text-[#333740] font-medium">
+                      Upload complete
+                    </span>
+
+                    <Image
+                      src={
+                        profileImagePreview || URL.createObjectURL(profileImage)
+                      }
+                      alt="Profile preview"
+                      width={100}
+                      height={100}
+                      className="rounded-full border object-cover"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="text-[#810306] text-sm font-semibold underline mt-2 hover:text-[#a22]"
+                    >
+                      Edit Image
+                    </button>
+
+                    <div className="w-full h-1 bg-green-600 rounded" />
+                  </div>
+                </div>
+              ) : (
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full h-40 border-2 border-dashed border-[#ABADB2] rounded-md bg-[#F5F5F5] flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-100 transition"
+                >
+                  <p className="text-sm text-[#333740]">
+                    Drag and drop your image here
+                  </p>
+                  <p className="text-sm text-[#333740] mt-1">
+                    or{" "}
+                    <span className="text-[#810306] font-semibold underline">
+                      Browse
+                    </span>
+                  </p>
+                </div>
+              )}
+
+              <input
+                type="file"
+                accept="image/png, image/jpeg"
+                onChange={handleProfileImageChange}
+                ref={fileInputRef}
+                className="hidden"
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div className="flex flex-col">
+                <label className="text-sm font-semibold text-[#22242A] mb-1">
+                  Date of birth
+                </label>
+                <input
+                  type="date"
+                  name="dateOfBirth"
+                  value={formData.dateOfBirth}
+                  onChange={handleChange}
+                  className="border border-[#ABADB2] p-2 rounded-md w-full"
+                />
+              </div>
+
+              <div className="flex flex-col">
+                <label className="text-sm font-semibold text-[#22242A] mb-1">
+                  Gender
+                </label>
+                <select
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleChange}
+                  className="border border-[#ABADB2] p-2 rounded-md w-full"
+                >
+                  <option value="">Select gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+            {/* Bio */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ">
+              <div className="flex flex-col ">
                 <label className="text-sm font-semibold text-[#22242A] mb-1">
                   Company/Studio
                 </label>
@@ -259,50 +419,81 @@ export default function ProducerProfilePage() {
                   className="border border-[#ABADB2] p-3 rounded-md"
                 />
               </div>
+
+              <div className="">
+                {" "}
+                <label className="text-sm font-semibold text-[#22242A] mb-1">
+                  Bio
+                </label>
+                <textarea
+                  name="bio"
+                  value={formData.bio}
+                  onChange={handleChange}
+                  className="border border-[#ABADB2] p-1 rounded-md w-full max-h-12 "
+                />
+              </div>
             </div>
+            {/*           
+                        <div className="flex justify-end items-center gap-1 cursor-pointer text-[#810306] font-semibold mb-4 text-sm">
+                          <button
+                            type="button"
+                            onClick={() => setShowModal(true)}
+                            className="flex items-center gap-1"
+                          >
+                            <Image
+                              src="/plus-icon.png"
+                              alt="Add experience"
+                              width={20}
+                              height={20}
+                            />
+                            <span>
+                              {experiences.length > 0
+                                ? "Add more experience"
+                                : "Add Experience"}
+                            </span>
+                          </button>
+                        </div>
+          
+                        {showModal && (
+                          <AddExperienceModal
+                            initial={experiences}
+                            onClose={() => setShowModal(false)}
+                            onSave={handleAddExperience}
+                          />
+                        )} */}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Phone */}
               <div className="flex flex-col">
                 <label className="text-sm font-semibold text-[#22242A] mb-1">
-                  Phone number
+                  Phone Number
                 </label>
-                <div className="flex items-center border border-[#ABADB2] rounded-md px-3 py-2">
-                  <div className="flex items-center mr-2 border border-[#ABADB2] py-2 px-2 rounded-md">
-                    <Image
-                      src="/Nigerian flag.png"
-                      alt="Nigeria flag"
-                      width={20}
-                      height={14}
-                      className="mr-2"
-                    />
-                    <span className="text-sm mr-2">+234</span>
-                    <Image
-                      src="/dropdown.png"
-                      alt="Dropdown arrow"
-                      width={20}
-                      height={12}
-                    />
-                  </div>
-                  <input
-                    type="text"
-                    name="phone"
+                <div className="border border-[#ABADB2] rounded-md px-2 py-1 w-full">
+                  <PhoneInput
+                    country={"ng"}
                     value={formData.phone}
-                    onChange={handleChange}
-                    className="flex-1 outline-none bg-transparent text-sm"
+                    onChange={(phone) =>
+                      setFormData({ ...formData, phone: `+${phone}` })
+                    }
+                    inputClass="!bg-transparent !border-none !text-sm !w-full"
+                    containerClass="!w-full"
+                    buttonClass="!border-none"
+                    enableSearch={true}
                   />
                 </div>
               </div>
 
+              {/* Portfolio Link */}
               <div className="flex flex-col">
                 <label className="text-sm font-semibold text-[#22242A] mb-1">
-                  NIN
+                  Portfolio Link
                 </label>
                 <input
                   type="text"
-                  name="nin"
-                  value={formData.nin}
+                  name="portfolioLink"
+                  value={formData.portfolioLink}
                   onChange={handleChange}
-                  className="border border-[#ABADB2] p-3 rounded-md"
+                  className="border border-[#ABADB2] p-2 rounded-md w-full"
                 />
               </div>
             </div>
@@ -319,27 +510,26 @@ export default function ProducerProfilePage() {
           />
         )}
 
-        {/* Action Buttons */}
         <div className="flex justify-end gap-4 pt-4">
-          <button
-            type="button"
-            onClick={handleSkip}
-            className="px-8 py-2 border-2 border-[#810306] text-[#810306] rounded-md font-semibold"
-          >
-            Skip
-          </button>
+          <div className="flex justify-end gap-4 pt-4 mt-auto">
+            <LoadingButton
+              type="button"
+              onClick={handleSkip}
+              variant="primary"
+              disabled={activeTab === "identity"}
+            >
+              Skip
+            </LoadingButton>
 
-          <button
-            type="submit"
-            disabled={!isCurrentStepComplete}
-            className={`px-8 py-2 rounded-md font-semibold ${
-              isCurrentStepComplete
-                ? "bg-[#810306] text-white"
-                : "bg-[#F5F5F5] text-[#858990] cursor-not-allowed"
-            }`}
-          >
-            {activeTab === "identity" ? "Get Started" : "Save"}
-          </button>
+            <LoadingButton
+              type="submit"
+              loading={loading}
+              disabled={!isCurrentStepComplete}
+              variant="primary"
+            >
+              {activeTab === "identity" ? "Complete Profile" : "Continue"}
+            </LoadingButton>
+          </div>
         </div>
       </form>
     </div>

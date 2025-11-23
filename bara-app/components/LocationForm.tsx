@@ -10,7 +10,7 @@ interface LocationFormProps {
     state: string;
     city: string;
     street: string;
-    zipCode: string;
+    postalCode: string;
     additionalDetails: string;
   };
   setForm: Dispatch<
@@ -199,12 +199,12 @@ useEffect(() => {
         {/* Zip code */}
         <div className="flex flex-col md:col-span-6">
           <label htmlFor="zipCode" className="mb-1 font-medium">
-            Zip code
+            Postal code
           </label>
           <input
-            id="zipCode"
-            name="zipCode"
-            value={form.zipCode}
+            id="postalCode"
+            name="postalCode"
+            value={form.postalCode}
             onChange={handleChange}
             className="w-full border border-[#ABADB2] rounded-md px-3 py-2"
           />

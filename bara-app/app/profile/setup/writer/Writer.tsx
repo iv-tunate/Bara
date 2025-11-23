@@ -67,7 +67,7 @@ export default function WriterProfilePage() {
     city: "",
     additionalDetails: "",
     street: "",
-    zipCode: "",
+    postalCode: "",
   });
 
   const [identityForm, setIdentityForm] = useState({
@@ -137,7 +137,7 @@ export default function WriterProfilePage() {
     locationForm.country &&
       locationForm.state &&
       locationForm.city &&
-      locationForm.zipCode &&
+      locationForm.postalCode &&
       locationForm.street
   );
 
@@ -186,7 +186,7 @@ export default function WriterProfilePage() {
         form.append("AddressDetail.City", locationForm.city || "");
         form.append("AddressDetail.State", locationForm.state || "");
         form.append("AddressDetail.Country", locationForm.country || "Nigeria");
-        form.append("AddressDetail.PostalCode", locationForm.zipCode || "");
+        form.append("AddressDetail.PostalCode", locationForm.postalCode || "");
         form.append("PortfolioUrl", formData.portfolioLink || "");
         form.append(
           "AddressDetail.AdditionalDetails",
@@ -261,12 +261,12 @@ export default function WriterProfilePage() {
     if (activeTab === "personal") setActiveTab("location");
     else if (activeTab === "location") setActiveTab("identity");
     else if (activeTab === "identity") {
-      router.push("/writer/dashboard");
+     // router.push("/writer/dashboard");
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-[#1a0000] bg-opacity-80 flex items-center justify-center z-50 p-2">
+    <div className="fixed inset-0 bg-[#1a0000] bg-opacity-80 flex items-center justify-center z-50 p-2 overflow-auto">
       <form
         onSubmit={handleSubmit}
         className="bg-white rounded-lg shadow-lg p-3 md:p-10 w-full max-w-3xl max-h-screen overflow-y-auto flex flex-col space-y-1 "
@@ -541,7 +541,7 @@ export default function WriterProfilePage() {
             <LoadingButton
               type="button"
               onClick={handleSkip}
-              variant="secondary"
+              variant="primary"
               disabled={activeTab === "identity"}
             >
               Skip
