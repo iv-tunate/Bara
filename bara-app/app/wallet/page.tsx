@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import WithdrawFunds from "@/components/WithdrawFunds";
-// import { getUserSession } from "@/utils/tokenManager";
+ import { getUserSession } from "@/utils/tokenManager";
 // import { usePageGuard } from "@/app/hooks/usepageguard";
 
 export default function WalletPage() {
