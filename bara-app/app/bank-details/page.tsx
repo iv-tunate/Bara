@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { getUserSession } from "@/utils/tokenManager";
 import { api } from "@/utils/api";
-import PageGaurd from "@/hooks/pageguard";
+import { usePageGuard } from "@/app/hooks/usepageguard";
 interface BankDetail {
   id: string;
   accountNumber: string;
@@ -34,7 +34,7 @@ export default function BankDetailsPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-
+  const [userId, setUserId] = useState("");
   const [formData, setFormData] = useState({
     accountNumber: "",
     bankCode: "",
@@ -42,16 +42,10 @@ export default function BankDetailsPage() {
   });
 
   useEffect(() => {
-    const session = getUserSession();
-    if (!session) {
-      router.push("/auth/login");
-      return;
-    }
-
-    PageGaurd(session);
-    
-    loadData(session.userId);
-  }, [router]);
+    const id = localStorage.getItem("userId");
+    setUserId(id);
+  }, []);
+  usePageGuard();
 
   const loadData = async (userId: string) => {
     try {
@@ -71,7 +65,7 @@ export default function BankDetailsPage() {
       setIsLoading(false);
     }
   };
-
+  loadData(userId);
   const handleBankSelect = (bankCode: string) => {
     const selectedBank = banks.find((bank) => bank.code === bankCode);
     if (selectedBank) {

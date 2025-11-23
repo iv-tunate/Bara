@@ -302,7 +302,7 @@ export const api = {
   getUserTransactions: async (
     userId: string,
     pageNumber: number = 1,
-    pageSize: number = 10
+    pageSize: number = 12
   ) => {
     return apiRequest(
       `${BASE_URL}${API_ENDPOINTS.USER_TRANSACTIONS(

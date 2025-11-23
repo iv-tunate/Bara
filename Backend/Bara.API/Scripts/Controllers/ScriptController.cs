@@ -82,7 +82,7 @@ namespace Bara.API.Scripts.Controllers
 
         [Authorize(Roles = "Writer, Admin, Producer")]
         [HttpGet("scripts/writer/{writerId}/{pageNumber}/{pageSize}")]
-        public async Task<IActionResult> GetScriptsByWriterId(Guid writerId, int pageNumber, int pageSize)
+        public async Task<IActionResult> GetScriptsByWriterId(Guid writerId, int pageNumber = 1, int pageSize = 16)
         {
             try
             {
@@ -116,7 +116,7 @@ namespace Bara.API.Scripts.Controllers
         /// </returns>
 
         [HttpGet("scripts/{pageNumber}/{pageSize}")]
-        public async Task<IActionResult> GetAllScripts(int pageNumber = 1, int pageSize = 10)
+        public async Task<IActionResult> GetAllScripts(int pageNumber = 1, int pageSize = 16)
         {
             try
             {

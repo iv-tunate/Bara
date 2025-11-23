@@ -16,9 +16,8 @@ export default function WriterProfile() {
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [imageLoading, setImageLoading] = useState(true);
-
-  const [profileData, setProfileData] = useState<Writer | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [profileData, setProfileData] = useState<Writer | null>(null);
  const [currentPage, setCurrentPage] = useState(1);
  const [scriptsLoading, setScriptsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -31,7 +30,7 @@ export default function WriterProfile() {
     const id = localStorage.getItem("userId");
     setWriterId(id);
   }, []);
-const pageSize = 10;
+const pageSize = 16;
   useEffect(() => {
     async function fetchProfile() {
       setIsLoading(true);

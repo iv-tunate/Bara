@@ -3,26 +3,26 @@ export type IPDealType =
   | "ProducerRetainsRights"
   | "SharedRights";
 
-
-  export interface Genre {
-    id: string;
-    name: string;
-  }
+export interface Genre {
+  id: string;
+  name: string;
+}
 
 export interface Script {
   id: string;
   title: string;
   price: number;
-  image?: string; 
+  imagePublicId?: string;
+  imageUrl?: string;
   logline: string;
   synopsis: string;
   genre: string;
-  writerId?: string; 
+  writerId?: string;
   writerName: string;
-  status: string; 
+  status: string;
   currency: string;
   currencySymbol: string;
-  ownershipRights?: IPDealType | null; 
+  ownershipRights?: IPDealType | null;
   proofUrl?: string;
   copyrightNumber?: string;
   isScriptRegistered: boolean;
@@ -31,7 +31,6 @@ export interface Script {
   path: string;
   uploadedOn: string;
 }
-
 
 export const ownershipLabels: Record<IPDealType, string> = {
   WriterRetainsRights: "IP owned by writer",

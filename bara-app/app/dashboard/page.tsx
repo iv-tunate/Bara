@@ -13,7 +13,8 @@ import { Script, Genre } from "@/models/script";
 import Navbar from "@/components/Navbar";
 import CompleteProfileNav from "@/components/CompleteProfileNav";
 import { Button } from "@/components/ui/button";
-
+import Pagination from "@/components/Pagination";
+import { downloadImage } from "@/utils/upload";
 export default function DashboardPage() {
   const [scripts, setScripts] = useState<Script[]>([]);
   const [selectedGenres, setSelectedGenres] = useState<Genre[]>([]);
@@ -26,12 +27,15 @@ export default function DashboardPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [profileState, setProfileState] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
+  const [image, setImage] = useState<string | null>(null);
+
   const router = useRouter();
-  const pageSize = 8;
+  const pageSize = 16;
 
   useEffect(() => {
     const session = getUserSession();
-   // console.log("Session Details", session);
+    // console.log("Session Details", session);
     if (session && !session.profileComplete) {
       setUserName(session.name);
       setRole(session.userType);
@@ -45,7 +49,6 @@ export default function DashboardPage() {
     setUserName(session.name);
     setRole(session.userType);
     setProfileState(true);
- 
   }, []);
 
   const fetchScripts = async () => {
@@ -65,6 +68,7 @@ export default function DashboardPage() {
         );
       } else {
         response = await api.getAllScripts(currentPage, pageSize);
+        console.log("Scripts", response);
       }
 
       if (response.success && response.data) {
@@ -86,6 +90,29 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchScripts();
   }, [currentPage, selectedGenres, searchTerm]);
+
+  useEffect(() => {
+    async function loadImage() {
+      if (!scripts?.imagePublicId && !scripts?.imageUrl) {
+        setImageLoading(false);
+        return;
+      }
+
+      try {
+        const imageContent = await downloadImage(
+          scripts?.imageUrl || scripts?.imagePublicId,
+          "cloudinary"
+        );
+        setImage(imageContent);
+      } catch (error) {
+        console.error("Failed to load image:", error);
+      } finally {
+        setImageLoading(false);
+      }
+    }
+
+    if (scripts) loadImage();
+  }, [scripts]);
 
   const handleGenreChange = (genres: Genre[]) => {
     setSelectedGenres(genres);
@@ -229,19 +256,21 @@ export default function DashboardPage() {
             {scripts.map((script) => (
               <div
                 key={script.id}
-                className={`group relative border border-[#ABADB2] rounded-md bg-white shadow-sm transition-all duration-300 overflow-hidden h-[360px] hover:h-[430px] hover:shadow-md hover:bg-[#f9f9f9]`}
+                className="group relative border border-[#ABADB2] rounded-md bg-white shadow-sm transition-all duration-500 overflow-hidden min-h-[460px] hover:min-h-[530px] hover:shadow-md hover:bg-[#f9f9f9]"
               >
                 <div className="relative">
                   <Image
-                    src={script.image || "/flowery.png"}
+                    src={image || "/flowery.png"}
                     alt={script.title}
                     width={400}
                     height={250}
                     className="w-full h-48 object-cover"
                   />
+
                   <span className="absolute top-3 left-3 bg-[#FFEDEE] text-[#810306] text-xs px-2 py-1 rounded border border-[#810306]">
                     {script.genre}
                   </span>
+
                   <button
                     type="button"
                     className="absolute top-3 right-3"
@@ -255,9 +284,12 @@ export default function DashboardPage() {
                   <h3 className="text-base font-bold text-[#22242A]">
                     {script.title}
                   </h3>
-                  <p className="text-sm text-[#333740] leading-snug">
+
+                  {/* FIXED SYNOPSIS HEIGHT */}
+                  <p className="text-sm text-[#333740] leading-snug line-clamp-2 min-h-[9rem]">
                     {script.synopsis}
                   </p>
+
                   <p className="text-base font-semibold text-[#333740]">
                     {script.currencySymbol}
                     {script.price.toLocaleString()}
@@ -276,6 +308,11 @@ export default function DashboardPage() {
             ))}
           </div>
         )}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={(page) => setCurrentPage(page)}
+        />
       </section>
     </main>
   );

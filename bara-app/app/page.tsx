@@ -15,6 +15,7 @@ export default function HomePage() {
   // const [showDropdown, setShowDropdown] = useState(false);
   const [role, setRole] = useState<string>("Guest");
   const [profileState, setProfileState] = useState(false);
+  const [exploreBtnState, setExploreBtnState] = useState(false);
   useEffect(() => {
     const session = getUserSession();
 
@@ -28,6 +29,7 @@ export default function HomePage() {
     }
     setRole(session.userType);
     setProfileState(true);
+    setExploreBtnState(true);
   }, []);
 
   return (
@@ -72,7 +74,8 @@ export default function HomePage() {
              transition-all duration-300 ease-in-out
               hover:scale-105"
                 >
-                  Explore for free
+                  {exploreBtnState ? "Explore" :  "Explore for free"}
+                 
                 </a>
               </div>
             </div>
