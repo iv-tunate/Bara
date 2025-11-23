@@ -142,7 +142,7 @@ jobs:
     steps:
       - name: Trigger Render Deploy
         run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.RENDER_STAGING_DEPLOY_HOOK }}")
+          response=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.BACKEND_STAGING_DEPLOY_HOOK }}")
           if [ $response -eq 200 ] || [ $response -eq 201 ]; then
             echo "✅ Staging deployment triggered successfully"
           else
@@ -157,7 +157,7 @@ jobs:
 
       - name: Verify deployment
         run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" https://your-staging-app.onrender.com/health/basic_health_check)
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://bara-y51u.onrender.com/health/basic_health_check)
           if [ $response -eq 200 ]; then
             echo "✅ Staging deployment verified successfully"
           else
