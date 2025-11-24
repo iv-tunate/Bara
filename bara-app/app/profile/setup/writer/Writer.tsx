@@ -12,6 +12,7 @@ import { api } from "@/utils/api";
 import { updateUserSession, getUserSession } from "@/utils/tokenManager";
 import toast from "react-hot-toast";
 import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 import { uploadImage } from "@/utils/upload";
 import { ProcessingModal, ProcessingStatus } from "@/components/ResponseModal";
 import LoadingButton from "@/components/LoadingButton";
