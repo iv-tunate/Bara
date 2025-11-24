@@ -84,6 +84,14 @@ GlobalJobFilters.Filters.Add(new AutomaticRetryAttribute
 
 builder.Services.AddScoped<HangfireJobs>();
 
+var logDir = Path.Combine(AppContext.BaseDirectory, "Logs");
+Directory.CreateDirectory(logDir);
+
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .CreateLogger();
+
 builder.Host.UseSerilog((context, config) => config.ReadFrom.Configuration(context.Configuration));
 
 builder.Services.AddMemoryCache();
