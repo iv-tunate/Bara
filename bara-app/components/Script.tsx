@@ -14,10 +14,8 @@ export const ScriptCard = ({ script }: { script: Script }) => {
     : script.imageUrl || script.imagePublicId || "/flowery.png";
 
   return (
-    <div className="group relative border rounded-md shadow-sm overflow-hidden transition-all duration-700 ease-in-out bg-white hover:shadow-md h-[400px] hover:h-[480px] flex flex-col">
-      {/* Image Section - Fixed height */}
+    <div className="group relative border rounded-md shadow-sm overflow-hidden transition-all duration-700 ease-in-out bg-white hover:shadow-md h-[460px] md:h-[460px] md:hover:h-[520px] flex flex-col">
       <div className="relative w-full h-48 flex-shrink-0 bg-gray-100">
-        {/* Loading Spinner */}
         {imgLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#800000]" />
@@ -43,17 +41,16 @@ export const ScriptCard = ({ script }: { script: Script }) => {
       </div>
 
       <div className="p-4 flex flex-col flex-1 min-h-0">
-
         <h3 className="text-base font-bold text-[#22242A] mb-2 line-clamp-2">
           {script.title}
         </h3>
 
-        <div className="relative overflow-hidden transition-all duration-700 ease-in-out h-12 group-hover:h-28 mb-2">
+        <div className="relative overflow-hidden transition-all duration-700 ease-in-out h-28 md:group-hover:h-36 mb-2">
           <p className="text-sm text-[#333740] leading-snug">
-            {script.synopsis}
+            {script.logline}
           </p>
 
-          <div className="pointer-events-none absolute bottom-0 left-0 w-full h-6 bg-gradient-to-t from-white to-transparent opacity-100 group-hover:opacity-0 transition-opacity duration-700" />
+          <div className="pointer-events-none absolute bottom-0 left-0 w-full h-6 bg-gradient-to-t from-white to-transparent opacity-100 md:group-hover:opacity-0 transition-opacity duration-700" />
         </div>
 
         <p className="text-base font-semibold text-[#333740] mb-2">
@@ -62,7 +59,7 @@ export const ScriptCard = ({ script }: { script: Script }) => {
         </p>
 
         <Link href={`/dashboard/scripts/${script.id}`} className="mt-auto">
-          <button className="w-full bg-[#800000] text-white py-2 rounded opacity-0 group-hover:opacity-100 transition-all duration-700 ease-in-out">
+          <button className="w-full bg-[#800000] text-white py-2 rounded opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-700 ease-in-out">
             See more
           </button>
         </Link>
