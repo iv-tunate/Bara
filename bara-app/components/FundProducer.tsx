@@ -2,14 +2,12 @@
 import Image from "next/image";
 import { useState, FormEvent } from "react";
 import DashboardNavbar from "@/components/DashboardNavbar";
+import FundingSuccessModal from "@/components/FundingSuccessModal";
 
-// Define the props interface for the AddCardModal component
-// This modal allows users to add a new payment card for funding their wallet
 interface AddCardModalProps {
-  isOpen: boolean; // Controls modal visibility
-  onClose: () => void; // Function to close the modal
+  isOpen: boolean; 
+  onClose: () => void; 
   onCardAdded: (cardData: {
-    // Callback function when card is successfully added
     cardNumber: string;
     expiry: string;
     cvv: string;
@@ -17,29 +15,23 @@ interface AddCardModalProps {
 }
 
 // --- AddCardModal Component ---
-// Modal component for adding a new payment card
-// Handles card details collection and validation
 function AddCardModal({ isOpen, onClose, onCardAdded }: AddCardModalProps) {
-  // State management for card input fields
-  const [cardNumber, setCardNumber] = useState(""); // Stores the 16-digit card number
-  const [expiry, setExpiry] = useState(""); // Stores expiry date in MM/YY format
-  const [cvv, setCvv] = useState(""); // Stores 3-digit CVV code
+  const [cardNumber, setCardNumber] = useState(""); 
+  const [expiry, setExpiry] = useState(""); 
+  const [cvv, setCvv] = useState(""); 
 
-  // Early return if modal is not open - prevents unnecessary rendering
   if (!isOpen) return null;
 
-  // Form validation logic - ensures all required fields meet minimum length requirements
   const isFormValid =
-    cardNumber.trim().length >= 16 && // Card number must be at least 16 digits
-    expiry.trim().length >= 4 && // Expiry must be at least 4 characters (MM/YY)
-    cvv.trim().length >= 3; // CVV must be at least 3 digits
+    cardNumber.trim().length >= 16 && 
+    expiry.trim().length >= 4 && 
+    cvv.trim().length >= 3; 
 
-  // Handle form submission when user clicks "Add card"
   const handleSubmit = (e: FormEvent) => {
-    e.preventDefault(); // Prevent default form submission behavior
-    if (!isFormValid) return; // Exit if form is invalid
-    onCardAdded({ cardNumber, expiry, cvv }); // Pass card data to parent component
-    onClose(); // Close modal after successful submission
+    e.preventDefault(); 
+    if (!isFormValid) return; 
+    onCardAdded({ cardNumber, expiry, cvv }); 
+    onClose(); 
   };
 
   // Render the modal overlay and form
@@ -129,49 +121,45 @@ function AddCardModal({ isOpen, onClose, onCardAdded }: AddCardModalProps) {
 }
 
 // --- FundProducer Component ---
-// Main component for funding a producer's wallet
-// Provides interface to select/add payment card and enter funding amount
 interface FundProducerProps {
-  isOpen: boolean; // Controls modal visibility
-  onClose: () => void; // Function to close the modal
+  isOpen: boolean; 
+  onClose: () => void; 
 }
 
 export default function FundProducer({ isOpen, onClose }: FundProducerProps) {
-  // State management for the funding form
-  const [amount, setAmount] = useState(""); // Stores the funding amount
-  const [selectedCard, setSelectedCard] = useState<any>(null); // Stores the selected payment card data
-  const [isAddCardModalOpen, setAddCardModalOpen] = useState(false); // Controls add card modal visibility
+  const [amount, setAmount] = useState(""); 
+  const [selectedCard, setSelectedCard] = useState<any>(null); 
+  const [isAddCardModalOpen, setAddCardModalOpen] = useState(false);
+  const [isSuccessModalOpen, setSuccessModalOpen] = useState(false); 
 
-  // Early return if modal is not open - prevents unnecessary rendering
   if (!isOpen) return null;
 
-  // Handler for when a new card is added via the AddCardModal
   const handleCardAdded = (cardData: any) => {
-
     setSelectedCard(cardData);
   };
 
-  // Form validation - ensures both amount and card are selected before submission
-  const isPaymentFormValid = amount.trim() !== "" && selectedCard !== null;
-
-  // Handle the main payment form submission
-  const handlePaymentSubmit = (e: FormEvent) => {
-    e.preventDefault(); // Prevent default form submission
-    if (!isPaymentFormValid) return; // Exit if form is invalid
-    
-  
-    console.log("Submitting payment with:", { amount, selectedCard });
-    onClose(); // Close the main modal after successful submission
+  // Handler for closing the success modal and resetting the form state
+  const handleSuccessModalClose = () => {
+    setSuccessModalOpen(false);
+    setAmount("");
+    onClose();
   };
 
-  // Render the main funding modal
+  // ensures both amount and card are selected before submission
+  const isPaymentFormValid = amount.trim() !== "" && selectedCard !== null;
+
+
+  const handlePaymentSubmit = (e: FormEvent) => {
+    e.preventDefault(); 
+    if (!isPaymentFormValid) return; 
+    console.log("Submitting payment with:", { amount, selectedCard });
+    setSuccessModalOpen(true); 
+  };
+
   return (
     <div>
-      {/* Full-screen white overlay with navigation */}
       <div className="fixed inset-0 bg-white z-40 overflow-auto">
-        {/* Navigation bar with back button */}
         <DashboardNavbar />
-        {/* Back button to close the modal */}
         <button
           onClick={onClose}
           className="cursor-pointer mt-6 ml-6 md:ml-24 mb-4"
@@ -181,7 +169,6 @@ export default function FundProducer({ isOpen, onClose }: FundProducerProps) {
 
         {/* Main content container */}
         <div className="max-w-2xl mx-auto px-6 md:px-10 py-4 flex flex-col gap-10">
-          {/* Page header */}
           <div>
             <h2 className="text-2xl font-semibold">Fund your Account</h2>
             <p className="text-gray-700 mt-1">
@@ -223,9 +210,7 @@ export default function FundProducer({ isOpen, onClose }: FundProducerProps) {
               >
                 Enter amount
               </label>
-              {/* Currency selector and amount input in one container */}
               <div className="flex items-center border border-[#ABADB2] rounded-sm px-3 py-2 gap-3">
-                {/* Currency selector dropdown (currently only NGN) */}
                 <div className="flex items-center gap-2 border border-[#ABADB2] rounded-sm px-2 py-1">
                   <Image
                     src="/naijaFlag.svg"
@@ -254,7 +239,6 @@ export default function FundProducer({ isOpen, onClose }: FundProducerProps) {
               </div>
             </div>
 
-            {/* Submit button - enabled only when form is valid */}
             <button
               type="submit"
               disabled={!isPaymentFormValid}
@@ -270,11 +254,15 @@ export default function FundProducer({ isOpen, onClose }: FundProducerProps) {
         </div>
       </div>
 
-      {/* Render the AddCardModal as an overlay */}
       <AddCardModal
         isOpen={isAddCardModalOpen}
         onClose={() => setAddCardModalOpen(false)}
         onCardAdded={handleCardAdded}
+      />
+
+      <FundingSuccessModal
+        isOpen={isSuccessModalOpen}
+        onClose={handleSuccessModalClose} 
       />
     </div>
   );
