@@ -161,13 +161,13 @@ export default function FundProducer({ isOpen, onClose }: FundProducerProps) {
         <DashboardNavbar />
         <button
           onClick={onClose}
-          className="cursor-pointer mt-6 ml-6 md:ml-24 mb-4"
+          className="fixed cursor-pointer mt-16 ml-6 md:ml-90 mb-4"
         >
           <Image src="/Arrow_left.png" alt="Back" width={20} height={20} />
         </button>
 
         {/* Main content container */}
-        <div className="max-w-2xl mx-auto px-6 md:px-10 py-4 flex flex-col gap-10">
+        <div className="max-w-2xl mx-auto mt-10 px-6 md:px-10 py-4 flex flex-col gap-10">
           <div>
             <h2 className="text-2xl font-semibold">Fund your account</h2>
             <p className="text-gray-700 mt-1">
