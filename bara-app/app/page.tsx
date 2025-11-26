@@ -44,38 +44,32 @@ export default function HomePage() {
       <div className="flex flex-col w-full max-w-8xl">
         {/* Hero Section */}
         <section
-          className="relative w-full h-[95vh] bg-cover bg-no-repeat flex items-end"
+          className="relative w-full min-h-[70vh] md:min-h-[90vh] bg-cover bg-center bg-no-repeat flex items-end"
           style={{
             backgroundImage: "url('/landingbg.png')",
           }}
         >
-          {/* Blurry Overlay */}
-          <div className="w-full mx-auto">
-            <div className="backdrop-blur-xl bg-white/20 py-5 text-center shadow-lg">
-              {/* Heading */}
-              <h1 className="text-2xl md:text-5xl font-bold text-white leading-tight">
+          <div className="w-full mx-auto px-4 md:px-0">
+            <div className="backdrop-blur-xl bg-white/20 py-6 md:py-8 px-4 md:px-0 text-center shadow-lg">
+              <h1 className="text-3xl md:text-5xl font-bold text-white leading-tight">
                 Where <span className="text-red-900">Writers</span> and{" "}
                 <span className="text-red-900">Producers</span>
-                <br />
+                <br className="hidden md:block" />
                 Collaborate To Bring Stories To Life
               </h1>
 
-              <p className="text-white/90 mt-4 text-lg">
+              <p className="text-white/90 mt-4 text-base md:text-lg">
                 Bara connects screenwriters and producers in one
-                <br />
+                <br className="hidden md:block" />
                 secure space.
               </p>
 
-              {/* Buttons */}
-              <div className="mt-5 flex flex-col md:flex-row items-center justify-center gap-6">
+              <div className="mt-6 flex flex-col md:flex-row items-center justify-center gap-6">
                 <a
                   href="/dashboard"
-                  className="border border-[#810306] text-[#810306] font-medium px-12 py-3 rounded-sm text-center
-             transition-all duration-300 ease-in-out
-              hover:scale-105"
+                  className="border border-[#810306] text-[#810306] font-medium px-10 py-3 rounded-sm text-center transition-all duration-300 hover:scale-105"
                 >
-                  {exploreBtnState ? "Explore" :  "Explore for free"}
-                 
+                  {exploreBtnState ? "Explore" : "Explore for free"}
                 </a>
               </div>
             </div>
@@ -83,19 +77,24 @@ export default function HomePage() {
         </section>
 
         {/* Section 2 => writers and producers */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-10 md:gap-2 ">
-          <div className="bg-[#FFEDEE] px-10 md:px-40 py-10 md:py-15 flex flex-col items-start justify-center gap-5">
-            <h2 className="text-3xl font-semibold">For Writers</h2>
-            <p className="text-lg">
+        <div className="flex flex-col md:flex-row items-stretch justify-between gap-8 md:gap-4 w-full">
+          {/* Writers */}
+          <div className="bg-[#FFEDEE] w-full px-6 md:px-12 lg:px-20 py-10 flex flex-col items-start justify-center gap-4 rounded-md">
+            <h2 className="text-2xl md:text-3xl font-semibold">For Writers</h2>
+            <p className="text-base md:text-lg leading-relaxed">
               Showcase your loglines, synopses, and full scripts to a global
               network of producers. Get paid securely, retain your rights or
               negotiate terms, and grow your reputation in the industry, all
               from one platform.
             </p>
           </div>
-          <div className="bg-[#FFEDEE] px-10 md:px-40 py-10 md:py-15 flex flex-col items-start justify-center gap-5">
-            <h2 className="text-3xl font-semibold">For Producers</h2>
-            <p className="text-lg">
+
+          {/* Producers */}
+          <div className="bg-[#FFEDEE] w-full px-6 md:px-12 lg:px-20 py-10 flex flex-col items-start justify-center gap-4 rounded-md">
+            <h2 className="text-2xl md:text-3xl font-semibold">
+              For Producers
+            </h2>
+            <p className="text-base md:text-lg leading-relaxed">
               Discover ready-to-produce scripts or hire writers to bring your
               vision to life. Search by genre with secure payments and clear IP
               agreements for peace of mind.
@@ -211,63 +210,71 @@ export default function HomePage() {
         </div>
 
         {/* Gallery */}
-        <div className="mx-auto w-full max-w-7xl flex flex-row gap-5 items-center justify-between bg-[url('/galleryquote.png')] bg-auto bg-no-repeat py-20 pb-35 px-10 md:px-18">
+        <div className="mx-auto w-full max-w-7xl flex flex-wrap justify-center md:justify-between items-center gap-5 bg-[url('/galleryquote.png')] bg-auto bg-no-repeat py-16 px-4 md:px-10">
           <Image
             src="/Testimonial-1.png"
             alt="Gallery Image"
-            width={200}
-            height={80}
+            width={150}
+            height={60}
+            className="flex-shrink-0"
           />
-
           <Image
             src="/Testimonial-2.png"
             alt="Gallery Image"
-            width={200}
-            height={80}
+            width={150}
+            height={60}
+            className="flex-shrink-0"
           />
-
           <Image
             src="/Testimonial-3.png"
             alt="Gallery Image"
-            width={200}
-            height={80}
+            width={150}
+            height={60}
+            className="flex-shrink-0"
           />
-
           <Image
             src="/Testimonial-4.png"
             alt="Gallery Image"
-            width={200}
-            height={80}
+            width={150}
+            height={60}
+            className="flex-shrink-0"
           />
-
           <Image
             src="/Testimonial-5.png"
             alt="Gallery Image"
-            width={200}
-            height={80}
+            width={150}
+            height={60}
+            className="flex-shrink-0"
           />
         </div>
 
         {/* Section 5 => Bara Bridge */}
-        <div className="bg-[url('/Mask-group.png')] bg-[#FFEDEE] bg-auto bg-no-repeat bg-right flex flex-col gap-5 py-10 px-7">
-          <div className="w-full max-w-2xl py-7 px-25 items-center justify-center">
-            <h5 className="text-4xl font-semibold">
+        <div className="relative bg-[#FFEDEE] flex flex-col gap-5 py-10 px-7">
+          {/* Desktop background image */}
+          <div className="absolute inset-0 bg-[url('/Mask-group.png')] bg-auto bg-no-repeat bg-right hidden sm:block z-0"></div>
+
+          {/*  mobile  */}
+          <div className="absolute inset-0 sm:hidden bg-[#FFEDEE]/90 z-0"></div>
+
+          {/* Text content */}
+          <div className="relative z-10 w-full max-w-2xl py-7 px-0 sm:px-25 flex items-center justify-center text-center sm:text-left">
+            <h5 className="text-3xl sm:text-4xl font-semibold">
               <span className="text-[#810306]">BARA</span> bridges the gap
               between visionary writers and forward-thinking producers
             </h5>
           </div>
-          <div className="flex flex-row gap-8 py-5 px-25">
+
+          {/* Buttons */}
+          <div className="relative z-10 flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-4 sm:gap-8 py-5 px-0 sm:px-25">
             <Link
               href="/auth/register?type=Producer"
-              className="bg-[#810306] hover:bg-red-800 text-white px-10 py-4 rounded-md text-sm   transition-all duration-300 ease-in-out
-              hover:scale-105"
+              className="bg-[#810306] hover:bg-red-800 text-white px-6 sm:px-10 py-3 sm:py-4 rounded-md text-sm sm:text-sm transition-all duration-300 ease-in-out hover:scale-105"
             >
               I am a Producer
             </Link>
             <Link
               href="/auth/register?type=Writer"
-              className="bg-[#810306] hover:bg-red-800 text-white px-10 py-4 rounded-md text-sm   transition-all duration-300 ease-in-out
-              hover:scale-105"
+              className="bg-[#810306] hover:bg-red-800 text-white px-6 sm:px-10 py-3 sm:py-4 rounded-md text-sm sm:text-sm transition-all duration-300 ease-in-out hover:scale-105"
             >
               I am a Writer
             </Link>

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Lato } from "next/font/google";
-import { Toaster } from "react-hot-toast";
 import "./globals.css";
-import SessionGuard from "./hooks/sessionguard";
+import ToasterClient from "@/components/ToasterClient";
+
 const lato = Lato({
   subsets: ["latin"],
   weight: ["400", "700"],
@@ -26,32 +26,8 @@ export default function RootLayout({
   return (
     <html lang="en" className={lato.variable}>
       <body className="font-sans bg-white text-black">
-        {/* <SessionGuard>{children}</SessionGuard> */}
         {children}
-        <Toaster
-          position="top-center"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: "#fff",
-              color: "#333",
-              borderRadius: "8px",
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-            },
-            success: {
-              iconTheme: {
-                primary: "#0DA500",
-                secondary: "#fff",
-              },
-            },
-            error: {
-              iconTheme: {
-                primary: "#800000",
-                secondary: "#fff",
-              },
-            },
-          }}
-        />
+        <ToasterClient />
       </body>
     </html>
   );
