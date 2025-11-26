@@ -5,8 +5,8 @@ import DashboardNavbar from "@/components/DashboardNavbar";
 import FundingSuccessModal from "@/components/FundingSuccessModal";
 
 interface AddCardModalProps {
-  isOpen: boolean; 
-  onClose: () => void; 
+  isOpen: boolean;
+  onClose: () => void;
   onCardAdded: (cardData: {
     cardNumber: string;
     expiry: string;
@@ -16,22 +16,22 @@ interface AddCardModalProps {
 
 // --- AddCardModal Component ---
 function AddCardModal({ isOpen, onClose, onCardAdded }: AddCardModalProps) {
-  const [cardNumber, setCardNumber] = useState(""); 
-  const [expiry, setExpiry] = useState(""); 
-  const [cvv, setCvv] = useState(""); 
+  const [cardNumber, setCardNumber] = useState("");
+  const [expiry, setExpiry] = useState("");
+  const [cvv, setCvv] = useState("");
 
   if (!isOpen) return null;
 
   const isFormValid =
-    cardNumber.trim().length >= 16 && 
-    expiry.trim().length >= 4 && 
-    cvv.trim().length >= 3; 
+    cardNumber.trim().length >= 16 &&
+    expiry.trim().length >= 4 &&
+    cvv.trim().length >= 3;
 
   const handleSubmit = (e: FormEvent) => {
-    e.preventDefault(); 
-    if (!isFormValid) return; 
-    onCardAdded({ cardNumber, expiry, cvv }); 
-    onClose(); 
+    e.preventDefault();
+    if (!isFormValid) return;
+    onCardAdded({ cardNumber, expiry, cvv });
+    onClose();
   };
 
   // Render the modal overlay and form
@@ -122,15 +122,15 @@ function AddCardModal({ isOpen, onClose, onCardAdded }: AddCardModalProps) {
 
 // --- FundProducer Component ---
 interface FundProducerProps {
-  isOpen: boolean; 
-  onClose: () => void; 
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 export default function FundProducer({ isOpen, onClose }: FundProducerProps) {
-  const [amount, setAmount] = useState(""); 
-  const [selectedCard, setSelectedCard] = useState<any>(null); 
+  const [amount, setAmount] = useState("");
+  const [selectedCard, setSelectedCard] = useState<any>(null);
   const [isAddCardModalOpen, setAddCardModalOpen] = useState(false);
-  const [isSuccessModalOpen, setSuccessModalOpen] = useState(false); 
+  const [isSuccessModalOpen, setSuccessModalOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -148,12 +148,11 @@ export default function FundProducer({ isOpen, onClose }: FundProducerProps) {
   // ensures both amount and card are selected before submission
   const isPaymentFormValid = amount.trim() !== "" && selectedCard !== null;
 
-
   const handlePaymentSubmit = (e: FormEvent) => {
-    e.preventDefault(); 
-    if (!isPaymentFormValid) return; 
+    e.preventDefault();
+    if (!isPaymentFormValid) return;
     console.log("Submitting payment with:", { amount, selectedCard });
-    setSuccessModalOpen(true); 
+    setSuccessModalOpen(true);
   };
 
   return (
@@ -170,9 +169,9 @@ export default function FundProducer({ isOpen, onClose }: FundProducerProps) {
         {/* Main content container */}
         <div className="max-w-2xl mx-auto px-6 md:px-10 py-4 flex flex-col gap-10">
           <div>
-            <h2 className="text-2xl font-semibold">Fund your Account</h2>
+            <h2 className="text-2xl font-semibold">Fund your account</h2>
             <p className="text-gray-700 mt-1">
-              Select or add a card to fund your wallet
+              Select the card you want to fund your wallet from
             </p>
           </div>
 
@@ -182,9 +181,17 @@ export default function FundProducer({ isOpen, onClose }: FundProducerProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {selectedCard ? (
                 // Display selected card with masked number
-                <div className="border border-green-500 rounded-md p-4 bg-green-50 flex flex-col justify-center">
-                  <p className="font-semibold text-green-800">Card Selected:</p>
-                  <p>**** **** **** {selectedCard.cardNumber.slice(-4)}</p>
+                <div className="text-sm border border-gray-300 rounded-md p-2 bg-[url(/card-bg.png)] bg-cover flex flex-col gap-20">
+                  <p className="text-md font-semibold">GTBank</p>
+                  <div className="flex flex-row gap-2">
+                    <Image
+                      src="/mastercard-logo.svg"
+                      alt="mastercard logo"
+                      width={40}
+                      height={30}
+                    />
+                    <p>****{selectedCard.cardNumber.slice(-4)}</p>
+                  </div>
                 </div>
               ) : null}
 
@@ -196,7 +203,7 @@ export default function FundProducer({ isOpen, onClose }: FundProducerProps) {
                 }`}
               >
                 <p className="text-gray-600 font-medium">
-                  {selectedCard ? "Add card" : "Add new card"}
+                  {selectedCard ? "Add new card" : "Add new card"}
                 </p>
                 <Image src="/Add.png" alt="Add" width={24} height={24} />
               </div>
@@ -208,7 +215,7 @@ export default function FundProducer({ isOpen, onClose }: FundProducerProps) {
                 htmlFor="amount"
                 className="block text-sm text-gray-800 mb-1"
               >
-                Enter amount
+                Add amount
               </label>
               <div className="flex items-center border border-[#ABADB2] rounded-sm px-3 py-2 gap-3">
                 <div className="flex items-center gap-2 border border-[#ABADB2] rounded-sm px-2 py-1">
@@ -262,7 +269,7 @@ export default function FundProducer({ isOpen, onClose }: FundProducerProps) {
 
       <FundingSuccessModal
         isOpen={isSuccessModalOpen}
-        onClose={handleSuccessModalClose} 
+        onClose={handleSuccessModalClose}
       />
     </div>
   );
