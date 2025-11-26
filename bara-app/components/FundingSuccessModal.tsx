@@ -19,7 +19,12 @@ export default function FundingSuccessModal({
       <div className="bg-white w-full max-w-2xl rounded-md p-16 py-20 flex flex-col items-center text-center">
         {/* Success Icon */}
         <div className="flex flex-col gap-6 items-center justify-center mb-4 w-full">
-          <Image src="/credit-card.png" alt="Credit Card" width={300} height={150} />
+          <Image
+            src="/credit-card.png"
+            alt="Credit Card"
+            width={300}
+            height={150}
+          />
           <Image
             src="/withdraw-succ.svg"
             alt="Success"
