@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
+
 import { useRouter } from "next/navigation";
 import DashboardNavbar from "@/components/DashboardNavbar";
-import { getUserSession } from "@/utils/tokenManager";
-import { usePageGuard } from "@/app/hooks/usepageguard";
+// import { getUserSession } from "@/utils/tokenManager";
+// import { usePageGuard } from "@/app/hooks/usepageguard";
 
 export default function ProjectsPage() {
   const router = useRouter();
   //const session = getUserSession();
-  usePageGuard();
+  // usePageGuard();
 
   return (
     <main className="min-h-screen bg-white">
