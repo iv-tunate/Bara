@@ -1,48 +1,15 @@
- "use client";
+"use client";
 
-export default function ChatMessages() {
-  const messages = [
-    {
-      id: 1,
-      text: "Let’s discuss this tomorrow. Let's discuss this tomorrow",
-      time: "07:20am",
-      sender: "me",
-    },
-    {
-      id: 2,
-      text: "Let’s discuss this tomorrow. Let’s discuss this tomorrow.",
-      time: "07:20am",
-      sender: "me",
-    },
-    {
-      id: 3,
-      text: "Let’s discuss this tomorrow. Let’s discuss this tomorrow.",
-      time: "07:20am",
-      sender: "other",
-    },
-    {
-      id: 4,
-      text: "Let’s discuss this tomorrow. Let’s discuss this tomorrow.",
-      time: "07:20am",
-      sender: "other",
-    },
-    {
-      id: 5,
-      text: "Let’s discuss this tomorrow. Let’s discuss this tomorrow.",
-      time: "07:20am",
-      sender: "me",
-    },
-    {
-      id: 6,
-      text: "Let’s discuss this tomorrow. Let’s discuss this tomorrow.",
-      time: "07:20am",
-      sender: "me",
-    },
-  ];
+interface Message {
+  id: number;
+  text: string;
+  time: string;
+  sender: "me" | "other";
+}
 
+export default function ChatMessages({ messages }: { messages: Message[] }) {
   return (
     <div className="flex-1 p-6 overflow-y-auto space-y-6">
-      {/* DATE SEPARATOR */}
       <div className="flex justify-center">
         <span className="text-xs bg-[#22242A] text-white px-3 py-1 rounded">
           June 5th, 2024
@@ -50,25 +17,28 @@ export default function ChatMessages() {
       </div>
 
       {messages.map((msg) => {
-        const isother = msg.sender === "other";
+        const isOther = msg.sender === "other";
 
         return (
           <div
             key={msg.id}
-            className={`flex ${isother ? "justify-start" : "justify-end"}`}
+            className={`flex ${isOther ? "justify-start" : "justify-end"}`}
           >
             <div
-              className={`
-                max-w-[60%] p-3 border border-[#ABADB2] bg-[#DADBDD] text-[14px] leading-tight
+              className={` p-3 text-[14px] leading-tight
                 ${
-                  isother
-                    ? "rounded-xl rounded-tl-none"
-                    : "rounded-xl rounded-tr-none"
-                }
-              `}
+                  isOther
+                    ? "bg-[#FFFFFF] border border-[#DADBDD] text-[#333740] rounded-md"
+                    : "bg-[#F5F5F5] text-[#333740] rounded-md border border-[#DADBDD]"
+                }`}
             >
               <p>{msg.text}</p>
-              <p className="text-right text-[11px] text-[#ABADB2] mt-1">
+
+              <p
+                className={`text-right text-[11px] mt-1 
+                  ${isOther ? "text-[#6F7073]" : "text-white/80"}
+                `}
+              >
                 {msg.time}
               </p>
             </div>
