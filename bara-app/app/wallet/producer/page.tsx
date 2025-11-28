@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import DashboardNavbar from "@/components/DashboardNavbar";
-import WithdrawFunds from "@/components/WithdrawFunds";
+import FundProducer from "@/components/FundProducer";
 // import { getUserSession } from "@/utils/tokenManager";
 // import { usePageGuard } from "@/app/hooks/usepageguard";
 
@@ -12,7 +12,7 @@ export default function WalletPage() {
 
   // const userSession = getUserSession();
   // usePageGuard();
-  
+
   // const user = {
   //   name: userSession?.name,
   //   email: userSession?.email,
@@ -169,7 +169,7 @@ export default function WalletPage() {
         </div>
       </div>
       {/* Withdraw Modal */}
-      <WithdrawFunds isOpen={isModalOpen} onClose={() => setModalOpen(false)} />
+      <FundProducer isOpen={isModalOpen} onClose={() => setModalOpen(false)} />
     </main>
   );
 }
