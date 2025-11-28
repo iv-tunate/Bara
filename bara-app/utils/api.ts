@@ -148,6 +148,11 @@ const API_ENDPOINTS = {
     `/api/producers/${producerId}/scripts/transactions:initiate`,
   SCRIPTS_BY_WRITER: (writerId: string, pageNumber: number, pageSize: number) =>
     `/api/scripts/writer/${writerId}/${pageNumber}/${pageSize}`,
+  CREATE_CHAT: "/api/v1/chats",
+  GET_CHAT_HISTORY: (chatId:string) => `/api/v1/chats/${chatId}/messages`,
+  SEND_MESSAGE: (chatId:string) => `/api/v1/chats/${chatId}/messages`,
+  MARK_MESSAGES_READ: (chatId:string) => `/api/v1/chats/${chatId}/messages/mark-read`,
+  CLOSE_CHAT: (chatId: string) => `/api/v1/chats/${chatId}/close`,
 };
 
 export const api = {

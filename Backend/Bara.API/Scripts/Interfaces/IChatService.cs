@@ -22,8 +22,10 @@ namespace Bara.API.Scripts.Interfaces
         /// </summary>
         /// <param name="userId">The ID of the user requesting the chat history</param>
         /// <param name="chatId">The ID of the chat to retrieve</param>
+        /// <param name="page">The page number for pagination (default is 1)</param>
+        /// <param name="pageSize">The number of messages per page (default is 20)</param>
         /// <returns>A response containing the complete chat history</returns>
-        Task<ResponseDetail<ChatHistoryResponse>> GetChatHistoryAsync(Guid userId, Guid chatId);
+        Task<ResponseDetail<List<ChatMessageResponse>>> GetChatHistoryAsync(Guid userId, Guid chatId, int page = 1, int pageSize = 20);
 
         /// <summary>
         /// Marks all unread messages in a chat as read for the requesting user.
@@ -36,14 +38,8 @@ namespace Bara.API.Scripts.Interfaces
         /// <summary>
         /// Creates a new chat for a script transaction.
         /// </summary>
-        /// <param name="scriptId">The ID of the script</param>
-        /// <param name="scriptTitle">The title of the script</param>
-        /// <param name="producerId">The ID of the producer</param>
-        /// <param name="producerName">The name of the producer</param>
-        /// <param name="writerId">The ID of the writer</param>
-        /// <param name="writerName">The name of the writer</param>
         /// <returns>A response containing the created chat ID</returns>
-        Task<ResponseDetail<Guid>> CreateChatAsync(Guid scriptId, string scriptTitle, Guid producerId, string producerName, Guid writerId, string writerName);
+        Task<ResponseDetail<Guid>> CreateChatAsync(CreateChatRequest request);
 
         /// <summary>
         /// Closes a chat when a script transaction is completed or cancelled.

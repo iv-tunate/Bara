@@ -1,10 +1,10 @@
 using Bara.API.DataContext;
 using Bara.API.Scripts.DTOs.ChatDTOs;
+using Bara.API.Scripts.Events;
 using Bara.API.Scripts.Interfaces;
 using Bara.API.Scripts.Models.ScriptRelatedChats;
-using Bara.API.Services.SignalR;
+using Bara.API.Utilities.Interfaces;
 using Bara.API.Utilities.ToolKit;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bara.API.Scripts.Repositories
@@ -16,62 +16,82 @@ namespace Bara.API.Scripts.Repositories
     {
         private readonly IChatRepository chatRepository;
         private readonly BaraContext dbContext;
+        private readonly INotificationService notificationService;
+        private readonly IChatValidator validator;
+        private readonly ISanitizationService sanitizationService;
+        private readonly IRateLimitService rateLimitService;
         private readonly ILogger<ChatService> logger;
         private readonly LogHelper<ChatService> logHelper;
-        private readonly IHubContext<NotificationHub> notificationHub;
 
         public ChatService(
             IChatRepository chatRepository,
             BaraContext dbContext,
+            INotificationService notificationService,
+            IChatValidator validator,
+            ISanitizationService sanitizationService,
+            IRateLimitService rateLimitService,
             ILogger<ChatService> logger,
-            LogHelper<ChatService> logHelper,
-            IHubContext<NotificationHub> notificationHub)
+            LogHelper<ChatService> logHelper)
         {
             this.chatRepository = chatRepository;
             this.dbContext = dbContext;
+            this.notificationService = notificationService;
+            this.validator = validator;
+            this.sanitizationService = sanitizationService;
+            this.rateLimitService = rateLimitService;
             this.logger = logger;
             this.logHelper = logHelper;
-            this.notificationHub = notificationHub;
         }
 
-        /// <summary>
-        /// Sends a message in a script transaction chat.
-        /// </summary>
-        /// <param name="userId">The ID of the user sending the message</param>
-        /// <param name="chatId">The ID of the chat to send the message to</param>
-        /// <param name="request">The message content and optional attachment</param>
-        /// <returns>A response containing the sent message details</returns>
-        public async Task<ResponseDetail<ChatMessageResponse>> SendMessageAsync(Guid userId, Guid chatId, SendMessageRequest request)
+        public async Task<ResponseDetail<ChatMessageResponse>> SendMessageAsync(
+            Guid userId, Guid chatId, SendMessageRequest request)
         {
             var correlationId = Guid.NewGuid();
 
             try
             {
-                // Validate user has access to this chat
+                var isAllowed = rateLimitService.IsAllowed(userId, chatId);
+                if (!isAllowed)
+                {
+                    logger.LogWarning("Rate limit exceeded - UserId: {UserId}, ChatId: {ChatId}, CorrelationId: {CorrelationId}",
+                        userId, chatId, correlationId);
+                    return ResponseDetail<ChatMessageResponse>.Failed("Too many messages. Please wait before sending another.", 429);
+                }
+
+                var validation = validator.ValidateSendMessageRequest(request);
+                if (!validation.IsValid)
+                {
+                    logger.LogWarning("Invalid message request - CorrelationId: {CorrelationId}, Error: {Error}",
+                        correlationId, validation.Message);
+                    return ResponseDetail<ChatMessageResponse>.Failed(validation.Message, validation.StatusCode);
+                }
+
                 var hasAccess = await chatRepository.UserHasAccessToChatAsync(chatId, userId);
                 if (!hasAccess)
                 {
-                    logger.LogWarning("User {UserId} attempted to send message to chat {ChatId} without access - CorrelationId: {CorrelationId}",
+                    logger.LogWarning(
+                        "User {UserId} attempted to send message to chat {ChatId} without access - CorrelationId: {CorrelationId}",
                         userId, chatId, correlationId);
                     return ResponseDetail<ChatMessageResponse>.Failed("Access denied to this chat", 403);
                 }
 
-                // Get chat to validate it exists and is not closed
                 var chat = await chatRepository.GetChatByIdAsync(chatId);
-                if (chat == null)
+                var existsValidation = validator.ValidateChatExists(chat);
+                if (!existsValidation.IsValid)
                 {
                     logger.LogWarning("Chat {ChatId} not found - CorrelationId: {CorrelationId}", chatId, correlationId);
-                    return ResponseDetail<ChatMessageResponse>.Failed("Chat not found", 404);
+                    return ResponseDetail<ChatMessageResponse>.Failed(existsValidation.Message, existsValidation.StatusCode);
                 }
 
-                if (chat.IsClosed)
+                var closedValidation = validator.ValidateChatNotClosed(chat);
+                if (!closedValidation.IsValid)
                 {
-                    logger.LogWarning("User {UserId} attempted to send message to closed chat {ChatId} - CorrelationId: {CorrelationId}",
+                    logger.LogWarning(
+                        "User {UserId} attempted to send message to closed chat {ChatId} - CorrelationId: {CorrelationId}",
                         userId, chatId, correlationId);
-                    return ResponseDetail<ChatMessageResponse>.Failed("Cannot send messages to a closed chat", 400);
+                    return ResponseDetail<ChatMessageResponse>.Failed(closedValidation.Message, closedValidation.StatusCode);
                 }
 
-                // Get sender information
                 var sender = await dbContext.Users
                     .Where(u => u.Id == userId)
                     .Select(u => new { u.Id, u.FirstName, u.LastName })
@@ -83,22 +103,24 @@ namespace Bara.API.Scripts.Repositories
                     return ResponseDetail<ChatMessageResponse>.Failed("Sender not found", 404);
                 }
 
-                // Create the message
+                var sanitizedContent = sanitizationService.SanitizeHtml(request.Content);
+                var sanitizedUrl = string.IsNullOrEmpty(request.AttachmentUrl)
+                    ? null
+                    : sanitizationService.SanitizeUrl(request.AttachmentUrl);
+
                 var message = new ChatMessage
                 {
                     ChatId = chatId,
                     UserId = userId,
                     SenderName = $"{sender.FirstName} {sender.LastName}",
-                    Content = request.Content,
-                    AttachmentUrl = request.AttachmentUrl,
+                    Content = sanitizedContent,
+                    AttachmentUrl = sanitizedUrl,
                     SentAt = DateTimeOffset.UtcNow,
                     IsRead = false
                 };
 
-                // Save the message
                 var savedMessage = await chatRepository.AddMessageAsync(message);
 
-                // Create response
                 var response = new ChatMessageResponse
                 {
                     MessageId = savedMessage.Id,
@@ -110,17 +132,20 @@ namespace Bara.API.Scripts.Repositories
                     IsRead = savedMessage.IsRead
                 };
 
-                // Send SignalR notification to the other party
                 var recipientId = userId == chat.ProducerId ? chat.WriterId : chat.ProducerId;
-                await notificationHub.Clients.User(recipientId.ToString())
-                    .SendAsync("MessageReceived", new
-                    {
-                        ChatId = chatId,
-                        Message = response,
-                        chat.ScriptTitle
-                    });
+                var messageSentEvent = new MessageSentEvent
+                {
+                    ChatId = chatId,
+                    SenderId = userId,
+                    RecipientId = recipientId,
+                    Message = response,
+                    ScriptTitle = chat.ScriptTitle
+                };
 
-                logger.LogInformation("Message sent successfully - CorrelationId: {CorrelationId}, ChatId: {ChatId}, SenderId: {SenderId}",
+                await notificationService.NotifyMessageSentAsync(messageSentEvent);
+
+                logger.LogInformation(
+                    "Message sent successfully - CorrelationId: {CorrelationId}, ChatId: {ChatId}, SenderId: {SenderId}",
                     correlationId, chatId, userId);
 
                 return ResponseDetail<ChatMessageResponse>.Successful(response, "Message sent successfully");
@@ -133,132 +158,105 @@ namespace Bara.API.Scripts.Repositories
             }
         }
 
-        /// <summary>
-        /// Retrieves the chat history for a script transaction.
-        /// </summary>
-        /// <param name="userId">The ID of the user requesting the chat history</param>
-        /// <param name="chatId">The ID of the chat to retrieve</param>
-        /// <returns>A response containing the complete chat history</returns>
-        public async Task<ResponseDetail<ChatHistoryResponse>> GetChatHistoryAsync(Guid userId, Guid chatId)
+        public async Task<ResponseDetail<List<ChatMessageResponse>>> GetChatHistoryAsync(
+            Guid userId, Guid chatId, int page = 1, int pageSize = 20)
         {
             var correlationId = Guid.NewGuid();
 
             try
             {
-                // Validate user has access to this chat
                 var hasAccess = await chatRepository.UserHasAccessToChatAsync(chatId, userId);
                 if (!hasAccess)
                 {
-                    logger.LogWarning("User {UserId} attempted to access chat {ChatId} without permission - CorrelationId: {CorrelationId}",
+                    logger.LogWarning(
+                        "User {UserId} attempted to access chat {ChatId} without permission - CorrelationId: {CorrelationId}",
                         userId, chatId, correlationId);
-                    return ResponseDetail<ChatHistoryResponse>.Failed("Access denied to this chat", 403);
+                    return ResponseDetail<List<ChatMessageResponse>>.Failed("Access denied to this chat", 403);
                 }
 
-                // Get chat with messages
                 var chat = await chatRepository.GetChatByIdAsync(chatId);
                 if (chat == null)
                 {
                     logger.LogWarning("Chat {ChatId} not found - CorrelationId: {CorrelationId}", chatId, correlationId);
-                    return ResponseDetail<ChatHistoryResponse>.Failed("Chat not found", 404);
+                    return ResponseDetail<List<ChatMessageResponse>>.Failed("Chat not found", 404);
                 }
 
-                // Get unread count for this user
-                var unreadCount = await chatRepository.GetUnreadMessageCountAsync(chatId, userId);
+                int skip = (page - 1) * pageSize;
+                int totalMessages = chat.Messages.Count;
+                int totalPages = (int)Math.Ceiling((double)totalMessages / pageSize);
 
-                // Map messages to response DTOs
-                var messages = chat.Messages.Select(m => new ChatMessageResponse
-                {
-                    MessageId = m.Id,
-                    SenderId = m.UserId,
-                    SenderName = m.SenderName,
-                    Content = m.Content,
-                    AttachmentUrl = m.AttachmentUrl,
-                    SentAt = m.SentAt,
-                    IsRead = m.IsRead
-                }).ToList();
-
-                // Create response
-                var response = new ChatHistoryResponse
-                {
-                    ChatId = chat.Id,
-                    ScriptTitle = chat.ScriptTitle,
-                    Messages = messages,
-                    UnreadCount = unreadCount,
-                    IsClosed = chat.IsClosed,
-                    ProducerId = chat.ProducerId,
-                    ProducerName = chat.ProducerName,
-                    WriterId = chat.WriterId,
-                    WriterName = chat.WriterName
-                };
-
-                // Mark messages as read for this user
-                await chatRepository.MarkMessagesAsReadAsync(chatId, userId);
-
-                // Send SignalR notification about read status
-                var otherUserId = userId == chat.ProducerId ? chat.WriterId : chat.ProducerId;
-                await notificationHub.Clients.User(otherUserId.ToString())
-                    .SendAsync("MessagesRead", new
+                var paginatedMessages = chat.Messages
+                    .OrderBy(m => m.SentAt)
+                    .Skip(skip)
+                    .Take(pageSize)
+                    .Select(m => new ChatMessageResponse
                     {
-                        ChatId = chatId,
-                        ReadByUserId = userId
-                    });
+                        MessageId = m.Id,
+                        SenderId = m.UserId,
+                        SenderName = m.SenderName,
+                        Content = m.Content,
+                        AttachmentUrl = m.AttachmentUrl,
+                        SentAt = m.SentAt,
+                        IsRead = m.IsRead
+                    })
+                    .ToList();
 
-                logger.LogInformation("Chat history retrieved successfully - CorrelationId: {CorrelationId}, ChatId: {ChatId}, UserId: {UserId}",
-                    correlationId, chatId, userId);
+                logger.LogInformation(
+                    "Chat history retrieved successfully - CorrelationId: {CorrelationId}, ChatId: {ChatId}, UserId: {UserId}, Page: {Page}, PageSize: {PageSize}, Total: {Total}",
+                    correlationId, chatId, userId, page, pageSize, totalMessages);
 
-                return ResponseDetail<ChatHistoryResponse>.Successful(response, "Chat history retrieved successfully");
+                return ResponseDetail<List<ChatMessageResponse>>.SuccessfulPaginatedResponse(
+                    paginatedMessages,
+                    totalMessages,
+                    totalPages,
+                    page,
+                    "Chat history retrieved successfully");
             }
             catch (Exception ex)
             {
                 logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name,
                     $"While retrieving chat history - CorrelationId: {correlationId}, ChatId: {chatId}, UserId: {userId}");
-                return ResponseDetail<ChatHistoryResponse>.Failed("Failed to retrieve chat history", 500);
+                return ResponseDetail<List<ChatMessageResponse>>.Failed("Failed to retrieve chat history", 500);
             }
         }
 
-        /// <summary>
-        /// Marks all unread messages in a chat as read for the requesting user.
-        /// </summary>
-        /// <param name="userId">The ID of the user marking messages as read</param>
-        /// <param name="chatId">The ID of the chat to mark messages as read</param>
-        /// <returns>A response indicating success or failure</returns>
         public async Task<ResponseDetail<bool>> MarkMessagesAsReadAsync(Guid userId, Guid chatId)
         {
             var correlationId = Guid.NewGuid();
 
             try
             {
-                // Validate user has access to this chat
                 var hasAccess = await chatRepository.UserHasAccessToChatAsync(chatId, userId);
                 if (!hasAccess)
                 {
-                    logger.LogWarning("User {UserId} attempted to mark messages as read in chat {ChatId} without access - CorrelationId: {CorrelationId}",
+                    logger.LogWarning(
+                        "User {UserId} attempted to mark messages as read in chat {ChatId} without access - CorrelationId: {CorrelationId}",
                         userId, chatId, correlationId);
                     return ResponseDetail<bool>.Failed("Access denied to this chat", 403);
                 }
 
-                // Mark messages as read
                 var markedCount = await chatRepository.MarkMessagesAsReadAsync(chatId, userId);
 
                 if (markedCount > 0)
                 {
-                    // Get chat info for SignalR notification
                     var chat = await chatRepository.GetChatByIdAsync(chatId);
                     if (chat != null)
                     {
-                        // Send SignalR notification to the other party
                         var otherUserId = userId == chat.ProducerId ? chat.WriterId : chat.ProducerId;
-                        await notificationHub.Clients.User(otherUserId.ToString())
-                            .SendAsync("MessagesRead", new
-                            {
-                                ChatId = chatId,
-                                ReadByUserId = userId,
-                                MarkedCount = markedCount
-                            });
+                        var messagesReadEvent = new MessagesReadEvent
+                        {
+                            ChatId = chatId,
+                            UserId = userId,
+                            OtherUserId = otherUserId,
+                            MarkedCount = markedCount
+                        };
+
+                        await notificationService.NotifyMessagesReadAsync(messagesReadEvent);
                     }
                 }
 
-                logger.LogInformation("Messages marked as read - CorrelationId: {CorrelationId}, ChatId: {ChatId}, UserId: {UserId}, Count: {Count}",
+                logger.LogInformation(
+                    "Messages marked as read - CorrelationId: {CorrelationId}, ChatId: {ChatId}, UserId: {UserId}, Count: {Count}",
                     correlationId, chatId, userId, markedCount);
 
                 return ResponseDetail<bool>.Successful(true, $"{markedCount} messages marked as read");
@@ -271,101 +269,80 @@ namespace Bara.API.Scripts.Repositories
             }
         }
 
-        /// <summary>
-        /// Creates a new chat for a script transaction.
-        /// </summary>
-        /// <param name="scriptId">The ID of the script</param>
-        /// <param name="scriptTitle">The title of the script</param>
-        /// <param name="producerId">The ID of the producer</param>
-        /// <param name="producerName">The name of the producer</param>
-        /// <param name="writerId">The ID of the writer</param>
-        /// <param name="writerName">The name of the writer</param>
-        /// <returns>A response containing the created chat ID</returns>
-        public async Task<ResponseDetail<Guid>> CreateChatAsync(Guid scriptId, string scriptTitle, Guid producerId, string producerName, Guid writerId, string writerName)
+        public async Task<ResponseDetail<Guid>> CreateChatAsync(CreateChatRequest request)
         {
             var correlationId = Guid.NewGuid();
 
             try
             {
-                // Check if chat already exists for these participants
-                var existingChat = await chatRepository.GetChatByParticipantsAsync(scriptId, producerId, writerId);
+                var existingChat = await chatRepository.GetChatByParticipantsAsync(request.ScriptId, request.ProducerId, request.WriterId);
                 if (existingChat != null)
                 {
-                    logger.LogInformation("Chat already exists - CorrelationId: {CorrelationId}, ChatId: {ChatId}",
+                    logger.LogInformation(
+                        "Chat already exists - CorrelationId: {CorrelationId}, ChatId: {ChatId}",
                         correlationId, existingChat.Id);
                     return ResponseDetail<Guid>.Successful(existingChat.Id, "Chat already exists");
                 }
 
-                // Create new chat
                 var chat = new Chat
                 {
-                    ScriptId = scriptId,
-                    ScriptTitle = scriptTitle,
-                    ProducerId = producerId,
-                    ProducerName = producerName,
-                    WriterId = writerId,
-                    WriterName = writerName,
-                    IsClosed = false
+                    ScriptId = request.ScriptId,
+                    ScriptTitle = request.ScriptTitle,
+                    ProducerId = request.ProducerId,
+                    ProducerName = request.ProducerName,
+                    WriterId = request.WriterId,
+                    WriterName = request.WriterName,
+                    IsClosed = false,
+                    CreatedAt = DateTimeOffset.UtcNow
                 };
 
                 var createdChat = await chatRepository.CreateChatAsync(chat);
 
-                logger.LogInformation("Chat created successfully - CorrelationId: {CorrelationId}, ChatId: {ChatId}, ScriptId: {ScriptId}",
-                    correlationId, createdChat.Id, scriptId);
+                logger.LogInformation(
+                    "Chat created successfully - CorrelationId: {CorrelationId}, ChatId: {ChatId}, ScriptId: {ScriptId}",
+                    correlationId, createdChat.Id, request.ScriptId);
 
                 return ResponseDetail<Guid>.Successful(createdChat.Id, "Chat created successfully");
             }
             catch (Exception ex)
             {
                 logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name,
-                    $"While creating chat - CorrelationId: {correlationId}, ScriptId: {scriptId}, ProducerId: {producerId}, WriterId: {writerId}");
+                    $"While creating chat - CorrelationId: {correlationId}, ScriptId: {request.ScriptId}");
                 return ResponseDetail<Guid>.Failed("Failed to create chat", 500);
             }
         }
 
-        /// <summary>
-        /// Closes a chat when a script transaction is completed or cancelled.
-        /// </summary>
-        /// <param name="chatId">The ID of the chat to close</param>
-        /// <returns>A response indicating success or failure</returns>
         public async Task<ResponseDetail<bool>> CloseChatAsync(Guid chatId)
         {
             var correlationId = Guid.NewGuid();
 
             try
             {
-                // Get chat info before closing for SignalR notification
                 var chat = await chatRepository.GetChatByIdAsync(chatId);
                 if (chat == null)
                 {
-                    logger.LogWarning("Chat {ChatId} not found for closing - CorrelationId: {CorrelationId}", chatId, correlationId);
+                    logger.LogWarning("Chat {ChatId} not found for closing - CorrelationId: {CorrelationId}",
+                        chatId, correlationId);
                     return ResponseDetail<bool>.Failed("Chat not found", 404);
                 }
 
-                // Close the chat
                 var success = await chatRepository.CloseChatAsync(chatId);
                 if (!success)
                 {
-                    logger.LogWarning("Failed to close chat {ChatId} - CorrelationId: {CorrelationId}", chatId, correlationId);
+                    logger.LogWarning("Failed to close chat {ChatId} - CorrelationId: {CorrelationId}",
+                        chatId, correlationId);
                     return ResponseDetail<bool>.Failed("Failed to close chat", 500);
                 }
 
-                // Send SignalR notifications to both participants
-                await notificationHub.Clients.User(chat.ProducerId.ToString())
-                    .SendAsync("ChatClosed", new
-                    {
-                        ChatId = chatId,
-                        chat.ScriptTitle,
-                        ClosedAt = DateTimeOffset.UtcNow
-                    });
+                var chatClosedEvent = new ChatClosedEvent
+                {
+                    ChatId = chatId,
+                    ProducerId = chat.ProducerId,
+                    WriterId = chat.WriterId,
+                    ScriptTitle = chat.ScriptTitle
+                };
 
-                await notificationHub.Clients.User(chat.WriterId.ToString())
-                    .SendAsync("ChatClosed", new
-                    {
-                        ChatId = chatId,
-                        chat.ScriptTitle,
-                        ClosedAt = DateTimeOffset.UtcNow
-                    });
+                await notificationService.NotifyChatClosedAsync(chatClosedEvent);
 
                 logger.LogInformation("Chat closed successfully - CorrelationId: {CorrelationId}, ChatId: {ChatId}",
                     correlationId, chatId);

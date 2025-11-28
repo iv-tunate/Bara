@@ -621,24 +621,24 @@ namespace Bara.API.Scripts.Repositories
 
                 await dbContext.ScriptTransactions.AddAsync(scriptTransaction);
 
-                var chatResult = await chatService.CreateChatAsync(
-                    scriptId: request.ScriptId,
-                    scriptTitle: script.Title,
-                    producerId: producerId,
-                    producerName: $"{producer.FirstName} {producer.LastName}",
-                    writerId: request.WriterId,
-                    writerName: $"{writer.FirstName} {writer.LastName}"
-                );
+                //var chatResult = await chatService.CreateChatAsync(
+                //    scriptId: request.ScriptId,
+                //    scriptTitle: script.Title,
+                //    producerId: producerId,
+                //    producerName: $"{producer.FirstName} {producer.LastName}",
+                //    writerId: request.WriterId,
+                //    writerName: $"{writer.FirstName} {writer.LastName}"
+                //);
 
-                if (!chatResult.IsSuccess)
-                {
-                    logger.LogWarning("Failed to create chat - CorrelationId: {CorrelationId}, Error: {Error}", correlationId, chatResult.Message);
-                }
-                else
-                {
-                    scriptTransaction.ScriptComments = await dbContext.Chats.FirstOrDefaultAsync(c => c.Id == chatResult.Data);
-                    logger.LogInformation("Chat created for script transaction - CorrelationId: {CorrelationId}, ChatId: {ChatId}", correlationId, chatResult.Data);
-                }
+                //if (!chatResult.IsSuccess)
+                //{
+                //    logger.LogWarning("Failed to create chat - CorrelationId: {CorrelationId}, Error: {Error}", correlationId, chatResult.Message);
+                //}
+                //else
+                //{
+                //    scriptTransaction.ScriptComments = await dbContext.Chats.FirstOrDefaultAsync(c => c.Id == chatResult.Data);
+                //    logger.LogInformation("Chat created for script transaction - CorrelationId: {CorrelationId}, ChatId: {ChatId}", correlationId, chatResult.Data);
+                //}
 
                 var fundsLocked = await walletService.LockFundsForScriptTransactionAsync(producerId, request.WriterId, script.Price, fee);
                 if (!fundsLocked)

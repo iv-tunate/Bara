@@ -402,49 +402,368 @@ This section describes all database models and enums used throughout the API.
 
 - Belongs to one `User`
 
-#### Chat Model
+#### Chat
 
 **Description:** Chat conversations between producers and writers for script transactions.
 
-| Property       | Type   | Required | Description                  |
-| -------------- | ------ | -------- | ---------------------------- |
-| `Id`           | Guid   | Yes      | Unique identifier            |
-| `ScriptId`     | Guid   | Yes      | Foreign key to Script        |
-| `ScriptTitle`  | string | No       | Script title (denormalized)  |
-| `ProducerId`   | Guid   | Yes      | Foreign key to Producer      |
-| `ProducerName` | string | No       | Producer name (denormalized) |
-| `WriterId`     | Guid   | Yes      | Foreign key to Writer        |
-| `WriterName`   | string | No       | Writer name (denormalized)   |
+## Endpoints
 
-**Relationships:**
+### 1. Create Chat
 
-- Belongs to one `Script`
-- Belongs to one `Producer`
-- Belongs to one `Writer`
-- Has many `ChatMessage`
+**Endpoint:** `POST /api/v1/chats`
 
-#### ChatMessage Model
+**Authentication:** Required (Bearer Token)
+
+**Description:** Creates a new chat for a script transaction between a producer and writer.
+
+**Request Body:**
+```json
+{
+  "scriptId": "550e8400-e29b-41d4-a716-446655440000",
+  "scriptTitle": "The Great Adventure",
+  "producerId": "660e8400-e29b-41d4-a716-446655440000",
+  "producerName": "John Producer",
+  "writerId": "770e8400-e29b-41d4-a716-446655440000",
+  "writerName": "Jane Writer"
+}
+```
+
+**Response (Success - 201):**
+```json
+{
+  "isSuccess": true,
+  "message": "Chat created successfully",
+  "data": "880e8400-e29b-41d4-a716-446655440000",
+  "statusCode": 201
+}
+```
+
+**Response (Error - 400):**
+```json
+{
+  "isSuccess": false,
+  "message": "Request body cannot be empty",
+  "statusCode": 400,
+  "error": "BadRequest"
+}
+```
+
+---
+
+### 2. Send Message
+
+**Endpoint:** `POST /api/v1/chats/{chatId}/messages`
+
+**Authentication:** Required (Bearer Token)
+
+**Description:** Sends a message in a script transaction chat. The sender is determined from the authenticated user.
+
+**URL Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `chatId`  | Guid | The ID of the chat |
+
+**Request Body:**
+```json
+{
+  "content": "This is a message about the script revisions.",
+  "attachmentUrl": "https://example.com/document.pdf"
+}
+```
+
+**Content Constraints:**
+- `content`: Required, 1-5000 characters
+- `attachmentUrl`: Optional, must be valid HTTP/HTTPS URL, max 2048 characters
+
+**Response (Success - 200):**
+```json
+{
+  "isSuccess": true,
+  "message": "Message sent successfully",
+  "data": {
+    "messageId": "990e8400-e29b-41d4-a716-446655440000",
+    "senderId": "660e8400-e29b-41d4-a716-446655440000",
+    "senderName": "John Producer",
+    "content": "This is a message about the script revisions.",
+    "attachmentUrl": "https://example.com/document.pdf",
+    "sentAt": "2024-01-15T10:30:00Z",
+    "isRead": false
+  },
+  "statusCode": 200
+}
+```
+
+**Response (Rate Limited - 429):**
+```json
+{
+  "isSuccess": false,
+  "message": "Too many messages. Please wait before sending another.",
+  "statusCode": 429,
+  "error": "TooManyRequests"
+}
+```
+
+**Response (Access Denied - 403):**
+```json
+{
+  "isSuccess": false,
+  "message": "Access denied to this chat",
+  "statusCode": 403,
+  "error": "Forbidden"
+}
+```
+
+**Response (Chat Closed - 400):**
+```json
+{
+  "isSuccess": false,
+  "message": "Cannot send messages to a closed chat",
+  "statusCode": 400,
+  "error": "BadRequest"
+}
+```
+
+---
+
+### 3. Get Chat History
+
+**Endpoint:** `GET /api/v1/chats/{chatId}/messages`
+
+**Authentication:** Required (Bearer Token)
+
+**Description:** Retrieves paginated chat history for the authenticated user. Messages are automatically marked as read.
+
+**URL Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `chatId`  | Guid | The ID of the chat |
+
+**Query Parameters:**
+
+| Parameter  | Type | Default | Required | Description |
+|-----------|------|---------|----------|-------------|
+| `page`    | int  | 1       | No       | Page number (must be > 0) |
+| `pageSize`| int  | 20      | No       | Items per page (1-100) |
+
+**Example Request:**
+```
+GET /api/v1/chats/550e8400-e29b-41d4-a716-446655440000/messages?page=1&pageSize=20
+```
+
+**Response (Success - 200):**
+```json
+{
+  "isSuccess": true,
+  "message": "Chat history retrieved successfully",
+  "data": [
+    {
+      "messageId": "990e8400-e29b-41d4-a716-446655440000",
+      "senderId": "660e8400-e29b-41d4-a716-446655440000",
+      "senderName": "John Producer",
+      "content": "What are your thoughts on this script?",
+      "attachmentUrl": null,
+      "sentAt": "2024-01-15T09:00:00Z",
+      "isRead": true
+    },
+    {
+      "messageId": "aa0e8400-e29b-41d4-a716-446655440000",
+      "senderId": "770e8400-e29b-41d4-a716-446655440000",
+      "senderName": "Jane Writer",
+      "content": "I think it needs some revisions in Act 2.",
+      "attachmentUrl": "https://example.com/revisions.pdf",
+      "sentAt": "2024-01-15T10:00:00Z",
+      "isRead": true
+    }
+  ],
+  "statusCode": 200,
+  "totalCount": 25,
+  "totalPages": 2,
+  "pageNumber": 1
+}
+```
+
+**Response (Access Denied - 403):**
+```json
+{
+  "isSuccess": false,
+  "message": "Access denied to this chat",
+  "statusCode": 403,
+  "error": "Forbidden"
+}
+```
+
+---
+
+### 4. Mark Messages as Read
+
+**Endpoint:** `PATCH /api/v1/chats/{chatId}/messages/mark-read`
+
+**Authentication:** Required (Bearer Token)
+
+**Description:** Marks all unread messages in a chat as read for the authenticated user. Notifies the other participant.
+
+**URL Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `chatId`  | Guid | The ID of the chat |
+
+**Request Body:** Empty (no body required)
+
+**Response (Success - 200):**
+```json
+{
+  "isSuccess": true,
+  "message": "5 messages marked as read",
+  "data": true,
+  "statusCode": 200
+}
+```
+
+**Response (Access Denied - 403):**
+```json
+{
+  "isSuccess": false,
+  "message": "Access denied to this chat",
+  "statusCode": 403,
+  "error": "Forbidden"
+}
+```
+
+---
+
+### 5. Close Chat
+
+**Endpoint:** `PATCH /api/v1/chats/{chatId}/close`
+
+**Authentication:** Required (Bearer Token)
+
+**Description:** Closes a chat when a script transaction is completed or cancelled. Both participants are notified via SignalR.
+
+**URL Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `chatId`  | Guid | The ID of the chat |
+
+**Request Body:** Empty (no body required)
+
+**Response (Success - 200):**
+```json
+{
+  "isSuccess": true,
+  "message": "Chat closed successfully",
+  "data": true,
+  "statusCode": 200
+}
+```
+
+**Response (Chat Not Found - 404):**
+```json
+{
+  "isSuccess": false,
+  "message": "Chat not found",
+  "statusCode": 404,
+  "error": "NotFound"
+}
+```
+
+---
+
+## Models
+
+### Chat Model
+
+**Description:** Chat conversations between producers and writers for script transactions.
+
+| Property       | Type   | Required | Max Length | Description                  |
+|---|---|---|---|---|
+| `Id`           | Guid   | Yes      | -          | Unique identifier            |
+| `ScriptId`     | Guid   | Yes      | -          | Foreign key to Script        |
+| `ScriptTitle`  | string | Yes      | 500        | Script title (denormalized)  |
+| `ProducerId`   | Guid   | Yes      | -          | Foreign key to Producer      |
+| `ProducerName` | string | Yes      | 255        | Producer name (denormalized) |
+| `WriterId`     | Guid   | Yes      | -          | Foreign key to Writer        |
+| `WriterName`   | string | Yes      | 255        | Writer name (denormalized)   |
+| `IsClosed`     | bool   | Yes      | -          | Whether chat is closed       |
+| `CreatedAt`    | DateTimeOffset | Yes | -          | Chat creation timestamp      |
+
+---
+
+### ChatMessage Model
 
 **Description:** Individual messages within chat conversations.
 
-| Property        | Type           | Required | Description                   |
-| --------------- | -------------- | -------- | ----------------------------- |
-| `Id`            | Guid           | Yes      | Unique identifier             |
-| `ChatId`        | Guid           | Yes      | Foreign key to Chat           |
-| `UserId`        | Guid           | Yes      | Foreign key to User (sender)  |
-| `SenderName`    | string         | No       | Sender name (denormalized)    |
-| `Content`       | string         | No       | Message content               |
-| `AttachmentUrl` | string         | No       | Optional file attachment URL  |
-| `SentAt`        | DateTimeOffset | No       | Message timestamp             |
-| `IsRead`        | boolean        | No       | Whether message has been read |
+| Property        | Type           | Required | Max Length | Description                   |
+|---|---|---|---|---|
+| `Id`            | Guid           | Yes      | -          | Unique identifier             |
+| `ChatId`        | Guid           | Yes      | -          | Foreign key to Chat           |
+| `UserId`        | Guid           | Yes      | -          | User ID (sender)              |
+| `SenderName`    | string         | Yes      | 255        | Sender name (denormalized)    |
+| `Content`       | string         | Yes      | 5000       | Message content (HTML-encoded)|
+| `AttachmentUrl` | string         | No       | 2048       | Optional file attachment URL  |
+| `SentAt`        | DateTimeOffset | Yes      | -          | Message timestamp             |
+| `IsRead`        | bool           | Yes      | -          | Whether message has been read |
 
-**Relationships:**
+---
 
-- Belongs to one `Chat`
-- Belongs to one `User` (sender)
+## Error Codes
 
-### Enums
+| Status Code | Error | Description |
+|---|---|---|
+| 400 | BadRequest | Invalid request or chat is closed |
+| 403 | Forbidden | User does not have access to this chat |
+| 404 | NotFound | Chat or resource not found |
+| 429 | TooManyRequests | Rate limit exceeded (10 messages/minute) |
+| 500 | InternalServerError | Server error occurred |
 
+---
+
+## SignalR Events
+
+### Client Events (Receive)
+
+**MessageReceived**
+
+```javascript
+hubConnection.on("MessageReceived", (data) => {
+  console.log(data.ChatId);
+  console.log(data.Message);
+  console.log(data.ScriptTitle);
+});
+```
+
+**MessagesRead**
+
+```javascript
+hubConnection.on("MessagesRead", (data) => {
+  console.log(data.ChatId);
+  console.log(data.ReadByUserId);
+  console.log(data.MarkedCount);
+});
+```
+
+**ChatClosed**
+
+```javascript
+hubConnection.on("ChatClosed", (data) => {
+  console.log(data.ChatId);
+  console.log(data.ScriptTitle);
+  console.log(data.ClosedAt);
+});
+```
+
+---
+
+## Rate Limiting
+
+- **Limit:** 10 messages per minute per user per chat
+- **Status Code:** 429 (Too Many Requests)
+- **Response:** `"Too many messages. Please wait before sending another."`
+- **Reset:** Automatic after 1 minute
+- 
 #### VerificationStatus
 
 **Description:** User verification document status.

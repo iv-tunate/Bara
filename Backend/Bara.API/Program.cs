@@ -11,6 +11,8 @@ using Bara.API.Transactions.Interfaces;
 using Bara.API.Transactions.Repositories;
 using Bara.API.Users.Interfaces.UserInterfaces;
 using Bara.API.Users.Repositories;
+using Bara.API.Utilities.Interfaces;
+using Bara.API.Utilities.Repositories;
 using Bara.API.Utilities.Settings;
 using Bara.API.Utilities.ToolKit;
 using Hangfire;
@@ -146,6 +148,11 @@ builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection(
 builder.Services.Configure<IpRateLimitPolicies>(builder.Configuration.GetSection("IpRateLimitPolicies"));
 builder.Services.AddInMemoryRateLimiting();
 builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IChatValidator, ChatValidator>();
+builder.Services.AddScoped<ISanitizationService, SanitizationService>();
+builder.Services.AddScoped<IRateLimitService, RateLimitService>();
 
 builder.Services.AddHttpClient("YouVerify", client =>
 {
