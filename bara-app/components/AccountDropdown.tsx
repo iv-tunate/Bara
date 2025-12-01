@@ -31,7 +31,6 @@ export default function AccountDropdown({ onClose }: Props) {
   const router = useRouter();
   const [userData, setUserData] = useState<UserData | null>(null);
 
-  // Use undefined to avoid null typing surprises in some TS configs
   const [walletData, setWalletData] = useState<WalletData | undefined>(
     undefined
   );
@@ -81,7 +80,6 @@ export default function AccountDropdown({ onClose }: Props) {
               : false,
         });
 
-        // Wallet
         const walletResponse = await api.getWalletBalance(session.userId);
         if (walletResponse?.success && walletResponse?.data) {
           setWalletData({
@@ -132,7 +130,6 @@ export default function AccountDropdown({ onClose }: Props) {
       ref={dropdownRef}
       className="w-80 bg-white shadow-lg rounded-md border border-gray-200 z-50 overflow-hidden"
     >
-      {/* Header */}
       <div className="p-4 border-b border-gray-200 bg-gray-50">
         <div className="flex items-center justify-between">
           <div>
@@ -144,7 +141,6 @@ export default function AccountDropdown({ onClose }: Props) {
         </div>
       </div>
 
-      {/* Wallet preview (optional) */}
       {walletData && (
         <div className="p-4 border-b border-gray-200">
           <h4 className="font-medium text-[#22242A] text-sm mb-2">Wallet</h4>
@@ -180,7 +176,6 @@ export default function AccountDropdown({ onClose }: Props) {
         </div>
       )}
 
-      {/* Menu - Writers only (My Profile, My Account, My Wallet) */}
       <div className="py-2">
         {userData?.userType === "Writer" && (
           <Link
