@@ -89,15 +89,15 @@ export default function ProjectsPage() {
         {projectScripts.map((projectScript) => (
           <div
             key={projectScript.id}
-            className="border rounded-md shadow-sm p-2 flex gap-5 items-start bg-[#F5F5F5] mb-5"
+            className="border rounded-md py-2 px-1 md:p-3 flex flex-col md:flex-row md:gap-5 items-start bg-[#F5F5F5] mb-5"
           >
             {/* Image */}
-            <div className="relative w-64 h-40 rounded-md overflow-hidden">
+            <div className="relative w-full md:w-64 h-48 md:h-40 rounded-md overflow-hidden">
               <Image
                 src="/projectimg.png"
                 alt="script image"
-                width={256}
-                height={160}
+                layout="fill"
+                className="object-cover"
               />
 
               <span className="absolute top-2 left-2 bg-[#FFEDEE] border-1 border-[#810306] text-[#810306] text-xs px-2 py-1 rounded">
@@ -115,7 +115,7 @@ export default function ProjectsPage() {
               <p className="text-gray-800 text-md">{projectScript.price}</p>
 
               <div
-                className={`flex flex-row items-center gap-4 px-3 py-1 rounded-sm text-xs w-max border ${
+                className={`flex flex-row items-center gap-1 px-1 py-1 rounded-sm text-xs w-max border ${
                   statusClasses[projectScript.status] || "bg-neutral-800"
                 }`}
               >
@@ -133,11 +133,56 @@ export default function ProjectsPage() {
             </div>
 
             {/* Button */}
-            <button className="bg-[#810306] text-white px-6 py-1 rounded-sm hover:bg-red-800">
+            <button className="bg-[#810306] text-white w-full md:w-auto px-6 py-1 rounded-sm hover:bg-red-800 mt-4 md:mt-0">
               Confirm script
             </button>
           </div>
         ))}
+      </div>
+
+      {/* Former Content Here */}
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-[#22242A] mb-2">
+            My Projects
+          </h1>
+          <p className="text-[#666] text-sm">
+            Manage your ongoing projects and collaborations
+          </p>
+        </div>
+
+        {/* Empty State */}
+        <div className="flex flex-col items-center justify-center py-16">
+          <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+            <svg
+              className="w-12 h-12 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+              />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-[#22242A] mb-2">
+            No projects yet
+          </h3>
+          <p className="text-[#666] text-center max-w-md mb-6">
+            Start collaborating on scripts and managing your projects here.
+          </p>
+          <button
+            type="button"
+            onClick={() => router.push("/dashboard")}
+            className="bg-[#800000] text-white px-6 py-2 rounded-md hover:bg-[#1a0000] transition-colors"
+          >
+            Explore Scripts
+          </button>
+        </div>
       </div>
     </main>
   );
