@@ -89,7 +89,7 @@ export default function ProjectsPage() {
         {projectScripts.map((projectScript) => (
           <div
             key={projectScript.id}
-            className="border rounded-md py-2 px-1 md:p-3 flex flex-col md:flex-row md:gap-5 items-start bg-[#F5F5F5] mb-5"
+            className="border bg-[#F5F5F5] border-[#ABADB2] rounded-md py-2 px-1 md:p-3 flex flex-col md:flex-row md:gap-5 items-start mb-5"
           >
             {/* Image */}
             <div className="relative w-full md:w-64 h-48 md:h-40 rounded-md overflow-hidden">
@@ -115,7 +115,7 @@ export default function ProjectsPage() {
               <p className="text-gray-800 text-md">{projectScript.price}</p>
 
               <div
-                className={`flex flex-row items-center gap-1 px-1 py-1 rounded-sm text-xs w-max border ${
+                className={`flex flex-row items-center gap-1 px-1 py-1 rounded-sm text-xs md:w-max border ${
                   statusClasses[projectScript.status] || "bg-neutral-800"
                 }`}
               >
