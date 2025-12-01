@@ -13,7 +13,7 @@ export default function ProjectsPage() {
   //const session = getUserSession();
   // usePageGuard();
 
-  const projectScripts = [
+  const pendingScripts = [
     {
       id: 1,
       title: "Broken Promise",
@@ -23,7 +23,7 @@ export default function ProjectsPage() {
       price: "₦300,000",
       daysLeft: 13,
       icon: "/circle-i.svg",
-      status: "available",
+      availability: "available",
     },
     {
       id: 2,
@@ -34,7 +34,7 @@ export default function ProjectsPage() {
       price: "₦300,000",
       daysLeft: 7,
       icon: "/caution.svg",
-      status: "caution",
+      availability: "caution",
     },
     {
       id: 3,
@@ -45,7 +45,43 @@ export default function ProjectsPage() {
       price: "₦300,000",
       daysLeft: 3,
       icon: "/warning.svg",
-      status: "warning",
+      availability: "warning",
+    },
+  ];
+
+  const purchasedScripts = [
+    {
+      id: 1,
+      title: "Broken Promise",
+      description:
+        "A desperate journalist uncovers a hidden AI network controlling world events and must race against time to expose the truth before becoming its next target.",
+      genre: "Adventure",
+      price: "₦300,000",
+      daysLeft: 13,
+      icon: "/purchased-icon.svg",
+      status: "Purchased",
+    },
+    {
+      id: 2,
+      title: "Broken Promise",
+      description:
+        "A desperate journalist uncovers a hidden AI network controlling world events and must race against time to expose the truth before becoming its next target.",
+      genre: "Adventure",
+      price: "₦300,000",
+      daysLeft: 7,
+      icon: "/purchased-icon.svg",
+      status: "Purchased",
+    },
+    {
+      id: 3,
+      title: "Broken Promise",
+      description:
+        "A desperate journalist uncovers a hidden AI network controlling world events and must race against time to expose the truth before becoming its next target.",
+      genre: "Adventure",
+      price: "₦300,000",
+      daysLeft: 3,
+      icon: "/purchased-icon.svg",
+      status: "Purchased",
     },
   ];
 
@@ -53,6 +89,7 @@ export default function ProjectsPage() {
     available: "bg-[#CCCEEF] border-[#000AAF] text-[#000AAF]",
     caution: "bg-[#FFD9BF] border-[#BF4E00] text-[#BF4E00]",
     warning: "bg-[#FFBFBF] border-[#BF0000] text-[#BF0000]",
+    Purchased: "bg-[#C3E8BF] border-[#0DA500] text-[#0DA500]",
   };
 
   return (
@@ -85,59 +122,120 @@ export default function ProjectsPage() {
               Purchased
             </p>
           </div>
-        </div>
-        {projectScripts.map((projectScript) => (
-          <div
-            key={projectScript.id}
-            className="border bg-[#F5F5F5] border-[#ABADB2] rounded-md py-2 px-1 md:p-3 flex flex-col md:flex-row md:gap-5 items-start mb-5"
-          >
-            {/* Image */}
-            <div className="relative w-full md:w-64 h-48 md:h-40 rounded-md overflow-hidden">
-              <Image
-                src="/projectimg.png"
-                alt="script image"
-                layout="fill"
-                className="object-cover"
-              />
+          <div className="mt-8">
+            {activeTab === "Pending" && (
+              <div>
+                {pendingScripts.map((pendingScript) => (
+                  <div
+                    key={pendingScript.id}
+                    className="border bg-[#F5F5F5] border-[#ABADB2] rounded-md py-2 px-1 md:p-3 flex flex-col md:flex-row md:gap-5 items-start mb-5"
+                  >
+                    {/* Image */}
+                    <div className="relative w-full md:w-64 h-48 md:h-40 rounded-md overflow-hidden">
+                      <Image
+                        src="/projectimg.png"
+                        alt="script image"
+                        layout="fill"
+                        className="object-cover"
+                      />
+                      <span className="absolute top-2 left-2 bg-[#FFEDEE] border-1 border-[#810306] text-[#810306] text-xs px-2 py-1 rounded">
+                        {pendingScript.genre}
+                      </span>
+                    </div>
 
-              <span className="absolute top-2 left-2 bg-[#FFEDEE] border-1 border-[#810306] text-[#810306] text-xs px-2 py-1 rounded">
-                {projectScript.genre}
-              </span>
-            </div>
+                    {/* Content */}
+                    <div className="flex-1 space-y-2">
+                      <h2 className="text-xl font-semibold">
+                        {pendingScript.title}
+                      </h2>
+                      <p className="text-[#333740] leading-relaxed max-w-xl">
+                        {pendingScript.description}
+                      </p>
+                      <p className="text-gray-800 text-md">
+                        {pendingScript.price}
+                      </p>
+                      <div
+                        className={`flex flex-row items-center gap-1 px-1 py-1 rounded-sm text-xs md:w-max border ${
+                          statusClasses[pendingScript.availability] ||
+                          "bg-neutral-800"
+                        }`}
+                      >
+                        <Image
+                          src={pendingScript.icon}
+                          alt="calendar icon"
+                          width={16}
+                          height={16}
+                        />
+                        <p>
+                          You have {pendingScript.daysLeft} days left to confirm
+                          or reject script
+                        </p>
+                      </div>
+                    </div>
 
-            {/* Content */}
-            <div className="flex-1 space-y-2">
-              <h2 className="text-xl font-semibold">{projectScript.title}</h2>
-              <p className="text-[#333740] leading-relaxed max-w-xl">
-                {projectScript.description}
-              </p>
-
-              <p className="text-gray-800 text-md">{projectScript.price}</p>
-
-              <div
-                className={`flex flex-row items-center gap-1 px-1 py-1 rounded-sm text-xs md:w-max border ${
-                  statusClasses[projectScript.status] || "bg-neutral-800"
-                }`}
-              >
-                <Image
-                  src={projectScript.icon}
-                  alt="calendar icon"
-                  width={16}
-                  height={16}
-                />
-                <p>
-                  You have {projectScript.daysLeft} days left to confirm or
-                  reject script
-                </p>
+                    {/* Button */}
+                    <button className="bg-[#810306] text-white w-full md:w-auto px-6 py-1 rounded-sm hover:bg-red-800 mt-4 md:mt-0">
+                      Confirm script
+                    </button>
+                  </div>
+                ))}
               </div>
-            </div>
+            )}
 
-            {/* Button */}
-            <button className="bg-[#810306] text-white w-full md:w-auto px-6 py-1 rounded-sm hover:bg-red-800 mt-4 md:mt-0">
-              Confirm script
-            </button>
+            {activeTab === "Purchased" && (
+              <div>
+                {purchasedScripts.map((purchasedScript) => (
+                  <div
+                    key={purchasedScript.id}
+                    className="border bg-[#F5F5F5] border-[#ABADB2] rounded-md py-2 px-1 md:p-3 flex flex-col md:flex-row md:gap-5 items-start mb-5"
+                  >
+                    {/* Image */}
+                    <div className="relative w-full md:w-64 h-48 md:h-40 rounded-md overflow-hidden">
+                      <Image
+                        src="/projectimg.png"
+                        alt="script image"
+                        layout="fill"
+                        className="object-cover"
+                      />
+                      <span className="absolute top-2 left-2 bg-[#FFEDEE] border-1 border-[#810306] text-[#810306] text-xs px-2 py-1 rounded">
+                        {purchasedScript.genre}
+                      </span>
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 space-y-2">
+                      <h2 className="text-xl font-semibold">
+                        {purchasedScript.title}
+                      </h2>
+                      <p className="text-[#333740] leading-relaxed max-w-xl">
+                        {purchasedScript.description}
+                      </p>
+                      <p className="text-gray-800 text-md">
+                        {purchasedScript.price}
+                      </p>
+                      <div
+                        className={`flex flex-row items-center gap-1 px-1 py-1 rounded-sm text-xs md:w-max border ${
+                          statusClasses[purchasedScript.status] ||
+                          "bg-neutral-800"
+                        }`}
+                      >
+                        <Image
+                          src={purchasedScript.icon}
+                          alt="calendar icon"
+                          width={12}
+                          height={12}
+                        />
+                        <p>
+                          {purchasedScript.status}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        ))}
+        </div>
       </div>
 
       {/* Former Content Here */}
