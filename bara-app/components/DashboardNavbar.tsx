@@ -1,12 +1,71 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import AccountDropdown from "./AccountDropdown";
+import AccountDropdown, { UserData, WalletData } from "./AccountDropdown";
+import { getUserSession } from "@/utils/tokenManager";
+import { api } from "@/utils/api";
 
 export default function DashboardNavbar() {
   const [showAccountDropdown, setShowAccountDropdown] = useState(false);
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [walletData, setWalletData] = useState<WalletData | undefined>(
+    undefined
+  );
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadUserData = async () => {
+      setIsLoading(true);
+      try {
+        const session = getUserSession();
+        if (!session) {
+          setIsLoading(false);
+          return;
+        }
+        let profileResponse: any = null;
+        if (session.userType === "Writer") {
+          profileResponse = await api.getWriterProfile(session.userId);
+        } else if (session.userType === "Producer") {
+          profileResponse = await api.getProducerProfile(session.userId);
+        }
+
+        setUserData({
+          userId: session.userId,
+          name: session.name,
+          email: session.email,
+          userType: session.userType,
+          verificationStatus:
+            profileResponse?.success && profileResponse.data
+              ? profileResponse.data.verificationStatus || "Pending"
+              : "Pending",
+          isVerified:
+            profileResponse?.success && profileResponse.data
+              ? !!profileResponse.data.isVerified
+              : false,
+        });
+
+        const walletResponse = await api.getWalletBalance(session.userId);
+        if (walletResponse?.success && walletResponse?.data) {
+          setWalletData({
+            totalBalance: walletResponse.data.totalBalance ?? 0,
+            availableBalance: walletResponse.data.availableBalance ?? 0,
+            lockedBalance: walletResponse.data.lockedBalance ?? 0,
+            currencySymbol: walletResponse.data.currencySymbol ?? "₦",
+          });
+        } else {
+          setWalletData(undefined);
+        }
+      } catch (error) {
+        console.error("Error loading user data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadUserData();
+  }, []);
 
   return (
     <nav
@@ -62,7 +121,12 @@ export default function DashboardNavbar() {
           </button>
           {showAccountDropdown && (
             <div className="absolute top-full right-0 mt-2">
-              <AccountDropdown onClose={() => setShowAccountDropdown(false)} />
+              <AccountDropdown
+                onClose={() => setShowAccountDropdown(false)}
+                userData={userData}
+                walletData={walletData}
+                isLoading={isLoading}
+              />
             </div>
           )}
         </div>

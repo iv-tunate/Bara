@@ -1,16 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getUserSession, clearUserSession } from "@/utils/tokenManager";
-import { api } from "@/utils/api";
+import { clearUserSession } from "@/utils/tokenManager";
 
 interface Props {
   onClose: () => void;
 }
 
-interface UserData {
+export interface UserData {
   userId: string;
   name: string;
   email: string;
@@ -19,22 +18,28 @@ interface UserData {
   isVerified: boolean;
 }
 
-interface WalletData {
+export interface WalletData {
   totalBalance: number;
   availableBalance: number;
   lockedBalance: number;
   currencySymbol: string;
 }
 
-export default function AccountDropdown({ onClose }: Props) {
+interface Props {
+  onClose: () => void;
+  userData: UserData | null;
+  walletData: WalletData | undefined;
+  isLoading: boolean;
+}
+
+export default function AccountDropdown({
+  onClose,
+  userData,
+  walletData,
+  isLoading,
+}: Props) {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
-  const [userData, setUserData] = useState<UserData | null>(null);
-
-  const [walletData, setWalletData] = useState<WalletData | undefined>(
-    undefined
-  );
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -48,58 +53,6 @@ export default function AccountDropdown({ onClose }: Props) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [onClose]);
-
-  useEffect(() => {
-    const loadUserData = async () => {
-      setIsLoading(true);
-      try {
-        const session = getUserSession();
-        if (!session) {
-          setIsLoading(false);
-          return;
-        }
-        let profileResponse: any = null;
-        if (session.userType === "Writer") {
-          profileResponse = await api.getWriterProfile(session.userId);
-        } else if (session.userType === "Producer") {
-          profileResponse = await api.getProducerProfile(session.userId);
-        }
-
-        setUserData({
-          userId: session.userId,
-          name: session.name,
-          email: session.email,
-          userType: session.userType,
-          verificationStatus:
-            profileResponse?.success && profileResponse.data
-              ? profileResponse.data.verificationStatus || "Pending"
-              : "Pending",
-          isVerified:
-            profileResponse?.success && profileResponse.data
-              ? !!profileResponse.data.isVerified
-              : false,
-        });
-
-        const walletResponse = await api.getWalletBalance(session.userId);
-        if (walletResponse?.success && walletResponse?.data) {
-          setWalletData({
-            totalBalance: walletResponse.data.totalBalance ?? 0,
-            availableBalance: walletResponse.data.availableBalance ?? 0,
-            lockedBalance: walletResponse.data.lockedBalance ?? 0,
-            currencySymbol: walletResponse.data.currencySymbol ?? "₦",
-          });
-        } else {
-          setWalletData(undefined);
-        }
-      } catch (error) {
-        console.error("Error loading user data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadUserData();
-  }, []);
 
   const handleLogout = () => {
     clearUserSession();
