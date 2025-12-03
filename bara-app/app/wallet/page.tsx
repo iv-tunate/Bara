@@ -1,76 +1,164 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import WithdrawFunds from "@/components/WithdrawFunds";
- import { getUserSession } from "@/utils/tokenManager";
-// import { usePageGuard } from "@/app/hooks/usepageguard";
+import FundProducer from "@/components/FundProducer";
+import Pagination from "@/components/Pagination";
+import { getUserSession } from "@/utils/tokenManager";
+import { api } from "@/utils/api";
+import { Transaction } from "@/models/transaction";
+import { usePageGuard } from "@/app/hooks/usepageguard";
+
+interface WalletData {
+  availableBalance: number;
+  totalBalance: number;
+  lockedBalance: number;
+  currencySymbol: string;
+}
 
 export default function WalletPage() {
   const [isModalOpen, setModalOpen] = useState(false);
+  const [walletData, setWalletData] = useState<WalletData | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const pageSize = 10;
 
-  // const userSession = getUserSession();
-  // usePageGuard();
-  
-  // const user = {
-  //   name: userSession?.name,
-  //   email: userSession?.email,
-  //   userId: userSession?.userId,
-  //   profileStatus: userSession?.profileComplete,
-  // };
-  const transactions = [
-    {
-      id: 1,
-      amount: "NGN 250,000",
-      status: "Successful",
-      recepient: "The waiters Dream",
-      dateTime: "Today | 02:46pm",
-      ref: "Ref: TXN-20250912-8391",
-      description: "Payment received for ",
-      avatar: "/profilePic.png",
-    },
-    {
-      id: 2,
-      amount: "NGN 250,000",
-      status: "Successful",
-      recepient: "",
-      dateTime: "30.08.2025 | 02:45pm",
-      ref: "Ref: TXN-20250912-8392",
-      description: "Withdrawal successfully completed",
-      avatar: "/profilePic.png",
-    },
-    {
-      id: 3,
-      amount: "NGN 250,000",
-      status: "Failed",
-      recepient: "",
-      dateTime: "30.08.2025 | 02:45pm",
-      ref: "Ref: TXN-20250912-8393",
-      description: "₦250,000 withdrawal to GTBank failed. Please try again.",
-      avatar: "/profilePic.png",
-    },
-    {
-      id: 4,
-      amount: "NGN 250,000",
-      status: "Failed",
-      recepient: "",
-      dateTime: "30.08.2025 | 02:44pm",
-      ref: "Ref: TXN-20250912-8394",
-      description: "₦250,000 withdrawal to GTBank failed. Please try again.",
-      avatar: "/profilePic.png",
-    },
-  ];
+  const userSession = getUserSession();
+  usePageGuard();
 
-  const statusClasses: { [key: string]: string } = {
-    Successful: "bg-[#C3E8BF] border-[#0DA500] text-[#0DA500]",
-    Failed: "bg-[#FFBFBF] border-[#FF0000] text-[#FF0000]",
+  useEffect(() => {
+    const fetchWalletData = async () => {
+      if (!userSession?.userId) {
+        setError("User session not found. Please log in.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+
+        const walletResponse = await api.getWalletBalance(userSession.userId);
+        if (walletResponse.success && walletResponse.data) {
+          setWalletData(walletResponse.data);
+        } else {
+          setError(walletResponse.message || "Failed to fetch wallet balance");
+        }
+
+        const transactionsResponse = await api.getUserTransactions(
+          userSession.userId,
+          currentPage,
+          pageSize
+        );
+        if (transactionsResponse.success && transactionsResponse.data) {
+          setTransactions(
+            Array.isArray(transactionsResponse.data)
+              ? transactionsResponse.data
+              : []
+          );
+          setTotalPages(
+            Math.ceil((transactionsResponse.totalCount || 0) / pageSize)
+          );
+        } else {
+          setError(
+            transactionsResponse.message || "Failed to fetch transactions"
+          );
+        }
+      } catch (err) {
+        setError("An error occurred while fetching wallet data");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWalletData();
+  }, [userSession?.userId, currentPage]);
+
+  const formatCurrency = (amount: number, symbol: string = "₦") => {
+    return `${symbol}${Number(amount || 0).toLocaleString()}`;
   };
 
-  const amountClasses: { [key: string]: string } = {
-    Successful: "text-[#0DA500]",
-    Failed: "text-[#FF0000]",
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const isToday = date.toDateString() === now.toDateString();
+
+    const timeString = date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+
+    if (isToday) {
+      return `Today | ${timeString}`;
+    }
+
+    const dateFormatted = date
+      .toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      })
+      .replace(/\//g, ".");
+
+    return `${dateFormatted} | ${timeString}`;
   };
+
+  const getStatusClass = (status: string) => {
+    const statusLower = status.toLowerCase();
+    if (
+      statusLower === "successful" ||
+      statusLower === "success" ||
+      statusLower === "completed"
+    ) {
+      return "bg-[#C3E8BF] border-[#0DA500] text-[#0DA500]";
+    }
+    if (statusLower === "failed" || statusLower === "failure") {
+      return "bg-[#FFBFBF] border-[#FF0000] text-[#FF0000]";
+    }
+    return "bg-gray-200 border-gray-500 text-gray-500";
+  };
+
+  const getAmountClass = (status: string) => {
+    const statusLower = status.toLowerCase();
+    if (
+      statusLower === "successful" ||
+      statusLower === "success" ||
+      statusLower === "completed"
+    ) {
+      return "text-[#0DA500]";
+    }
+    if (statusLower === "failed" || statusLower === "failure") {
+      return "text-[#FF0000]";
+    }
+    return "text-gray-500";
+  };
+
+  const getDisplayStatus = (status: string) => {
+    const statusLower = status.toLowerCase();
+    if (statusLower === "success" || statusLower === "completed") {
+      return "Successful";
+    }
+    if (statusLower === "failure") {
+      return "Failed";
+    }
+    return status;
+  };
+
+  const totalWithdrawn = transactions
+    .filter(
+      (t) =>
+        t.transactionType.toLowerCase().includes("withdrawal") &&
+        (t.status.toLowerCase() === "successful" ||
+          t.status.toLowerCase() === "success" ||
+          t.status.toLowerCase() === "completed")
+    )
+    .reduce((sum, t) => sum + t.amount, 0);
 
   return (
     <main className="min-h-screen bg-white">
@@ -79,97 +167,167 @@ export default function WalletPage() {
       <div className="max-w-2xl mx-auto px-4 md:px-10 lg:px-10 py-4 flex flex-col gap-10">
         <h2 className="text-xl font-semibold">Bara wallet</h2>
 
-        {/* Balance Card */}
-        <div className="flex flex-col items-left justify-start bg-[#FFEDEE] bg-[url('/whisk-bg.png')] bg-contain bg-no-repeat bg-right py-5 px-7 rounded-md gap-10">
-          <div className=" flex flex-row gap-3">
-            <Image src="/Money.svg" alt="Close" width={20} height={20} />
-            <p className="font-semibold">Available Balance</p>
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <p className="text-gray-500">Loading wallet data...</p>
           </div>
-          <h2 className="font-semibold text-2xl">NGN 600,000.00</h2>
-          <button
-            onClick={() => setModalOpen(true)}
-            className="rounded-md bg-[#810306] px-4 py-2 text-white hover:bg-red-800 w-fit cursor-pointer transition-all duration-300 ease-in-out
-              hover:scale-105"
-          >
-            Withdraw Funds
-          </button>
-        </div>
-
-        {/* Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Total earnings */}
-          <div className="bg-white  border-2 border-gray-800/20 rounded-xl p-4 flex flex-col gap-3">
-            <div className=" flex flex-row gap-3">
-              {/* <Image src="/earned-arrow.svg" alt="arrow" width={20} height={20} /> */}
-              <p className="text-md font-medium">Total earnings so far</p>
+        ) : error ? (
+          <div className="flex items-center justify-center py-20">
+            <p className="text-red-500">{error}</p>
+          </div>
+        ) : (
+          <>
+            {/* Balance Card */}
+            <div className="flex flex-col items-left justify-start bg-[#FFEDEE] bg-[url('/whisk-bg.png')] bg-contain bg-no-repeat bg-right py-5 px-7 rounded-md gap-10">
+              <div className=" flex flex-row gap-3">
+                <Image src="/Money.svg" alt="Close" width={20} height={20} />
+                <p className="font-semibold">Available Balance</p>
+              </div>
+              <h2 className="font-semibold text-2xl">
+                {walletData
+                  ? formatCurrency(
+                      walletData.availableBalance,
+                      walletData.currencySymbol
+                    )
+                  : "NGN 0.00"}
+              </h2>
+              <button
+                onClick={() => setModalOpen(true)}
+                className="rounded-md bg-[#810306] px-4 py-2 text-white hover:bg-red-800 w-fit cursor-pointer transition-all duration-300 ease-in-out
+                  hover:scale-105"
+              >
+                {userSession?.userType?.toLowerCase() === "producer"
+                  ? "Fund Wallet"
+                  : "Withdraw Funds"}
+              </button>
             </div>
-            <p className="text-xl font-semibold">NGN 2, 018, 500.00</p>
-          </div>
 
-          {/* Amount withdrawn */}
-          <div className="bg-white  border-2 border-gray-800/20 rounded-xl p-4 flex flex-col gap-3">
-            <div className=" flex flex-row gap-3">
-              {/* <img src="/Lock_light.svg" alt="lock" width={20} height={20} /> */}
-              <p className="text-md font-medium">Amount withdrawn</p>
+            {/* Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Total Balance */}
+              <div className="bg-white  border-2 border-gray-800/20 rounded-xl p-4 flex flex-col gap-3">
+                <div className=" flex flex-row gap-3">
+                  <p className="text-md font-medium">Total Balance</p>
+                </div>
+                <p className="text-xl font-semibold">
+                  {walletData
+                    ? formatCurrency(
+                        walletData.totalBalance,
+                        walletData.currencySymbol
+                      )
+                    : "NGN 0.00"}
+                </p>
+              </div>
+
+              {/* Locked Balance or Amount Withdrawn */}
+              <div className="bg-white  border-2 border-gray-800/20 rounded-xl p-4 flex flex-col gap-3">
+                <div className=" flex flex-row gap-3">
+                  <p className="text-md font-medium">
+                    {userSession?.userType?.toLowerCase() === "producer"
+                      ? "Locked Balance"
+                      : "Amount Withdrawn"}
+                  </p>
+                </div>
+                <p className="text-xl font-semibold">
+                  {userSession?.userType?.toLowerCase() === "producer"
+                    ? walletData
+                      ? formatCurrency(
+                          walletData.lockedBalance,
+                          walletData.currencySymbol
+                        )
+                      : "NGN 0.00"
+                    : formatCurrency(
+                        totalWithdrawn,
+                        walletData?.currencySymbol || "NGN"
+                      )}
+                </p>
+              </div>
             </div>
-            <p className="text-xl font-semibold">NGN 230, 000.00</p>
-          </div>
-        </div>
 
-        {/* Recent Transactions */}
-        <h2 className="text-2xl font-semibold">Recent Transactions</h2>
+            {/* Recent Transactions */}
+            <h2 className="text-2xl font-semibold">Recent Transactions</h2>
 
-        <div className="flex flex-col gap-3 -mt-4">
-          {transactions.map((transaction) => (
-            <div
-              key={transaction.id}
-              className="flex flex-col gap-5 border border-gray-800/20 rounded-md px-5 py-3"
-            >
-              <div className="flex flex-row justify-between gap-5">
-                <div className="flex flex-row gap-5">
-                  <Image
-                    src={transaction.avatar}
-                    alt="avatar"
-                    width={40}
-                    height={40}
-                    className="rounded-full object-cover"
-                  />
-                  <div>
-                    <p
-                      className={`text-xl font-semibold ${
-                        amountClasses[transaction.status] || "bg-neutral-800"
-                      }`}
+            {transactions.length === 0 ? (
+              <div className="flex items-center justify-center py-10 border border-gray-800/20 rounded-md">
+                <p className="text-gray-500">No transactions yet</p>
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-col gap-3 -mt-4">
+                  {transactions.map((transaction) => (
+                    <div
+                      key={transaction.id}
+                      className="flex flex-col gap-5 border border-gray-800/20 rounded-md px-5 py-3"
                     >
-                      {transaction.amount}
-                    </p>
-                    <p className="text-sm">
-                      {transaction.description}
-                      <b>{transaction.recepient}</b>
-                    </p>
-                  </div>
-                </div>
-                <div>
-                  <div
-                    className={`text-xs font-medium px-3 py-1 rounded-sm border ${
-                      statusClasses[transaction.status] || "bg-neutral-800"
-                    }`}
-                  >
-                    {transaction.status}
-                  </div>
-                </div>
-              </div>
+                      <div className="flex flex-row justify-between gap-5">
+                        <div className="flex flex-row gap-5">
+                          <Image
+                            src="/profilePic.png"
+                            alt="avatar"
+                            width={40}
+                            height={40}
+                            className="rounded-full object-cover"
+                          />
+                          <div>
+                            <p
+                              className={`text-xl font-semibold ${getAmountClass(
+                                transaction.status
+                              )}`}
+                            >
+                              {formatCurrency(
+                                transaction.amount,
+                                transaction.currencySymbol
+                              )}
+                            </p>
+                            <p className="text-sm">
+                              {transaction.transactionType}
+                            </p>
+                          </div>
+                        </div>
+                        <div>
+                          <div
+                            className={`text-xs font-medium px-3 py-1 rounded-sm border ${getStatusClass(
+                              transaction.status
+                            )}`}
+                          >
+                            {getDisplayStatus(transaction.status)}
+                          </div>
+                        </div>
+                      </div>
 
-              {/* Date & Time */}
-              <div className="flex flex-row justify-between text-[10px]">
-                <p>{transaction.dateTime}</p>
-                <p>{transaction.ref}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+                      {/* Date & Time */}
+                      <div className="flex flex-row justify-between text-[10px]">
+                        <p>{formatDateTime(transaction.createdAt)}</p>
+                        <p>Ref: {transaction.reference}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                  />
+                )}
+              </>
+            )}
+          </>
+        )}
       </div>
-      {/* Withdraw Modal */}
-      <WithdrawFunds isOpen={isModalOpen} onClose={() => setModalOpen(false)} />
+      {userSession?.userType?.toLowerCase() === "producer" ? (
+        <FundProducer
+          isOpen={isModalOpen}
+          onClose={() => setModalOpen(false)}
+        />
+      ) : (
+        <WithdrawFunds
+          isOpen={isModalOpen}
+          onClose={() => setModalOpen(false)}
+        />
+      )}
     </main>
   );
 }

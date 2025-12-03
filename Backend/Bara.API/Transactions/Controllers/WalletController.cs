@@ -1,4 +1,3 @@
-using Bara.API.Transactions.DTOs;
 using Bara.API.Transactions.Interfaces;
 using Bara.API.Utilities.ToolKit;
 using Microsoft.AspNetCore.Authorization;
@@ -38,20 +37,11 @@ namespace Bara.API.Transactions.Controllers
         {
             try
             {
-                var walletDetails = await walletService.GetWalletDetailsAsync(userId);
-
-                if (walletDetails == null)
+                var response = await walletService.GetWalletDetailsAsync(userId);
+                if (response == null)
                 {
                     return NotFound(ResponseDetail<object>.Failed("Wallet not found for the specified user", 404, "Not Found"));
                 }
-
-                var response = ResponseDetail<object>.Successful(new
-                {
-                    availableBalance = walletDetails.AvailableBalance,
-                    totalBalance = walletDetails.TotalBalance,
-                    lockedBalance = walletDetails.LockedBalance,
-                    currencySymbol = walletDetails.CurrencySymbol
-                }, "Wallet balance retrieved successfully");
 
                 return Ok(response);
             }
@@ -74,14 +64,11 @@ namespace Bara.API.Transactions.Controllers
         {
             try
             {
-                var walletDetails = await walletService.GetWalletDetailsAsync(userId);
-
-                if (walletDetails == null)
+                var response = await walletService.GetWalletDetailsAsync(userId);
+                if (response == null)
                 {
                     return NotFound(ResponseDetail<object>.Failed("Wallet not found for the specified user", 404, "Not Found"));
                 }
-
-                var response = ResponseDetail<GetWalletDetailDTO>.Successful(walletDetails, "Wallet details retrieved successfully");
                 return Ok(response);
             }
             catch (Exception ex)

@@ -34,25 +34,6 @@ namespace Bara.API.Transactions.Repositories
             this.paystackService = paystackService;
         }
 
-        public Task<string> FundWalletAsync(Guid userId, decimal amount, string email)
-        {
-            throw new NotImplementedException("Use TransactionRepository.InitiateTransactionAsync for wallet funding");
-        }
-
-        public Task<bool> ProcessPaymentCallbackAsync(string reference)
-        {
-            throw new NotImplementedException("Use TransactionRepository.VerifyTransactionAsync for payment callbacks");
-        }
-
-        public Task<bool> WithdrawFundsAsync(Guid userId, decimal amount, Guid bankAccountId)
-        {
-            throw new NotImplementedException("Use TransactionRepository.InitiateWithdrawalAsync for withdrawals");
-        }
-
-        public Task<bool> ProcessScriptPaymentAsync(Guid producerId, Guid writerId, Guid scriptId, decimal amount)
-        {
-            throw new NotImplementedException("Use script transaction methods for script payments");
-        }
 
         public async Task<decimal> GetWalletBalanceAsync(Guid userId)
         {
