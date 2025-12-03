@@ -18,6 +18,7 @@
         public string RabbitMqUsername { get; set; }
         public string RabbitMqPassword { get; set; }
         public string SendGridApiKey { get; set; }
+        public string MailTrapApiKey { get; set; }
         public string PaystackSecret { get; set; }
         public string PaystackPublic { get; set; }
     }

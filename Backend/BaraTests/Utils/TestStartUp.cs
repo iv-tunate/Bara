@@ -3,6 +3,7 @@ using Bara.API.Scripts.Interfaces;
 using Bara.API.Scripts.Repositories;
 using Bara.API.Services.BackgroudServices;
 using Bara.API.Services.FileStorageServices.FileRepositories;
+using Bara.API.Services.MailingService;
 using Bara.API.Services.YouVerifyIntegration;
 using Bara.API.Users.Interfaces.UserInterfaces;
 using Bara.API.Users.Repositories;
@@ -18,7 +19,6 @@ using Services.ExternalAPI_Integration;
 using Services.FileStorageServices.CloudinaryStorage;
 using Services.FileStorageServices.Interfaces;
 using Services.MailingService;
-using Services.MailingService.SendGrid;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -48,7 +48,7 @@ namespace BaraTests.Utils
             services.AddScoped<HangfireJobs>();
             services.AddTransient<IFileStorageService, CloudinaryService>();
             services.AddTransient<IFileService, FileRepository>();
-            services.AddTransient<IMailService, SendGridService>();
+            services.AddTransient<IMailService, MailService>();
             services.AddTransient<IWriterService, WriterRepository>();
             services.AddTransient<IScriptService, ScriptRepository>();
             services.AddTransient<IProducerService, ProducerRepository>();
