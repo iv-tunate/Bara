@@ -5,11 +5,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import AccountDropdown, { UserData, WalletData } from "./AccountDropdown";
+import MessageDropdown from "./MessageDropdown";
 import { getUserSession } from "@/utils/tokenManager";
 import { api } from "@/utils/api";
 
 export default function DashboardNavbar() {
   const [showAccountDropdown, setShowAccountDropdown] = useState(false);
+  const [showMessageDropdown, setShowMessageDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [walletData, setWalletData] = useState<WalletData | undefined>(
@@ -26,6 +28,7 @@ export default function DashboardNavbar() {
           setIsLoading(false);
           return;
         }
+
         let profileResponse: any = null;
         if (session.userType === "Writer") {
           profileResponse = await api.getWriterProfile(session.userId);
@@ -107,11 +110,10 @@ export default function DashboardNavbar() {
         {/* Account */}
         <div className="relative">
           <button
-            type="button"
             onClick={() => setShowAccountDropdown((prev) => !prev)}
-            className="hover:text-[#800000] flex items-center gap-1 transition-colors cursor-pointer"
+            className="hover:text-[#800000] flex items-center gap-1 cursor-pointer"
           >
-            <Image src="/User_alt.png" alt="Account" width={16} height={16} />
+            <Image src="/User_alt.png" alt="Account" width={16} height={16} />{" "}
             Account
           </button>
           {showAccountDropdown && (
@@ -126,14 +128,30 @@ export default function DashboardNavbar() {
           )}
         </div>
 
+        {/* Saved Scripts */}
         <Link
           href="/dashboard/saved-scripts"
           className="hover:text-[#800000] flex items-center gap-1 cursor-pointer"
         >
-          <Image src="/Shape.png" alt="Saved Scripts" width={16} height={16} />
+          <Image src="/Shape.png" alt="Saved Scripts" width={16} height={16} />{" "}
           Saved scripts
         </Link>
 
+        {/* Messages Dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setShowMessageDropdown((prev) => !prev)}
+            className="hover:text-[#800000] flex items-center gap-1 cursor-pointer"
+          >
+            <Image src="/Shape.png" alt="Messages" width={16} height={16} />{" "}
+            Messages
+          </button>
+          {showMessageDropdown && (
+            <MessageDropdown onClose={() => setShowMessageDropdown(false)} />
+          )}
+        </div>
+
+        {/* Projects */}
         <Link
           href="/dashboard/projects"
           className="hover:text-[#800000] flex items-center gap-1 cursor-pointer"
@@ -143,7 +161,7 @@ export default function DashboardNavbar() {
             alt="Projects"
             width={16}
             height={16}
-          />
+          />{" "}
           My projects
         </Link>
       </div>
@@ -181,6 +199,7 @@ export default function DashboardNavbar() {
               )}
             </div>
 
+            {/* Saved Scripts */}
             <Link
               href="/dashboard/saved-scripts"
               className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-100 rounded-md"
@@ -191,10 +210,28 @@ export default function DashboardNavbar() {
                 alt="Saved Scripts"
                 width={16}
                 height={16}
-              />
+              />{" "}
               Saved scripts
             </Link>
 
+            {/* Messages Dropdown Mobile */}
+            <div className="relative w-full">
+              <button
+                onClick={() => setShowMessageDropdown((prev) => !prev)}
+                className="bg-[#800000] text-white font-medium w-full py-3 rounded-md hover:bg-[#1a0000] transition-colors text-center cursor-pointer"
+              >
+                Messages
+              </button>
+              {showMessageDropdown && (
+                <div className="absolute top-full left-0 w-full mt-2 z-50">
+                  <MessageDropdown
+                    onClose={() => setShowMessageDropdown(false)}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Projects */}
             <Link
               href="/dashboard/projects"
               className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-100 rounded-md"
@@ -205,7 +242,7 @@ export default function DashboardNavbar() {
                 alt="Projects"
                 width={16}
                 height={16}
-              />
+              />{" "}
               My projects
             </Link>
 
