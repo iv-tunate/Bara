@@ -143,7 +143,7 @@ export default function DashboardNavbar() {
             onClick={() => setShowMessageDropdown((prev) => !prev)}
             className="hover:text-[#800000] flex items-center gap-1 cursor-pointer"
           >
-            <Image src="/Shape.png" alt="Messages" width={16} height={16} />{" "}
+            <Image src="/Message.png" alt="Messages" width={18} height={18} />{" "}
             Messages
           </button>
           {showMessageDropdown && (
