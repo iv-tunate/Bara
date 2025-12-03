@@ -18,14 +18,21 @@ export default function Footer() {
 
       {/* Links */}
       <div className="flex flex-col sm:flex-row text-white gap-3 sm:gap-10 text-md items-center">
+        <Link href="/legal-terms">
+          <p>BARA Legal Terms</p>
+        </Link>
         <Link href="/privacy-policy">
           <p>Privacy Policy</p>
+        </Link>
+        <Link href="/copyright">
+          <p>BARA Copyright</p>
         </Link>
         <Link href="/help">
           <p>Help</p>
         </Link>
-        <Link href="/terms-of-use">
-          <p>Terms of Use</p>
+
+        <Link href="/terms-nda">
+          <p>BARA NDA</p>
         </Link>
       </div>
     </footer>

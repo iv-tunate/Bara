@@ -77,28 +77,82 @@ export default function HomePage() {
         </section>
 
         {/* Section 2 => writers and producers */}
-        <div className="flex flex-col md:flex-row items-stretch justify-between gap-8 md:gap-4 w-full">
+        <div className="flex flex-col md:flex-row items-stretch justify-between gap-2 md:gap-4 w-full">
           {/* Writers */}
-          <div className="bg-[#FFEDEE] w-full px-6 md:px-12 lg:px-20 py-10 flex flex-col items-start justify-center gap-4 rounded-md">
-            <h2 className="text-2xl md:text-3xl font-semibold">For Writers</h2>
-            <p className="text-base md:text-lg leading-relaxed">
+          <div
+            className="
+      w-full px-6 md:px-12 lg:px-20 py-10
+      flex flex-col items-center md:items-start justify-center gap-4 
+       relative overflow-hidden
+    "
+          >
+            {/* Background Image */}
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: "url('/landingbg.png')" }}
+            ></div>
+
+            {/* Tint */}
+            <div className="absolute inset-0 "></div>
+
+            <h2 className="text-2xl md:text-3xl font-semibold relative z-10 text-center md:text-left text-[white]">
+              For Writers
+            </h2>
+
+            <p className="text-base md:text-lg leading-relaxed relative z-10 text-center md:text-left text-[white]">
               Showcase your loglines, synopses, and full scripts to a global
               network of producers. Get paid securely, retain your rights or
               negotiate terms, and grow your reputation in the industry, all
               from one platform.
             </p>
+
+            {/* Button */}
+            <div className="mt-4 relative z-10 flex justify-center md:justify-start w-full">
+              <Link
+                href="/register?type=writer"
+                className="bg-[#800000] text-white px-10 py-2 rounded-md text-base font-medium hover:bg-[#550000]"
+              >
+                Create Account
+              </Link>
+            </div>
           </div>
 
           {/* Producers */}
-          <div className="bg-[#FFEDEE] w-full px-6 md:px-12 lg:px-20 py-10 flex flex-col items-start justify-center gap-4 rounded-md">
-            <h2 className="text-2xl md:text-3xl font-semibold">
+          <div
+            className="
+      w-full px-6 md:px-12 lg:px-20 py-10
+      flex flex-col items-center md:items-start justify-center gap-4 
+       relative overflow-hidden
+    "
+          >
+            {/* Background Image */}
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: "url('/landingbg.png')" }}
+            ></div>
+
+            {/* Tint */}
+            <div className="absolute inset-0 "></div>
+
+            <h2 className="text-2xl md:text-3xl font-semibold relative z-10 text-center md:text-left text-[white]">
               For Producers
             </h2>
-            <p className="text-base md:text-lg leading-relaxed">
+
+            <p className="text-base md:text-lg leading-relaxed relative z-10 text-center md:text-left text-[white]">
               Discover ready-to-produce scripts or hire writers to bring your
               vision to life. Search by genre with secure payments and clear IP
               agreements for peace of mind.
             </p>
+
+            {/* Button */}
+            <div className="mt-4 relative z-10 flex justify-center md:justify-start w-full">
+              <Link
+                href="/register?type=producer"
+                className="bg-[#800000] text-white px-10 py-2 rounded-md text-base font-medium hover:bg-[#550000]"
+              >
+                Create Account
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -274,7 +328,7 @@ export default function HomePage() {
             </Link>
             <Link
               href="/auth/register?type=Writer"
-              className="bg-[#810306] hover:bg-red-800 text-white px-6 sm:px-10 py-3 sm:py-4 rounded-md text-sm sm:text-sm transition-all duration-300 ease-in-out hover:scale-105"
+              className="bg-[#810306] hover:bg-red-800 text-white   py-3 sm:py-4 px-9 rounded-md text-sm sm:text-sm transition-all duration-300 ease-in-out hover:scale-105"
             >
               I am a Writer
             </Link>
