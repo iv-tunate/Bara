@@ -187,7 +187,7 @@ export default function NotificationPage() {
               }`}
             >
               <div className="flex flex-row items-center justify-between">
-                <p className="text-sm bg-[#FFBFBF] w-max px-1 rounded-sm border border-[#BF0000]">
+                <p className="text-xs bg-[#FFBFBF] w-max px-1 rounded-sm border border-[#BF0000]">
                   {notification.category}
                 </p>
                 <div className="flex gap-3 items-center">
