@@ -12,7 +12,7 @@ export function usePageGuard() {
       const encoded = encodeURIComponent(pathname);
       router.replace(`/auth/login?returnUrl=${encoded}`);
     }
-    if (!session.profileComplete) {
+    else if (session && !session.profileComplete) {
       router.push(`/profile/setup/${session.userType}`);
       return;
     }
