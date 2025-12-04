@@ -23,8 +23,6 @@ export default function NotificationPage() {
   const [openNotificationId, setOpenNotificationId] = useState<number | null>(
     null
   );
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
 
   const notifications: Notification[] = [
     {
@@ -139,16 +137,6 @@ export default function NotificationPage() {
     unread: "bg-[#F5F5F5]",
   };
 
-  // Calculate pagination
-  const totalPages = Math.ceil(notifications.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentNotifications = notifications.slice(startIndex, endIndex);
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <DashboardNavbar />
@@ -158,13 +146,15 @@ export default function NotificationPage() {
         <div className="flex flex-row justify-between items-center mb-7 mt-5">
           <h3 className="text-2xl">Notifications</h3>
           <div className="flex gap-10 justify-end items-center">
-            <p className="text-[#810306] font-semibold">Mark all as read</p>
+            <Link href={"/notifications"}>
+              <p className="text-[#810306] font-semibold">Mark all as read</p>
+            </Link>
             <div className="flex gap-3 items-center">
               <p>Filter</p>
               <select
                 name="categories"
                 id="categories"
-                className="border border-[#ABADB2] rounded-xs appearance-none px-3 py-1"
+                className="outline-none hover:outline-none border border-[#ABADB2] rounded-sm"
               >
                 <option defaultValue={"All"}>All</option>
                 <option value="Payment and others">Payment and wallet</option>
@@ -186,7 +176,7 @@ export default function NotificationPage() {
 
         {/* Notifications Container */}
         <div>
-          {currentNotifications.map((notification) => (
+          {notifications.map((notification) => (
             <div
               key={notification.id}
               className={`px-4 py-3 flex flex-col gap-2 rounded-sm mb-2 ${
@@ -247,11 +237,38 @@ export default function NotificationPage() {
         </div>
 
         {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={handlePageChange}
-        />
+        <div className="flex flex-row items-center gap-1">
+          <button className="flex gap-3 border border-[#ABADB2] px-2 py-1 rounded-sm items-center">
+            <Image
+              src="/Arrow-left.svg"
+              alt="previous"
+              width={18}
+              height={18}
+            />
+            <p>Prev</p>
+          </button>
+          <div className="flex flex-row items-center gap-1 text-[#333740]">
+            <button className="bg-[#810306] border border-[#810306] text-[#FFFFFF] px-3 py-1 rounded-sm items-center">
+              1
+            </button>
+            <button className="border border-[#ABADB2] px-3 py-1 rounded-sm items-center">
+              2
+            </button>
+            <button className="border border-[#ABADB2] px-3 py-1 rounded-sm items-center">
+              3
+            </button>
+            <button className="border border-[#ABADB2] px-3 py-1 rounded-sm items-center">
+              4
+            </button>
+            <button className="border border-[#ABADB2] px-3 py-1 rounded-sm items-center">
+              ...
+            </button>
+          </div>
+          <button className="flex gap-3 border border-[#ABADB2] px-2 py-1 rounded-sm items-center">
+            <p>Next</p>
+            <Image src="/Arrow-right.svg" alt="next" width={18} height={18} />
+          </button>
+        </div>
         {/* End of Pagination */}
       </div>
     </div>
