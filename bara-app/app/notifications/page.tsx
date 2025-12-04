@@ -151,25 +151,28 @@ export default function NotificationPage() {
             </Link>
             <div className="flex gap-3 items-center">
               <p>Filter</p>
-              <select
-                name="categories"
-                id="categories"
-                className="outline-none hover:outline-none border border-[#ABADB2] rounded-sm"
-              >
-                <option defaultValue={"All"}>All</option>
-                <option value="Payment and others">Payment and wallet</option>
-                <option value="Messages">Messages</option>
-                <option value="Comments">Comments</option>
-                <option value="Script Activity">Script Activity</option>
-                <option value="Refunds and Disputes">
-                  Refunds and Disputes
-                </option>
-                <option value="Accounts and Profile">
-                  Accounts and Profile
-                </option>
-                <option value="Reminders">Reminders</option>
-                <option value="Reminders">System Updates</option>
-              </select>
+              <div className="relative">
+                <select
+                  name="categories"
+                  id="categories"
+                  className="outline-none hover:outline-none border border-[#ABADB2] rounded-sm appearance-none cursor-pointer pl-2"
+                >
+                  <option defaultValue={"All"}>All</option>
+                  <option value="Payment and others">Payment and wallet</option>
+                  <option value="Messages">Messages</option>
+                  <option value="Comments">Comments</option>
+                  <option value="Script Activity">Script Activity</option>
+                  <option value="Refunds and Disputes">
+                    Refunds and Disputes
+                  </option>
+                  <option value="Accounts and Profile">
+                    Accounts and Profile
+                  </option>
+                  <option value="Reminders">Reminders</option>
+                  <option value="Reminders">System Updates</option>
+                </select>
+                <Image className="pointer-events-none absolute top-1 left-35" src="/chevron-down.svg" alt="dropdown" height={20} width={20} />
+              </div>
             </div>
           </div>
         </div>
