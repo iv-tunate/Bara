@@ -23,6 +23,8 @@ export default function NotificationPage() {
   const [openNotificationId, setOpenNotificationId] = useState<number | null>(
     null
   );
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const notifications: Notification[] = [
     {
@@ -67,7 +69,8 @@ export default function NotificationPage() {
     },
     {
       id: 5,
-      message: "Producer Ada Jones started reviewing Broken Secret. You’ll be notified when feedback is added.",
+      message:
+        "Producer Ada Jones started reviewing Broken Secret. You’ll be notified when feedback is added.",
       category: "Script Activity",
       date: "24th October, 2025",
       time: "12:22pm",
@@ -77,7 +80,8 @@ export default function NotificationPage() {
     },
     {
       id: 6,
-      message: "Withdrawal of ₦150,000 to GTBank (••••1234) completed successfully.",
+      message:
+        "Withdrawal of ₦150,000 to GTBank (••••1234) completed successfully.",
       category: "Withdrawal",
       date: "24th October, 2025",
       time: "12:22pm",
@@ -87,7 +91,8 @@ export default function NotificationPage() {
     },
     {
       id: 7,
-      message: "Producer requested a refund for Land of Mira. Payment placed on hold.",
+      message:
+        "Producer requested a refund for Land of Mira. Payment placed on hold.",
       category: "Refunds and disputes",
       date: "24th October, 2025",
       time: "12:22pm",
@@ -107,7 +112,8 @@ export default function NotificationPage() {
     },
     {
       id: 9,
-      message: "We’ve updated our Terms and Conditions to improve copyright protection.",
+      message:
+        "We’ve updated our Terms and Conditions to improve copyright protection.",
       category: "System Updates",
       date: "24th October, 2025",
       time: "12:22pm",
@@ -117,7 +123,8 @@ export default function NotificationPage() {
     },
     {
       id: 10,
-      message: "Remember to update your bio and recent works. More visibility means more opportunities.",
+      message:
+        "Remember to update your bio and recent works. More visibility means more opportunities.",
       category: "Reminder",
       date: "24th October, 2025",
       time: "12:22pm",
@@ -130,6 +137,16 @@ export default function NotificationPage() {
   const statusClasses: { [key: string]: string } = {
     read: "bg-white",
     unread: "bg-[#F5F5F5]",
+  };
+
+  // Calculate pagination
+  const totalPages = Math.ceil(notifications.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentNotifications = notifications.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   return (
@@ -169,7 +186,7 @@ export default function NotificationPage() {
 
         {/* Notifications Container */}
         <div>
-          {notifications.map((notification) => (
+          {currentNotifications.map((notification) => (
             <div
               key={notification.id}
               className={`px-4 py-3 flex flex-col gap-2 rounded-sm mb-2 ${
@@ -230,6 +247,11 @@ export default function NotificationPage() {
         </div>
 
         {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
         {/* End of Pagination */}
       </div>
     </div>
