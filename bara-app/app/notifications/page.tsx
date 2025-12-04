@@ -160,11 +160,11 @@ export default function NotificationPage() {
           <div className="flex gap-10 justify-end items-center">
             <p className="text-[#810306] font-semibold">Mark all as read</p>
             <div className="flex gap-3 items-center">
-              <p>New</p>
+              <p>Filter</p>
               <select
                 name="categories"
                 id="categories"
-                className="border border-gray-800 rounded-xs appearance-none px-3 py-1"
+                className="border border-[#ABADB2] rounded-xs appearance-none px-3 py-1"
               >
                 <option defaultValue={"All"}>All</option>
                 <option value="Payment and others">Payment and wallet</option>
