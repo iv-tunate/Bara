@@ -1,10 +1,9 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import NotificationsDropdown from "@/components/NotificationsDropdown";
-import Pagination from "@/components/Pagination";
 
 type NotificationStatus = "read" | "unread";
 
