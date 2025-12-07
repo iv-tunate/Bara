@@ -138,7 +138,7 @@ export default function HelpPage() {
                   <div className="flex items-center space-x-2">
                     <p className="font-medium text-gray-600 text-center text-[#333740]">
                       Drag and drop file (png, jpeg) here, <br />
-                      <span className="text-red-800 underline">or Browse</span>
+                      <span className="text-red-800">or Browse</span>
                     </p>
                   </div>
                 </label>
