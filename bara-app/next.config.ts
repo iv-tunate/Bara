@@ -22,11 +22,12 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**",
+        hostname: "res.cloudinary.com",
+        pathname: "/**",
       },
     ],
-    domains: ["res.cloudinary.com"],
   },
+
   generateBuildId: async () => {
     return `build-${Date.now()}`;
   },
