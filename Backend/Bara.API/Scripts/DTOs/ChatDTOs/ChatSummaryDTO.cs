@@ -9,7 +9,7 @@ namespace Bara.API.Scripts.DTOs.ChatDTOs
         public string ScriptTitle { get; set; }
         public Guid OtherUserId { get; set; }
         public string OtherUserName { get; set; }
-        public string LastMessageContent { get; set; } // Preview
+        public string LastMessageContent { get; set; } 
         public DateTimeOffset LastMessageSentAt { get; set; }
         public int UnreadCount { get; set; }
         public bool IsClosed { get; set; }

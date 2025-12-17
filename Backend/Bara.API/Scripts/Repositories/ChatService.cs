@@ -363,15 +363,14 @@ namespace Bara.API.Scripts.Repositories
             var correlationId = Guid.NewGuid();
             try
             {
-                // Repository now handles projection and counting efficiently (Single Query)
                 var chatSummaries = await chatRepository.GetUserChatsAsync(userId, page, pageSize);
 
                 return ResponseDetail<List<ChatSummaryDTO>>.Successful(chatSummaries, "Chats retrieved successfully");
             }
             catch (Exception ex)
             {
-                 logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name,
-                    $"While retrieving user chats - CorrelationId: {correlationId}, UserId: {userId}");
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name,
+                   $"While retrieving user chats - CorrelationId: {correlationId}, UserId: {userId}");
                 return ResponseDetail<List<ChatSummaryDTO>>.Failed("Failed to retrieve chats", 500);
             }
         }

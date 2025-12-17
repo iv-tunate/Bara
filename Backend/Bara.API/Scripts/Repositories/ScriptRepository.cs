@@ -1,5 +1,6 @@
 ﻿using Bara.API.DataContext;
 using Bara.API.Scripts.DTOs;
+using Bara.API.Scripts.DTOs.ChatDTOs;
 using Bara.API.Scripts.Enums;
 using Bara.API.Scripts.Interfaces;
 using Bara.API.Scripts.Models;
@@ -627,7 +628,6 @@ namespace Bara.API.Scripts.Repositories
                 }
 
 
-                // Create chat for this transaction
                 var chatRequest = new CreateChatRequest
                 {
                     ScriptId = request.ScriptId,

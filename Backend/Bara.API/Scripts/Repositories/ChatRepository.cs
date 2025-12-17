@@ -1,7 +1,7 @@
 using Bara.API.DataContext;
+using Bara.API.Scripts.DTOs.ChatDTOs;
 using Bara.API.Scripts.Interfaces;
 using Bara.API.Scripts.Models.ScriptRelatedChats;
-using Bara.API.Scripts.DTOs.ChatDTOs;
 using Bara.API.Utilities.ToolKit;
 using Microsoft.EntityFrameworkCore;
 
@@ -213,7 +213,7 @@ namespace Bara.API.Scripts.Repositories
             {
                 return await dbContext.Chats
                     .Where(c => c.ProducerId == userId || c.WriterId == userId)
-                    .OrderByDescending(c => c.LastMessageSentAt)
+                    .OrderByDescending(c => c.CreatedAt)
                     .Select(c => new ChatSummaryDTO
                     {
                         ChatId = c.Id,
@@ -221,9 +221,7 @@ namespace Bara.API.Scripts.Repositories
                         ScriptTitle = c.ScriptTitle,
                         OtherUserId = c.ProducerId == userId ? c.WriterId : c.ProducerId,
                         OtherUserName = c.ProducerId == userId ? c.WriterName : c.ProducerName,
-                        LastMessageContent = c.Messages.OrderByDescending(m => m.SentAt).FirstOrDefault().Content ?? "No messages yet",
-                        LastMessageSentAt = c.Messages.OrderByDescending(m => m.SentAt).FirstOrDefault().SentAt, // Or c.LastMessageSentAt if reliable
-                        UnreadCount = c.Messages.Count(m => m.UserId != userId && !m.IsRead), // Efficient SQL Count
+                        UnreadCount = c.Messages.Count(m => m.UserId != userId && !m.IsRead),
                         IsClosed = c.IsClosed
                     })
                     .Skip((page - 1) * pageSize)
