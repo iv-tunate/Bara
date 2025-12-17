@@ -51,24 +51,18 @@ export const SignalRProvider = ({
         setIsConnected(true);
         console.log("SignalR Connected");
 
-        // --- Event Listeners ---
-
-        // KYC Events
         connection.on("KycSuccessful", (data: { message: string }) => {
           toast.success(data.message);
-          // Trigger profile refresh if needed (can export a global mutator or event)
         });
 
         connection.on("KycFailed", (data: { message: string }) => {
           toast.error(data.message);
         });
 
-        // Wallet Events
         connection.on(
           "WalletUpdated",
           (data: { Balance: number; Total: number }) => {
             toast.success("Wallet balance updated!");
-            // Ideally trigger wallet data re-fetch
           }
         );
 
@@ -81,12 +75,9 @@ export const SignalRProvider = ({
           }
         );
 
-        // Chat Events (Handled primarily in Chat Components, but global notification here)
         connection.on(
           "MessageReceived",
           (data: { ChatId: string; Message: any; ScriptTitle: string }) => {
-            // Only toast if not on the chat page or active chat
-            // For now, simple toast
             toast(
               `New message in ${
                 data.ScriptTitle

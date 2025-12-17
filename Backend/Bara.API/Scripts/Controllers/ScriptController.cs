@@ -272,5 +272,23 @@ namespace Bara.API.Scripts.Controllers
                 return StatusCode(500, ResponseDetail<string>.Failed("Your request failed...", 500, "Error"));
             }
         }
+        [HttpGet("script/{scriptId}")]
+        public async Task<IActionResult> GetScriptById(Guid scriptId)
+        {
+            try
+            {
+                var response = await scriptService.GetScriptById(scriptId, null);
+                if (response.IsSuccess is false)
+                {
+                    return BadRequest(response);
+                }
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"An exception: {ex.GetType().Name} was thrown at {ex.Source} while fetching script by id...\nBase Exception: {ex.GetBaseException().GetType().Name}", $"Exception Code: {ex.HResult}");
+                return StatusCode(500, ResponseDetail<string>.Failed("Your request failed...", 500, "Error"));
+            }
+        }
     }
 }

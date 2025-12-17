@@ -10,7 +10,7 @@ import { getUserSession } from "@/utils/tokenManager";
 import { api } from "@/utils/api";
 import { Script, ownershipLabels } from "@/models/script";
 import { usePageGuard } from "@/app/hooks/usepageguard";
-import toast from "react-hot-toast"; 
+import toast from "react-hot-toast";
 
 export default function ScriptDetailPage() {
   const router = useRouter();
@@ -44,7 +44,6 @@ export default function ScriptDetailPage() {
       if (!scriptIdParam || !session?.userId) return;
 
       try {
-        // 1. Fetch Script
         const scriptResponse = await api.getScriptById(scriptIdParam);
         if (scriptResponse.success && scriptResponse.data) {
           const sData = scriptResponse.data;
@@ -143,7 +142,7 @@ export default function ScriptDetailPage() {
         const response = await api.initiateScriptTransaction(
           session.userId,
           script.id,
-          session.writerId || script.writerId 
+          session.writerId || script.writerId
         );
 
         if (response.success) {
@@ -172,10 +171,24 @@ export default function ScriptDetailPage() {
     }
   };
 
-  if (isLoading || !script) {
+  if (isLoading) {
     return (
       <main className="min-h-screen bg-white flex items-center justify-center">
-        <p className="text-gray-500">Loading script...</p>
+        <p className="text-gray-500">Loading...</p>
+      </main>
+    );
+  }
+
+  if (error || !script) {
+    return (
+      <main className="min-h-screen bg-white flex items-center justify-center flex-col gap-4">
+        <p className="text-red-500">{error || "Script not found"}</p>
+        <button
+          onClick={() => router.push("/dashboard/scripts")}
+          className="text-[#810306] hover:underline"
+        >
+          Go Back
+        </button>
       </main>
     );
   }
