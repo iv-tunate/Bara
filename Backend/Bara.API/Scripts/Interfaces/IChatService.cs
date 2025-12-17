@@ -47,5 +47,12 @@ namespace Bara.API.Scripts.Interfaces
         /// <param name="chatId">The ID of the chat to close</param>
         /// <returns>A response indicating success or failure</returns>
         Task<ResponseDetail<bool>> CloseChatAsync(Guid chatId);
+
+        /// <summary>
+        /// Retrieves all chats for a specific user.
+        /// </summary>
+        /// <returns>A response containing the list of chats</returns>
+        Task<ResponseDetail<List<ChatSummaryDTO>>> GetUserChatsAsync(Guid userId, int page = 1, int pageSize = 20);
+    }
     }
 }

@@ -87,8 +87,6 @@ namespace Bara.API.Transactions.Repositories
         {
             try
             {
-                using var transaction = await dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
-
                 var producer = await dbContext.Users
                     .Include(u => u.Wallet)
                     .FirstOrDefaultAsync(u => u.Id == producerId);
@@ -102,19 +100,15 @@ namespace Bara.API.Transactions.Repositories
 
                 var writerShare = amount - fee;
 
-                // Lock funds in producer's wallet
                 producer.Wallet.AvailableBalance -= amount;
                 producer.Wallet.LockedBalance += amount;
 
-                // Reflect pending amount in writer's wallet (locked, not available)
                 writer.Wallet.LockedBalance += writerShare;
                 writer.Wallet.TotalBalance += writerShare;
 
                 dbContext.Wallets.UpdateRange(producer.Wallet, writer.Wallet);
                 await dbContext.SaveChangesAsync();
-                await transaction.CommitAsync();
 
-                // Send SignalR notifications
                 await notificationHub.Clients.User(producerId.ToString())
                     .SendAsync("WalletUpdated", new
                     {
@@ -145,8 +139,6 @@ namespace Bara.API.Transactions.Repositories
         {
             try
             {
-                using var transaction = await dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
-
                 var producer = await dbContext.Users
                     .Include(u => u.Wallet)
                     .FirstOrDefaultAsync(u => u.Id == producerId);
@@ -158,19 +150,15 @@ namespace Bara.API.Transactions.Repositories
                 if (producer?.Wallet == null || writer?.Wallet == null)
                     return false;
 
-                // Finalize producer's payment (remove from locked and total)
                 producer.Wallet.LockedBalance -= amount;
                 producer.Wallet.TotalBalance -= amount;
 
-                // Release funds to writer (move from locked to available)
                 writer.Wallet.LockedBalance -= writerShare;
                 writer.Wallet.AvailableBalance += writerShare;
 
                 dbContext.Wallets.UpdateRange(producer.Wallet, writer.Wallet);
                 await dbContext.SaveChangesAsync();
-                await transaction.CommitAsync();
 
-                // Send SignalR notifications
                 await notificationHub.Clients.User(producerId.ToString())
                     .SendAsync("WalletUpdated", new
                     {
@@ -201,8 +189,6 @@ namespace Bara.API.Transactions.Repositories
         {
             try
             {
-                using var transaction = await dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
-
                 var producer = await dbContext.Users
                     .Include(u => u.Wallet)
                     .FirstOrDefaultAsync(u => u.Id == producerId);
@@ -214,19 +200,15 @@ namespace Bara.API.Transactions.Repositories
                 if (producer?.Wallet == null || writer?.Wallet == null)
                     return false;
 
-                // Refund producer (move from locked back to available)
                 producer.Wallet.LockedBalance -= amount;
                 producer.Wallet.AvailableBalance += amount;
 
-                // Remove pending amount from writer's wallet
                 writer.Wallet.LockedBalance -= writerShare;
                 writer.Wallet.TotalBalance -= writerShare;
 
                 dbContext.Wallets.UpdateRange(producer.Wallet, writer.Wallet);
                 await dbContext.SaveChangesAsync();
-                await transaction.CommitAsync();
 
-                // Send SignalR notifications
                 await notificationHub.Clients.User(producerId.ToString())
                     .SendAsync("WalletUpdated", new
                     {

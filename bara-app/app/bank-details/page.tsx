@@ -42,30 +42,31 @@ export default function BankDetailsPage() {
   });
 
   useEffect(() => {
-    const id = localStorage.getItem("userId");
-    setUserId(id);
-  }, []);
-  usePageGuard();
+    const session = getUserSession();
+    if (!session?.userId) return;
+    setUserId(session.userId);
 
-  const loadData = async (userId: string) => {
-    try {
-      setIsLoading(true);
-      const bankDetailsResponse = await api.getBankDetails(userId);
-      if (bankDetailsResponse.success && bankDetailsResponse.data) {
-        setBankDetails(bankDetailsResponse.data);
+    const loadData = async (id: string) => {
+      try {
+        setIsLoading(true);
+        const bankDetailsResponse = await api.getBankDetails(id);
+        if (bankDetailsResponse.success && bankDetailsResponse.data) {
+          setBankDetails(bankDetailsResponse.data);
+        }
+        const banksResponse = await api.getBanks();
+        if (banksResponse.success && banksResponse.data) {
+          setBanks(banksResponse.data);
+        }
+      } catch (error) {
+        console.error("Error loading data:", error);
+        setError("Failed to load bank details");
+      } finally {
+        setIsLoading(false);
       }
-      const banksResponse = await api.getBanks();
-      if (banksResponse.success && banksResponse.data) {
-        setBanks(banksResponse.data);
-      }
-    } catch (error) {
-      console.error("Error loading data:", error);
-      setError("Failed to load bank details");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  loadData(userId);
+    };
+
+    loadData(session.userId);
+  }, []);
   const handleBankSelect = (bankCode: string) => {
     const selectedBank = banks.find((bank) => bank.code === bankCode);
     if (selectedBank) {

@@ -1,6 +1,7 @@
 using Bara.API.DataContext;
 using Bara.API.Scripts.Interfaces;
 using Bara.API.Scripts.Models.ScriptRelatedChats;
+using Bara.API.Scripts.DTOs.ChatDTOs;
 using Bara.API.Utilities.ToolKit;
 using Microsoft.EntityFrameworkCore;
 
@@ -203,6 +204,37 @@ namespace Bara.API.Scripts.Repositories
                 logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name,
                     $"While checking user access for chat {chatId}, user {userId}");
                 return false;
+            }
+        }
+
+        public async Task<List<ChatSummaryDTO>> GetUserChatsAsync(Guid userId, int page, int pageSize)
+        {
+            try
+            {
+                return await dbContext.Chats
+                    .Where(c => c.ProducerId == userId || c.WriterId == userId)
+                    .OrderByDescending(c => c.LastMessageSentAt)
+                    .Select(c => new ChatSummaryDTO
+                    {
+                        ChatId = c.Id,
+                        ScriptId = c.ScriptId,
+                        ScriptTitle = c.ScriptTitle,
+                        OtherUserId = c.ProducerId == userId ? c.WriterId : c.ProducerId,
+                        OtherUserName = c.ProducerId == userId ? c.WriterName : c.ProducerName,
+                        LastMessageContent = c.Messages.OrderByDescending(m => m.SentAt).FirstOrDefault().Content ?? "No messages yet",
+                        LastMessageSentAt = c.Messages.OrderByDescending(m => m.SentAt).FirstOrDefault().SentAt, // Or c.LastMessageSentAt if reliable
+                        UnreadCount = c.Messages.Count(m => m.UserId != userId && !m.IsRead), // Efficient SQL Count
+                        IsClosed = c.IsClosed
+                    })
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name,
+                    $"While getting chats for user {userId}");
+                return new List<ChatSummaryDTO>();
             }
         }
     }

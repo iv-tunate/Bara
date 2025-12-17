@@ -1,4 +1,5 @@
 using Bara.API.Scripts.Models.ScriptRelatedChats;
+using Bara.API.Scripts.DTOs.ChatDTOs;
 
 namespace Bara.API.Scripts.Interfaces
 {
@@ -67,5 +68,14 @@ namespace Bara.API.Scripts.Interfaces
         /// <param name="userId">The ID of the user</param>
         /// <returns>True if the user has access, false otherwise</returns>
         Task<bool> UserHasAccessToChatAsync(Guid chatId, Guid userId);
+
+        /// <summary>
+        /// Retrieves all chats for a specific user with summary details.
+        /// </summary>
+        /// <param name="userId">The ID of the user</param>
+        /// <param name="page">The page number for pagination</param>
+        /// <param name="pageSize">The number of chats per page</param>
+        /// <returns>A list of chat summaries</returns>
+        Task<List<ChatSummaryDTO>> GetUserChatsAsync(Guid userId, int page, int pageSize);
     }
 }

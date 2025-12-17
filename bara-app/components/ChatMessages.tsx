@@ -1,7 +1,7 @@
 "use client";
 
 interface Message {
-  id: number;
+  id: string | number;
   text: string;
   time: string;
   sender: "me" | "other";
