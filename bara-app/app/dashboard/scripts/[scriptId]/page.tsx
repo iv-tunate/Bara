@@ -10,14 +10,16 @@ import { getUserSession } from "@/utils/tokenManager";
 import { api } from "@/utils/api";
 import { Script, ownershipLabels } from "@/models/script";
 import { usePageGuard } from "@/app/hooks/usepageguard";
-import toast from "react-hot-toast";
+import { useScriptContext } from "@/context/ScriptContext";
 
 export default function ScriptDetailPage() {
   const router = useRouter();
   const params = useParams();
   const scriptIdParam = params?.scriptId as string;
 
-  const [script, setScript] = useState<Script | null>(null);
+  const { getScript, cacheScript } = useScriptContext();
+  const [localScript, setLocalScript] = useState<Script | null>(null);
+
   const [writerProfile, setWriterProfile] = useState<any>(null);
   const [copied, setCopied] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<"wallet" | "card">(
@@ -30,8 +32,14 @@ export default function ScriptDetailPage() {
   const [error, setError] = useState("");
   const [hasBankDetails, setHasBankDetails] = useState(false);
 
+  const [imgError, setImgError] = useState(false);
+  const [imgLoading, setImgLoading] = useState(true);
+
   const session = getUserSession();
   usePageGuard();
+
+  const contextScript = getScript(scriptIdParam);
+  const script = localScript || contextScript || null;
 
   const scriptLink = script
     ? `${
@@ -39,26 +47,37 @@ export default function ScriptDetailPage() {
       }/dashboard/scripts/${script.id}`
     : "";
 
+  let imgSrc = "/flowery.png";
+  if (script) {
+    imgSrc = imgError
+      ? "/flowery.png"
+      : script.imageUrl || script.imagePublicId || "/flowery.png";
+  }
+
   useEffect(() => {
     async function loadData() {
       if (!scriptIdParam || !session?.userId) return;
+
+      if (contextScript) {
+        setIsLoading(false);
+      }
 
       try {
         const scriptResponse = await api.getScriptById(scriptIdParam);
         if (scriptResponse.success && scriptResponse.data) {
           const sData = scriptResponse.data;
-          setScript({
+
+          const mappedScript: Script = {
             id: sData.id,
             title: sData.title,
             price: sData.price,
-            image: sData.image || "/flowery.png",
+            imageUrl: sData.imageUrl,
+            imagePublicId: sData.imagePublicId,
             logline: sData.logline,
             synopsis: sData.synopsis,
             genre: sData.genre,
-            writerId: sData.writer?.id || sData.writerId,
-            writerName:
-              sData.writer?.firstName + " " + sData.writer?.lastName ||
-              sData.writerName,
+            writerId: sData.writerId,
+            writerName: sData.writerName,
             status: sData.status,
             currency: sData.currency || "NAIRA",
             currencySymbol: sData.currencySymbol || "₦",
@@ -68,18 +87,21 @@ export default function ScriptDetailPage() {
             isScriptRegistered: sData.isScriptRegistered,
             registrationBody: sData.registrationBody,
             url: sData.url,
-            path: sData.path,
+            path: sData.path || "",
             uploadedOn: sData.uploadedOn,
-          });
+          };
 
-          const writerId = sData.writer?.id || sData.writerId;
+          setLocalScript(mappedScript);
+          cacheScript(mappedScript);
+
+          const writerId = mappedScript.writerId;
           if (writerId) {
             const writerResp = await api.getWriterProfile(writerId);
             if (writerResp.success && writerResp.data) {
               setWriterProfile(writerResp.data);
             }
           }
-        } else {
+        } else if (!contextScript) {
           setError("Script not found");
         }
 
@@ -94,13 +116,15 @@ export default function ScriptDetailPage() {
         }
       } catch (error) {
         console.error("Error loading data:", error);
-        setError("Failed to load data");
+        if (!contextScript) {
+          setError("Failed to load data");
+        }
       } finally {
         setIsLoading(false);
       }
     }
     loadData();
-  }, [scriptIdParam, session?.userId]);
+  }, [scriptIdParam, session?.userId, cacheScript, contextScript]);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(scriptLink);
@@ -116,11 +140,6 @@ export default function ScriptDetailPage() {
       );
       return;
     }
-    // If they have bank details, "Add New Card" usually implies initiating a fund wallet flow
-    // or opening a payment gateway modal. The previous logic didn't have a specific handler for "Add Card",
-    // it just had a button.
-    // I'll make it select "card" and focus payment, or initiate a minimal funding transaction to save card?
-    // For now, I'll validly select 'card' method.
     setSelectedMethod("card");
   };
 
@@ -151,7 +170,6 @@ export default function ScriptDetailPage() {
           setError(response.message || "Failed to process payment");
         }
       } else {
-        // Card or Insufficient Wallet -> Fund Wallet Flow (which acts as payment)
         const fundingResponse = await api.initiateFundWallet(
           session.userId,
           script.price
@@ -171,7 +189,7 @@ export default function ScriptDetailPage() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading && !script) {
     return (
       <main className="min-h-screen bg-white flex items-center justify-center">
         <p className="text-gray-500">Loading...</p>
@@ -206,17 +224,29 @@ export default function ScriptDetailPage() {
             {script.title}
           </h1>
 
-          <Image
-            src={script.image}
-            alt={script.title}
-            width={400}
-            height={300}
-            className="w-full h-auto rounded-md object-cover"
-          />
+          <div className="relative w-full h-auto rounded-md overflow-hidden bg-gray-100 aspect-[4/3]">
+            {imgLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#800000]" />
+              </div>
+            )}
+            <img
+              src={imgSrc}
+              alt={script.title}
+              className={`w-full h-full object-cover transition-opacity duration-500 ${
+                imgLoading ? "opacity-0" : "opacity-100"
+              }`}
+              onError={() => {
+                setImgError(true);
+                setImgLoading(false);
+              }}
+              onLoad={() => setImgLoading(false)}
+            />
+          </div>
 
           <p className="text-lg font-semibold text-[#22242A]">
             {script.currencySymbol}
-            {script.price.toLocaleString()}
+            {script.price}
           </p>
 
           <button className="w-full bg-[#FFEDEE] text-[#810306] text-sm font-semibold py-3 rounded-md">
@@ -296,7 +326,14 @@ export default function ScriptDetailPage() {
               </h3>
 
               {/* Wallet Option */}
-              <div className="flex items-center justify-between rounded-md py-3 px-3 bg-[#F5F5F5]">
+              <div
+                className={`flex items-center justify-between rounded-md py-3 px-3 bg-[#F5F5F5] transition-colors ${
+                  !walletDisabled
+                    ? "cursor-pointer hover:bg-gray-200"
+                    : "cursor-not-allowed opacity-75"
+                }`}
+                onClick={() => !walletDisabled && setSelectedMethod("wallet")}
+              >
                 <div className="flex items-center gap-3">
                   <Image
                     src="/wallet.png"
@@ -317,14 +354,19 @@ export default function ScriptDetailPage() {
                   value="wallet"
                   disabled={walletDisabled}
                   checked={selectedMethod === "wallet"}
-                  onChange={() => setSelectedMethod("wallet")}
-                  className="accent-[#800000]"
+                  onChange={() =>
+                    !walletDisabled && setSelectedMethod("wallet")
+                  }
+                  className="accent-[#800000] cursor-pointer"
                 />
               </div>
 
               {/* Card Option */}
-              <div className="bg-[#F5F5F5] rounded-md">
-                <div className="flex items-center justify-between py-3 px-3">
+              <div className="bg-[#F5F5F5] rounded-md transition-colors hover:bg-gray-200">
+                <div
+                  className="flex items-center justify-between py-3 px-3 cursor-pointer"
+                  onClick={() => setSelectedMethod("card")}
+                >
                   <div className="flex items-center gap-2">
                     <Image
                       src="/mastercard.png"
@@ -342,13 +384,16 @@ export default function ScriptDetailPage() {
                     value="card"
                     checked={selectedMethod === "card"}
                     onChange={() => setSelectedMethod("card")}
-                    className="accent-[#800000]"
+                    className="accent-[#800000] cursor-pointer"
                   />
                 </div>
                 <div>
                   <button
-                    onClick={handleAddNewCard}
-                    className="w-full text-left text-xs font-medium text-[#810306] py-3 px-3"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent toggling radio when clicking button
+                      handleAddNewCard();
+                    }}
+                    className="w-full text-left text-xs font-medium text-[#810306] py-3 px-3 hover:underline cursor-pointer"
                   >
                     + Add new card (Requires Bank Details)
                   </button>
@@ -409,7 +454,15 @@ export default function ScriptDetailPage() {
               }}
             />
           ) : (
-            <div className="text-gray-500 text-sm">Loading writer info...</div>
+            <div className="text-gray-500 text-sm">
+              {script.writerName ? (
+                <p className="font-semibold text-gray-700">
+                  Writer: {script.writerName}
+                </p>
+              ) : (
+                "Loading writer info..."
+              )}
+            </div>
           )}
         </div>
       </div>

@@ -6,9 +6,12 @@ import { api } from "@/utils/api";
 import { Script } from "@/models/script";
 import Pagination from "@/components/Pagination";
 import { ScriptGrid } from "@/components/Script";
+import { useScriptContext } from "@/context/ScriptContext"; // Import Context
 
 export default function ScriptsListPage() {
-  const [scripts, setScripts] = useState<Script[]>([]);
+  const [localScripts, setLocalScripts] = useState<Script[]>([]);
+  const { setScripts: setContextScripts } = useScriptContext(); // Use Context
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -22,20 +25,26 @@ export default function ScriptsListPage() {
     try {
       const response = await api.getAllScripts(page, pageSize);
       if (response.success && response.data) {
-        setScripts((prev) =>
+        setLocalScripts((prev) =>
           append
             ? [...prev, ...(response.data.data || [])]
             : response.data.data || []
         );
+
+        // Update context with the new scripts
+        if (response.data.data) {
+          setContextScripts(response.data.data);
+        }
+
         setTotalPages(response.totalPages || 1);
       } else {
         setError(response.message || "Failed to load scripts");
-        if (!append) setScripts([]);
+        if (!append) setLocalScripts([]);
       }
     } catch (error) {
       console.error(error);
       setError("An unexpected error occurred");
-      if (!append) setScripts([]);
+      if (!append) setLocalScripts([]);
     } finally {
       setIsLoading(false);
     }
@@ -58,22 +67,20 @@ export default function ScriptsListPage() {
           </div>
         )}
 
-        {isLoading && scripts.length === 0 ? (
+        {isLoading && localScripts.length === 0 ? (
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#800000]"></div>
           </div>
-        ) : scripts.length === 0 ? (
+        ) : localScripts.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500">No available scripts at the moment</p>
           </div>
         ) : (
           <>
             <ScriptGrid
-              scripts={scripts} // Passing all because pagination is handled by page change replacing list, or appending?
-              // The original Dashboard page logic had "append" logic but mostly replaced on page change in useEffect.
-              // I'll stick to replacing on page change for standard pagination feeling.
+              scripts={localScripts}
               isLoading={isLoading}
-              hasMore={false} // forcing simple pagination for now
+              hasMore={false}
               onLoadMore={() => {}}
             />
 
