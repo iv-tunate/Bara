@@ -94,11 +94,26 @@ export default function ScriptDetailPage() {
           setLocalScript(mappedScript);
           cacheScript(mappedScript);
 
+          if (mappedScript.writerName) {
+            const names = mappedScript.writerName.split(" ");
+            setWriterProfile({
+              firstName: names[0] || "",
+              lastName: names.slice(1).join(" ") || "",
+              bio: "", 
+              profileImage: null,
+              portfolioUrl: null,
+            });
+          }
+
           const writerId = mappedScript.writerId;
           if (writerId) {
-            const writerResp = await api.getWriterProfile(writerId);
-            if (writerResp.success && writerResp.data) {
-              setWriterProfile(writerResp.data);
+            try {
+              const writerResp = await api.getWriterProfile(writerId);
+              if (writerResp.success && writerResp.data) {
+                setWriterProfile(writerResp.data);
+              }
+            } catch (wErr) {
+              console.warn("Failed to fetch writer profile", wErr);
             }
           }
         } else if (!contextScript) {
