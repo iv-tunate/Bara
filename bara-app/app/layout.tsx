@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Lato } from "next/font/google";
 import "./globals.css";
-import ToasterClient from "@/components/ToasterClient";
+import ClientProviders from "@/components/ClientProviders";
 
 const lato = Lato({
   subsets: ["latin"],
@@ -26,8 +26,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={lato.variable}>
       <body className="font-sans bg-white text-black">
-        {children}
-        <ToasterClient />
+        <ClientProviders>{children}</ClientProviders>
       </body>
     </html>
   );

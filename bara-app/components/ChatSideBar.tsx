@@ -8,8 +8,8 @@ export default function ChatSidebar({
   onSelectChat,
 }: {
   chats: any[];
-  selectedChatId: number;
-  onSelectChat: (id: number) => void;
+  selectedChatId: string;
+  onSelectChat: (id: string) => void;
 }) {
   return (
     <aside className="w-full md:w-[260px] border-r border-gray-200 p-4 overflow-y-auto">

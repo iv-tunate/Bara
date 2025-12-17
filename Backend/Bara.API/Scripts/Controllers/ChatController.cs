@@ -152,6 +152,29 @@ namespace Bara.API.Scripts.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetChats(int Page = 1, int PageSize = 20)
+        {
+            try
+            {
+                var userId = GetAuthenticatedUserId();
+                var result = await chatService.GetUserChatsAsync(userId, Page, PageSize);
+
+                if (!result.IsSuccess)
+                {
+                    return StatusCode(result.StatusCode, result);
+                }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name,
+                    "While getting user chats");
+                return StatusCode(500, ResponseDetail<object>.Failed("An error occurred while retrieving chats", 500));
+            }
+        }
+
         /// <summary>
         /// Gets the authenticated user's ID from the JWT token.
         /// </summary>

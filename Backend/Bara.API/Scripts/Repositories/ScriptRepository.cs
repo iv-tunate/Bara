@@ -1,5 +1,6 @@
 ﻿using Bara.API.DataContext;
 using Bara.API.Scripts.DTOs;
+using Bara.API.Scripts.DTOs.ChatDTOs;
 using Bara.API.Scripts.Enums;
 using Bara.API.Scripts.Interfaces;
 using Bara.API.Scripts.Models;
@@ -318,42 +319,40 @@ namespace Bara.API.Scripts.Repositories
                 if (allScripts == null)
                 {
 
-                    var scriptData = await dbContext.Scripts
-                                .Include(x => x.Genres)
+                    allScripts = await dbContext.Scripts
                                 .Where(x => x.Status == ScriptStatus.Available)
                                 .OrderBy(x => x.IsPremiumScript)
                                 .ThenByDescending(x => x.CreatedAt)
                                 .AsNoTracking()
+                                .Select(s => new ScriptDTO
+                                {
+                                    Id = s.Id,
+                                    Title = s.Title,
+                                    Logline = s.Logline,
+                                    Synopsis = s.Synopsis,
+                                    Price = s.Price,
+                                    CurrencySymbol = s.CurrencySymbol,
+                                    Currency = s.Currency,
+                                    IsScriptRegistered = s.IsScriptRegistered,
+                                    RegistrationBody = s.RegistrationBody,
+                                    ImageUrl = s.ImageUrl,
+                                    ImagePublicId = s.ImagePublicId,
+                                    CopyrightNumber = s.CopyrightNumber,
+                                    OwnershipRights = s.OwnershipRights,
+                                    ProofUrl = s.ProofUrl,
+                                    WriterId = s.WriterId,
+                                    WriterName = s.WriterName,
+                                    Status = s.Status,
+                                    IsPremiumScript = s.IsPremiumScript,
+                                    CreatedAt = s.CreatedAt,
+                                    Genre = s.Genres.Select(g => new GenreDTO
+                                    {
+                                        Id = g.Id,
+                                        Name = g.Name,
+                                        Description = g.Description
+                                    }).ToList()
+                                })
                                 .ToListAsync();
-
-                    allScripts = scriptData.Select(s => new ScriptDTO
-                    {
-                        Id = s.Id,
-                        Title = s.Title,
-                        Logline = s.Logline,
-                        Synopsis = s.Synopsis,
-                        Price = s.Price,
-                        CurrencySymbol = s.CurrencySymbol,
-                        Currency = s.Currency,
-                        IsScriptRegistered = s.IsScriptRegistered,
-                        RegistrationBody = s.RegistrationBody,
-                        ImageUrl = s.ImageUrl,
-                        ImagePublicId = s.ImagePublicId,
-                        CopyrightNumber = s.CopyrightNumber,
-                        OwnershipRights = s.OwnershipRights,
-                        ProofUrl = s.ProofUrl,
-                        WriterId = s.WriterId,
-                        WriterName = s.WriterName,
-                        Status = s.Status,
-                        IsPremiumScript = s.IsPremiumScript,
-                        CreatedAt = s.CreatedAt,
-                        Genre = s.Genres.Select(g => new GenreDTO
-                        {
-                            Id = g.Id,
-                            Name = g.Name,
-                            Description = g.Description
-                        }).ToList() ?? new List<GenreDTO>()
-                    }).ToList();
 
                     var cacheOptions = new MemoryCacheEntryOptions()
                         .SetAbsoluteExpiration(TimeSpan.FromMinutes(10))
@@ -391,41 +390,39 @@ namespace Bara.API.Scripts.Repositories
                 memoryCache.TryGetValue<List<ScriptDTO>>(cacheKey, out var cachedScripts);
                 if (cachedScripts is null)
                 {
-                    var scriptData = await dbContext.Scripts
-                                                    .Include(x => x.Genres)
+                    cachedScripts = await dbContext.Scripts
                                                     .Where(x => x.WriterId == writerId && x.Status != ScriptStatus.Deleted)
                                                     .OrderByDescending(x => x.CreatedAt)
                                                     .AsNoTracking()
+                                                    .Select(s => new ScriptDTO
+                                                    {
+                                                        Id = s.Id,
+                                                        Title = s.Title,
+                                                        Logline = s.Logline,
+                                                        Synopsis = s.Synopsis,
+                                                        Price = s.Price,
+                                                        CurrencySymbol = s.CurrencySymbol,
+                                                        Currency = s.Currency,
+                                                        IsScriptRegistered = s.IsScriptRegistered,
+                                                        RegistrationBody = s.RegistrationBody,
+                                                        ImageUrl = s.ImageUrl,
+                                                        ImagePublicId = s.ImagePublicId,
+                                                        CopyrightNumber = s.CopyrightNumber,
+                                                        OwnershipRights = s.OwnershipRights,
+                                                        ProofUrl = s.ProofUrl,
+                                                        WriterId = s.WriterId,
+                                                        WriterName = s.WriterName,
+                                                        Status = s.Status,
+                                                        IsPremiumScript = s.IsPremiumScript,
+                                                        CreatedAt = s.CreatedAt,
+                                                        Genre = s.Genres.Select(g => new GenreDTO
+                                                        {
+                                                            Id = g.Id,
+                                                            Name = g.Name,
+                                                            Description = g.Description
+                                                        }).ToList()
+                                                    })
                                                     .ToListAsync();
-
-                    cachedScripts = scriptData.Select(s => new ScriptDTO
-                    {
-                        Id = s.Id,
-                        Title = s.Title,
-                        Logline = s.Logline,
-                        Synopsis = s.Synopsis,
-                        Price = s.Price,
-                        CurrencySymbol = s.CurrencySymbol,
-                        Currency = s.Currency,
-                        IsScriptRegistered = s.IsScriptRegistered,
-                        RegistrationBody = s.RegistrationBody,
-                        ImageUrl = s.ImageUrl,
-                        ImagePublicId = s.ImagePublicId,
-                        CopyrightNumber = s.CopyrightNumber,
-                        OwnershipRights = s.OwnershipRights,
-                        ProofUrl = s.ProofUrl,
-                        WriterId = s.WriterId,
-                        WriterName = s.WriterName,
-                        Status = s.Status,
-                        IsPremiumScript = s.IsPremiumScript,
-                        CreatedAt = s.CreatedAt,
-                        Genre = s.Genres.Select(g => new GenreDTO
-                        {
-                            Id = g.Id,
-                            Name = g.Name,
-                            Description = g.Description
-                        }).ToList() ?? new List<GenreDTO>()
-                    }).ToList();
 
                     var cacheOptions = new MemoryCacheEntryOptions()
                        .SetAbsoluteExpiration(TimeSpan.FromMinutes(10))
@@ -621,30 +618,33 @@ namespace Bara.API.Scripts.Repositories
 
                 await dbContext.ScriptTransactions.AddAsync(scriptTransaction);
 
-                //var chatResult = await chatService.CreateChatAsync(
-                //    scriptId: request.ScriptId,
-                //    scriptTitle: script.Title,
-                //    producerId: producerId,
-                //    producerName: $"{producer.FirstName} {producer.LastName}",
-                //    writerId: request.WriterId,
-                //    writerName: $"{writer.FirstName} {writer.LastName}"
-                //);
 
-                //if (!chatResult.IsSuccess)
-                //{
-                //    logger.LogWarning("Failed to create chat - CorrelationId: {CorrelationId}, Error: {Error}", correlationId, chatResult.Message);
-                //}
-                //else
-                //{
-                //    scriptTransaction.ScriptComments = await dbContext.Chats.FirstOrDefaultAsync(c => c.Id == chatResult.Data);
-                //    logger.LogInformation("Chat created for script transaction - CorrelationId: {CorrelationId}, ChatId: {ChatId}", correlationId, chatResult.Data);
-                //}
 
                 var fundsLocked = await walletService.LockFundsForScriptTransactionAsync(producerId, request.WriterId, script.Price, fee);
                 if (!fundsLocked)
                 {
                     logger.LogError("Failed to lock funds - CorrelationId: {CorrelationId}", correlationId);
                     return ResponseDetail<ScriptTransactionResponse>.Failed("Failed to lock funds", 500);
+                }
+
+
+                var chatRequest = new CreateChatRequest
+                {
+                    ScriptId = request.ScriptId,
+                    ScriptTitle = script.Title,
+                    ProducerId = producerId,
+                    ProducerName = $"{producer.FirstName} {producer.LastName}",
+                    WriterId = request.WriterId,
+                    WriterName = $"{writer.FirstName} {writer.LastName}"
+                };
+
+                var chatResult = await chatService.CreateChatAsync(chatRequest);
+                if (!chatResult.IsSuccess)
+                {
+                    logger.LogWarning("Failed to create chat - CorrelationId: {CorrelationId}, ScriptId: {ScriptId}, Error: {Error}",
+                        correlationId, request.ScriptId, chatResult.Message);
+                    // Decide if transaction should fail. For now, we log and proceed, or we could return failure.
+                    // Given communication is critical, let's log heavily. 
                 }
 
                 script.Status = ScriptStatus.InNegotiation;

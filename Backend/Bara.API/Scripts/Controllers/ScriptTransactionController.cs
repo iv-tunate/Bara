@@ -44,7 +44,6 @@ namespace Bara.API.Scripts.Controllers
         {
             try
             {
-                // Validate that the authenticated user matches the producer ID
                 var authenticatedUserId = GetAuthenticatedUserId();
                 if (authenticatedUserId != producerId)
                 {
@@ -90,7 +89,6 @@ namespace Bara.API.Scripts.Controllers
         {
             try
             {
-                // Validate that the authenticated user matches the producer ID
                 var authenticatedUserId = GetAuthenticatedUserId();
                 if (authenticatedUserId != producerId)
                 {

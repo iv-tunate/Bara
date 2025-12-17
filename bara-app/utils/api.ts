@@ -57,20 +57,20 @@ export async function apiRequest<T = any>(
 
     const contentType = response.headers.get("content-type");
 
-   let responseData: any = null;
-  
-   try {
-     if (contentType.includes("application/json")) {
-       responseData = await response.json();
-     } else if (contentType.includes("text/")) {
-       responseData = await response.text();
-     } else {
-       responseData = null;
-     }
-   } catch (parseError) {
-     console.warn("Failed to parse response:", parseError);
-     responseData = null;
-   }
+    let responseData: any = null;
+
+    try {
+      if (contentType.includes("application/json")) {
+        responseData = await response.json();
+      } else if (contentType.includes("text/")) {
+        responseData = await response.text();
+      } else {
+        responseData = null;
+      }
+    } catch (parseError) {
+      console.warn("Failed to parse response:", parseError);
+      responseData = null;
+    }
 
     if (response.ok) {
       return {
@@ -149,9 +149,10 @@ const API_ENDPOINTS = {
   SCRIPTS_BY_WRITER: (writerId: string, pageNumber: number, pageSize: number) =>
     `/api/scripts/writer/${writerId}/${pageNumber}/${pageSize}`,
   CREATE_CHAT: "/api/v1/chats",
-  GET_CHAT_HISTORY: (chatId:string) => `/api/v1/chats/${chatId}/messages`,
-  SEND_MESSAGE: (chatId:string) => `/api/v1/chats/${chatId}/messages`,
-  MARK_MESSAGES_READ: (chatId:string) => `/api/v1/chats/${chatId}/messages/mark-read`,
+  GET_CHAT_HISTORY: (chatId: string) => `/api/v1/chats/${chatId}/messages`,
+  SEND_MESSAGE: (chatId: string) => `/api/v1/chats/${chatId}/messages`,
+  MARK_MESSAGES_READ: (chatId: string) =>
+    `/api/v1/chats/${chatId}/messages/mark-read`,
   CLOSE_CHAT: (chatId: string) => `/api/v1/chats/${chatId}/close`,
 };
 
@@ -269,12 +270,12 @@ export const api = {
     );
   },
 
-  searchScripts: async(
-    searchTerm:string,
-     pageNumber: number,
+  searchScripts: async (
+    searchTerm: string,
+    pageNumber: number,
     pageSize: number
   ) => {
-       return await apiRequest(
+    return await apiRequest(
       `${BASE_URL}${API_ENDPOINTS.SEARCH_SCRIPTS(
         searchTerm,
         pageNumber,
@@ -421,6 +422,68 @@ export const api = {
         }),
       }
     );
+  },
+
+  // --- CHAT API ---
+  getChats: async (userId: string, page = 1, pageSize = 20) => {
+    return apiRequest(
+      `${BASE_URL}/api/chat?Page=${page}&PageSize=${pageSize}`,
+      {
+        method: "GET",
+        requireAuth: true,
+      }
+    );
+  },
+
+  getChatHistory: async (chatId: string, page = 1, pageSize = 20) => {
+    return apiRequest(
+      `${BASE_URL}/api/chat/${chatId}/messages?Page=${page}&PageSize=${pageSize}`,
+      {
+        method: "GET",
+        requireAuth: true,
+      }
+    );
+  },
+
+  sendMessage: async (
+    chatId: string,
+    content: string,
+    attachmentUrl?: string
+  ) => {
+    return apiRequest(`${BASE_URL}/api/chat/${chatId}/messages`, {
+      method: "POST",
+      requireAuth: true,
+      body: JSON.stringify({ content, attachmentUrl }),
+    });
+  },
+
+  markMessagesRead: async (chatId: string) => {
+    return apiRequest(`${BASE_URL}/api/chat/${chatId}/messages/mark-read`, {
+      method: "PATCH",
+      requireAuth: true,
+    });
+  },
+
+  createChat: async (data: {
+    scriptId: string;
+    producerId: string;
+    writerId: string;
+    scriptTitle: string;
+    producerName: string;
+    writerName: string;
+  }) => {
+    return apiRequest(`${BASE_URL}/api/chat`, {
+      method: "POST",
+      requireAuth: true,
+      body: JSON.stringify(data),
+    });
+  },
+
+  closeChat: async (chatId: string) => {
+    return apiRequest(`${BASE_URL}/api/chat/${chatId}/close`, {
+      method: "PATCH",
+      requireAuth: true,
+    });
   },
 };
 

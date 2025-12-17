@@ -105,7 +105,7 @@ export default function ProjectsPage() {
               onClick={() => setActiveTab("Pending")}
               className={`cursor-pointer pb-2 ${
                 activeTab === "Pending"
-                  ? "border-b-2 border-red-600 text-red-600"
+                  ? "border-b-4 border-[#810306] text-[#810306] font-semibold"
                   : "text-gray-500"
               }`}
             >
@@ -115,7 +115,7 @@ export default function ProjectsPage() {
               onClick={() => setActiveTab("Purchased")}
               className={`cursor-pointer pb-2 ${
                 activeTab === "Purchased"
-                  ? "border-b-2 border-red-600 text-red-600"
+                  ? "border-b-4 border-[#810306] text-[#810306] font-semibold"
                   : "text-gray-500"
               }`}
             >
