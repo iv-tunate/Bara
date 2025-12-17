@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import WithdrawFunds from "@/components/WithdrawFunds";
-import FundProducer from "@/components/FundProducer";
+import FundAccount from "@/components/FundAccount";
 import Pagination from "@/components/Pagination";
 import { getUserSession } from "@/utils/tokenManager";
 import { api } from "@/utils/api";
@@ -20,6 +20,7 @@ interface WalletData {
 
 export default function WalletPage() {
   const [isModalOpen, setModalOpen] = useState(false);
+  const [isWithdrawModalOpen, setWithdrawModalOpen] = useState(false);
   const [walletData, setWalletData] = useState<WalletData | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -191,15 +192,23 @@ export default function WalletPage() {
                     )
                   : "NGN 0.00"}
               </h2>
-              <button
-                onClick={() => setModalOpen(true)}
-                className="rounded-md bg-[#810306] px-4 py-2 text-white hover:bg-red-800 w-fit cursor-pointer transition-all duration-300 ease-in-out
-                  hover:scale-105"
-              >
-                {userSession?.userType?.toLowerCase() === "producer"
-                  ? "Fund Wallet"
-                  : "Withdraw Funds"}
-              </button>
+              <div className="flex gap-4">
+                {/* Fund Wallet Button (Available to Everyone) */}
+                <button
+                  onClick={() => setModalOpen(true)}
+                  className="rounded-md bg-[#810306] px-4 py-2 text-white hover:bg-red-800 w-fit cursor-pointer transition-all duration-300 ease-in-out hover:scale-105"
+                >
+                  Fund Wallet
+                </button>
+
+                {/* Withdraw Button (Available to Everyone) */}
+                <button
+                  onClick={() => setWithdrawModalOpen(true)}
+                  className="rounded-md border border-[#810306] text-[#810306] px-4 py-2 hover:bg-red-50 w-fit cursor-pointer transition-all duration-300 ease-in-out hover:scale-105"
+                >
+                  Withdraw Funds
+                </button>
+              </div>
             </div>
 
             {/* Summary */}
@@ -317,17 +326,13 @@ export default function WalletPage() {
           </>
         )}
       </div>
-      {userSession?.userType?.toLowerCase() === "producer" ? (
-        <FundProducer
-          isOpen={isModalOpen}
-          onClose={() => setModalOpen(false)}
-        />
-      ) : (
-        <WithdrawFunds
-          isOpen={isModalOpen}
-          onClose={() => setModalOpen(false)}
-        />
-      )}
+
+      <FundAccount isOpen={isModalOpen} onClose={() => setModalOpen(false)} />
+
+      <WithdrawFunds
+        isOpen={isWithdrawModalOpen}
+        onClose={() => setWithdrawModalOpen(false)}
+      />
     </main>
   );
 }

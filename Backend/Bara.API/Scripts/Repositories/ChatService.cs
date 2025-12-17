@@ -347,6 +347,7 @@ namespace Bara.API.Scripts.Repositories
                 logger.LogInformation("Chat closed successfully - CorrelationId: {CorrelationId}, ChatId: {ChatId}",
                     correlationId, chatId);
 
+
                 return ResponseDetail<bool>.Successful(true, "Chat closed successfully");
             }
             catch (Exception ex)
@@ -354,6 +355,23 @@ namespace Bara.API.Scripts.Repositories
                 logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name,
                     $"While closing chat - CorrelationId: {correlationId}, ChatId: {chatId}");
                 return ResponseDetail<bool>.Failed("Failed to close chat", 500);
+            }
+        }
+
+        public async Task<ResponseDetail<List<ChatSummaryDTO>>> GetUserChatsAsync(Guid userId, int page = 1, int pageSize = 20)
+        {
+            var correlationId = Guid.NewGuid();
+            try
+            {
+                var chatSummaries = await chatRepository.GetUserChatsAsync(userId, page, pageSize);
+
+                return ResponseDetail<List<ChatSummaryDTO>>.Successful(chatSummaries, "Chats retrieved successfully");
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name,
+                   $"While retrieving user chats - CorrelationId: {correlationId}, UserId: {userId}");
+                return ResponseDetail<List<ChatSummaryDTO>>.Failed("Failed to retrieve chats", 500);
             }
         }
     }

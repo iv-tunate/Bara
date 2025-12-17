@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { getUserSession } from "@/utils/tokenManager";
 import { api } from "@/utils/api";
 import { usePageGuard } from "@/app/hooks/usepageguard";
+
 interface BankDetail {
   id: string;
   accountNumber: string;
@@ -27,6 +28,9 @@ interface Bank {
 
 export default function BankDetailsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams?.get("returnUrl");
+
   const [bankDetails, setBankDetails] = useState<BankDetail[]>([]);
   const [banks, setBanks] = useState<Bank[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,30 +46,31 @@ export default function BankDetailsPage() {
   });
 
   useEffect(() => {
-    const id = localStorage.getItem("userId");
-    setUserId(id);
-  }, []);
-  usePageGuard();
+    const session = getUserSession();
+    if (!session?.userId) return;
+    setUserId(session.userId);
 
-  const loadData = async (userId: string) => {
-    try {
-      setIsLoading(true);
-      const bankDetailsResponse = await api.getBankDetails(userId);
-      if (bankDetailsResponse.success && bankDetailsResponse.data) {
-        setBankDetails(bankDetailsResponse.data);
+    const loadData = async (id: string) => {
+      try {
+        setIsLoading(true);
+        const bankDetailsResponse = await api.getBankDetails(id);
+        if (bankDetailsResponse.success && bankDetailsResponse.data) {
+          setBankDetails(bankDetailsResponse.data);
+        }
+        const banksResponse = await api.getBanks();
+        if (banksResponse.success && banksResponse.data) {
+          setBanks(banksResponse.data);
+        }
+      } catch (error) {
+        console.error("Error loading data:", error);
+        setError("Failed to load bank details");
+      } finally {
+        setIsLoading(false);
       }
-      const banksResponse = await api.getBanks();
-      if (banksResponse.success && banksResponse.data) {
-        setBanks(banksResponse.data);
-      }
-    } catch (error) {
-      console.error("Error loading data:", error);
-      setError("Failed to load bank details");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  loadData(userId);
+    };
+
+    loadData(session.userId);
+  }, []);
   const handleBankSelect = (bankCode: string) => {
     const selectedBank = banks.find((bank) => bank.code === bankCode);
     if (selectedBank) {
@@ -102,7 +107,14 @@ export default function BankDetailsPage() {
         setSuccess("Bank details added successfully");
         setFormData({ accountNumber: "", bankCode: "", bankName: "" });
         setShowAddForm(false);
-        await loadData(session.userId);
+        await loadData(session.userId); // Refresh list
+
+        // Handle Return URL
+        if (returnUrl) {
+          setTimeout(() => {
+            router.push(decodeURIComponent(returnUrl));
+          }, 1000);
+        }
       } else {
         setError(response.message || "Failed to add bank details");
       }
@@ -153,6 +165,9 @@ export default function BankDetailsPage() {
         {success && (
           <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-4">
             {success}
+            {returnUrl && (
+              <p className="text-xs mt-1">Redirecting you back...</p>
+            )}
           </div>
         )}
 

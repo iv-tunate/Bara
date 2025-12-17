@@ -9,12 +9,14 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@microsoft/signalr": "^10.0.0",
     "aws-sdk": "^2.1692.0",
     "class-variance-authority": "^0.7.1",
     "cloudinary": "^2.8.0",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "lucide-react": "^0.542.0",
-    "next": "^16.0.0",
+    "next": "16.0.10",
     "pdfjs-dist": "^5.4.54",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
