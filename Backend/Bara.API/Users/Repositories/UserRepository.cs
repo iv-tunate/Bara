@@ -43,6 +43,7 @@ namespace Bara.API.Users.Repositories
 
         public async Task<ResponseDetail<RegisterResponseDTO>> BeginRegistration(RegisterDTO detail)
         {
+            using var transaction = await dbContext.Database.BeginTransactionAsync();
             try
             {
                 var validationErrors = new List<string>();
@@ -146,6 +147,7 @@ namespace Bara.API.Users.Repositories
             }
             catch (Exception ex)
             {
+                await transaction.RollbackAsync();
                 logger.LogError($"An exception: {ex.GetType().Name} was thrown while creating a writer profile... \nBase Exception: {ex.GetBaseException().GetType().Name}", $"Exception Code: {ex.HResult}", ex.Message);
                 return ResponseDetail<RegisterResponseDTO>.Failed("Your request cannot be completed at this time... Please try again later", 500, "Unexpected error");
             }
@@ -164,7 +166,7 @@ namespace Bara.API.Users.Repositories
 
                 if (user is null)
                 {
-                    return ResponseDetail<BankDetail>.Failed(default, "Invalid or non existent user id. Please check the user ID and try again.");
+                    return ResponseDetail<BankDetail>.Failed(new BankDetail(), "Invalid or non existent user id. Please check the user ID and try again.");
                 }
 
                 var resolveAccountRes = await paystack.ResolveAccountNumber(bankDetailData.AccountNumber, bankDetailData.BankCode);

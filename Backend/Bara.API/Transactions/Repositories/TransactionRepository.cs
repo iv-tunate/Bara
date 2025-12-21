@@ -57,21 +57,13 @@ namespace Bara.API.Transactions.Repositories
                             x.Id,
                             x.Email,
                             x.AuthProfile.FullName,
-                            WalletId = (Guid?)x.Wallet.Id // Safe projection
+                            WalletId = x.Wallet.Id
                         }).FirstOrDefaultAsync();
 
                 if (user == null)
                 {
                     logger.LogInformation($"User with ID {userId} not found while initiating transaction.");
-                    await dbTransaction.RollbackAsync();
                     return ResponseDetail<object>.Failed("User not found", 404);
-                }
-
-                if (user.WalletId == null)
-                {
-                     logger.LogWarning($"User {userId} has no wallet.");
-                     await dbTransaction.RollbackAsync();
-                     return ResponseDetail<object>.Failed("User wallet not found", 400); 
                 }
 
                 var transaction = new PaymentTransaction
@@ -82,15 +74,21 @@ namespace Bara.API.Transactions.Repositories
                     Status = TransactionStatus.Initiated,
                     TransactionType = TransactionType.WalletFunding,
                     WalletID = user.WalletId,
-                    ReferenceId = $"PENDING-{Guid.NewGuid()}", 
-                    PaymentMethod = "Paystack", 
+                    ReferenceId = $"PENDING-{Guid.NewGuid()}-{user.Id}",
+                    PaymentMethod = "Paystack",
                     Currency = Currency.NAIRA
                 };
 
                 await dbContext.Transactions.AddAsync(transaction);
                 var dbRes = await dbContext.SaveChangesAsync();
-                
-                if (dbRes > 0)
+
+                if (dbRes < 0)
+                {
+                    await dbTransaction.RollbackAsync();
+                    logger.LogError($"Failed to save transaction for user {user.FullName}. Database error.");
+                    return ResponseDetail<object>.Failed("Failed to initiate transaction", 500);
+                }
+                else
                 {
                     var paymentInitRequest = new PaymentInitRequest
                     {
@@ -107,19 +105,19 @@ namespace Bara.API.Transactions.Repositories
                             { "TransactionId", transaction.Id }
                         },
                     };
-                    
+
                     var paymentResponse = await paystack.InitializePaymentAsync(paymentInitRequest);
-                    
+
                     if (paymentResponse.Status)
                     {
                         transaction.ReferenceId = paymentResponse.Data.Reference;
                         transaction.Status = TransactionStatus.Pending;
                         transaction.AccessCode = paymentResponse.Data.AccessCode;
-                        
-                        dbContext.Transactions.Update(transaction); 
+
+                        dbContext.Transactions.Update(transaction);
                         await dbContext.SaveChangesAsync();
                         await dbTransaction.CommitAsync();
-                        
+
                         return ResponseDetail<object>.Successful(new
                         {
                             transaction.Id,
@@ -134,12 +132,6 @@ namespace Bara.API.Transactions.Repositories
                         return ResponseDetail<object>.Failed(paymentResponse.Message, 500);
                     }
                 }
-                else
-                {
-                    await dbTransaction.RollbackAsync();
-                    logger.LogError($"Failed to save transaction for user {user.FullName}. Database error.");
-                    return ResponseDetail<object>.Failed("Failed to initiate transaction", 500);
-                }
             }
             catch (Exception ex)
             {
@@ -151,26 +143,8 @@ namespace Bara.API.Transactions.Repositories
 
         public async Task<ResponseDetail<bool>> InitiateWithdrawalProcess(Guid userId, InitiateWithdrawalDTO data)
         {
-            // Usually withdrawal initiation writes tokens and sends mail, might involve DB if token valid.
-            // Check original: it accessed externalServices, generated token, sent mail. No DB write initially?
-            // Actually it just checks user. No DB state change in original code. Wait.
-            // Original code: "user = await dbContext.Users.FindAsync(userId)"... "mailer.SendMail".
-            // No DB changes?
-            // Ah, looking closely at original: It does NOT save anything to DB. Just cache.
-            // So transaction not strictly needed unless we change logic to save withdrawal request.
-            // However, user said "every single method". I will wrap it just in case logic evolves, but effectively it's read-only for DB.
-            // Wait, does it? No dbContext.SaveChanges.
-            // I'll skip wrapping read-only/cache-only methods to avoid overhead, unless user insists on "every single method" blindly.
-            // But verify: ContinueWithdrawalInitiation DOES write.
-            
-            try 
+            try
             {
-               // This method is read-only on DB (just reads User), writes to Cache and Mail. 
-               // Wrapping in DB transaction does nothing useful but adds overhead.
-               // I will leave it as is, or wrap if user insists.
-               // Let's look at "ContinueWithdrawalInitiation". This one writes.
-               
-               // Original method body:
                 var user = await dbContext.Users.FindAsync(userId);
                 if (user == null)
                 {
@@ -203,7 +177,6 @@ namespace Bara.API.Transactions.Repositories
             }
             catch (Exception ex)
             {
-                // No transaction to rollback
                 logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"While initiating withdrawal for {userId}");
                 return ResponseDetail<bool>.Failed("Failed to initiate withdrawal", 500, ex.Message);
             }
@@ -223,14 +196,13 @@ namespace Bara.API.Transactions.Repositories
 
                 if (user == null)
                 {
-                    await dbTransaction.RollbackAsync();
                     return ResponseDetail<bool>.Failed(false, "Invaid or Non-Existent user Id", 400, "Invalid Operation");
                 }
 
                 var cacheKey = $"withdrawal_token_{userId}";
                 if (!cache.TryGetValue(cacheKey, out string cachedToken) || cachedToken != token)
                 {
-                    await dbTransaction.RollbackAsync();
+                    logger.LogInformation($"Invalid or expired withdrawal token attempt for user {user.FirstName} {user.MiddleName} {user.LastName}");
                     return ResponseDetail<bool>.Failed(false, "Invalid or expired token", 400, "Invalid Token");
                 }
                 cache.Remove(cacheKey);
@@ -238,11 +210,15 @@ namespace Bara.API.Transactions.Repositories
                 var recipientCode = user.BankDetails.Where(x => x.Id == data.BankAccountId)
                                                     .Select(x => x.RecipientCode).FirstOrDefault();
 
+                if (string.IsNullOrEmpty(recipientCode))
+                {
+                    logger.LogInformation($"No recipient code found for user {user.FirstName} {user.MiddleName} {user.LastName} which caused the withdrawal transaction to fail");
+                }
                 var availableBal = user.Wallet.AvailableBalance;
-                var fee = data.Amount * 0.016m; //1.6% fee
+                var fee = data.Amount * 0.016m;
                 if (availableBal < data.Amount)
                 {
-                    await dbTransaction.RollbackAsync();
+                    logger.LogInformation($"Insufficient balance for user {user.FirstName} {user.MiddleName} {user.LastName} to process withdrawal of {data.Amount}");
                     return ResponseDetail<bool>.Failed(false, "Insufficient balance", 400, "Insufficient Balance");
                 }
                 var reqBody = new WithdrawalRequest
@@ -257,7 +233,7 @@ namespace Bara.API.Transactions.Repositories
 
                 if (!withdrawalResponse.Status)
                 {
-                    await dbTransaction.RollbackAsync();
+                    logger.LogError($"Withdrawal initiation failed for user {user.FirstName} {user.MiddleName} {user.LastName}. Error: {withdrawalResponse.Message}");
                     return ResponseDetail<bool>.Failed(false, "Withdrawal initiation failed", 500, withdrawalResponse.Message);
                 }
                 var transaction = new PaymentTransaction
@@ -286,7 +262,7 @@ namespace Bara.API.Transactions.Repositories
                     await dbTransaction.RollbackAsync();
                     return ResponseDetail<bool>.Failed(false, "Withdrawal initiation failed", 500, "Database error");
                 }
-                
+
                 await dbTransaction.CommitAsync();
 
                 await notificationHub.Clients.User(userId.ToString())
@@ -327,21 +303,19 @@ namespace Bara.API.Transactions.Repositories
                 if (result is null)
                 {
                     logger.LogInformation($"Transaction with reference {reference} not found while verifying transaction.");
-                    await dbTransaction.RollbackAsync();
                     return ResponseDetail<bool>.Failed("Transaction not found", 404);
                 }
 
                 var userTransaction = result.Transaction;
                 if (userTransaction == null)
                 {
-                    await dbTransaction.RollbackAsync();
+                    logger.LogInformation($"Transaction with reference {reference} not found while verifying transaction.");
                     return ResponseDetail<bool>.Failed("Transaction not found", 404);
                 }
 
                 var verifyReq = await paystack.VerifyPaymentAsync(userTransaction.ReferenceId);
                 if (verifyReq.Status && verifyReq.Data != null)
                 {
-                    // Success logic
                     if (verifyReq.Data.Status == "success" && verifyReq.Data.Amount == userTransaction.Amount && userTransaction.Status is TransactionStatus.Completed)
                     {
                         await dbTransaction.CommitAsync();
@@ -398,7 +372,6 @@ namespace Bara.API.Transactions.Repositories
                     }
                     else
                     {
-                        // Verification returned a non-success status or mismatch
                         userTransaction.Status = verifyReq.Data.Status switch
                         {
                             "failed" => TransactionStatus.Failed,
@@ -409,7 +382,7 @@ namespace Bara.API.Transactions.Repositories
                         userTransaction.ModifiedAt = DateTimeOffset.UtcNow;
                         dbContext.Transactions.Update(userTransaction);
                         await dbContext.SaveChangesAsync();
-                        await dbTransaction.CommitAsync(); // Commit the "Failed" status
+                        await dbTransaction.CommitAsync();
                         return ResponseDetail<bool>.Failed("Transaction verification failed", 400);
                     }
                 }
@@ -449,14 +422,13 @@ namespace Bara.API.Transactions.Repositories
                 if (result is null)
                 {
                     logger.LogInformation($"Transfer with reference {reference} not found while verifying transfer.");
-                    await dbTransaction.RollbackAsync();
                     return ResponseDetail<bool>.Failed("Transfer not found", 404);
                 }
 
                 var userTransaction = result.Transaction;
                 if (userTransaction == null)
                 {
-                    await dbTransaction.RollbackAsync();
+                    logger.LogInformation($"Transfer with reference {reference} not found while verifying transfer.");
                     return ResponseDetail<bool>.Failed("Transfer not found", 404);
                 }
 
@@ -491,7 +463,7 @@ namespace Bara.API.Transactions.Repositories
                                 Reference = userTransaction.ReferenceId,
                                 Status = userTransaction.Status.ToString()
                             });
-                        
+
                         await dbTransaction.CommitAsync();
                         return ResponseDetail<bool>.Successful(true, "Transfer verified successfully");
                     }
@@ -512,8 +484,8 @@ namespace Bara.API.Transactions.Repositories
                         result.Wallet.TotalBalance += userTransaction.Amount;
                         dbContext.Wallets.Update(result.Wallet);
                         await dbContext.SaveChangesAsync();
-                        
-                        await dbTransaction.CommitAsync(); // Commit failure/reversal
+
+                        await dbTransaction.CommitAsync();
                         return ResponseDetail<bool>.Failed("Transfer verification failed", 400);
                     }
                 }
@@ -563,7 +535,7 @@ namespace Bara.API.Transactions.Repositories
                     cachedTransactions = transactions;
 
                     var cacheOptions = new MemoryCacheEntryOptions()
-                        .SetAbsoluteExpiration(TimeSpan.FromMinutes(5)) // Shorter cache for transaction data
+                        .SetAbsoluteExpiration(TimeSpan.FromMinutes(5))
                         .SetSlidingExpiration(TimeSpan.FromMinutes(2));
 
                     cache.Set(cacheKey, cachedTransactions, cacheOptions);
