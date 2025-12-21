@@ -200,6 +200,29 @@ export default function AccountDropdown({
           </svg>
           My Wallet
         </Link>
+        
+        <Link
+          href="/help"
+          onClick={onClose}
+          className="flex items-center px-4 py-2 text-sm text-[#333740] hover:bg-[#F5F5F5] transition-colors"
+        >
+  <svg
+  className="w-5 h-5 mr-2"
+  fill="none"
+  stroke="currentColor"
+  viewBox="0 0 24 24"
+>
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth={2}
+    d="M12 18h.01M12 6a6 6 0 00-6 6c0 2.5 3 2.5 3 5h6c0-2.5 3-2.5 3-5a6 6 0 00-6-6z"
+  />
+</svg>
+
+
+          Help and Support
+        </Link>
 
         <hr className="my-2 border-gray-200" />
 

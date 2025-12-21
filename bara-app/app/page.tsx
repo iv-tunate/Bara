@@ -89,7 +89,7 @@ export default function HomePage() {
             {/* Background Image */}
             <div
               className="absolute inset-0 bg-cover bg-center"
-              style={{ backgroundImage: "url('/landingbg.png')" }}
+              style={{ backgroundImage: "url('/director.png')" }}
             ></div>
 
             {/* Tint */}
@@ -128,7 +128,7 @@ export default function HomePage() {
             {/* Background Image */}
             <div
               className="absolute inset-0 bg-cover bg-center"
-              style={{ backgroundImage: "url('/landingbg.png')" }}
+              style={{ backgroundImage: "url('/lady-working.png')" }}
             ></div>
 
             {/* Tint */}
