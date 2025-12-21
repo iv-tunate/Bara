@@ -76,7 +76,7 @@ namespace Bara.API.Users.Repositories
                 logger.LogInformation($"{detail.Type}_Verification_Token_{detail.Email}: {token}");
 
                 var verificationMail = MailNotifications.RegistrationConfirmationMailNotification(detail.Email, token.ToString());
-
+                logger.LogInformation($"A Verification mail, along with the token was sent to {detail.Email}");
                 User user;
                 var email = detail.Email.ToLower();
                 if (detail.Type == Role.Writer)
