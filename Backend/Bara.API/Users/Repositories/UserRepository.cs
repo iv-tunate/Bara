@@ -143,12 +143,13 @@ namespace Bara.API.Users.Repositories
                     AccessToken = jwt_token,
                     Role = user.AuthProfile.Role
                 };
+                logger.LogInformation($"Registration was complete and token was sent to {detail.Email}");
                 return ResponseDetail<RegisterResponseDTO>.Successful(response, $"A verification token has been sent to {detail.Email}. Please check your inbox to complete the registration process.", 201);
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                logger.LogError($"An exception: {ex.GetType().Name} was thrown while creating a writer profile... \nBase Exception: {ex.GetBaseException().GetType().Name}", $"Exception Code: {ex.HResult}", ex.Message);
+                logger.LogError($"An exception: {ex.GetType().Name} was thrown while creating a writer profile... This has caused the operation to rollback and  the account is probably not created\nBase Exception: {ex.GetBaseException().GetType().Name}", $"Exception Code: {ex.HResult}", ex.Message);
                 return ResponseDetail<RegisterResponseDTO>.Failed("Your request cannot be completed at this time... Please try again later", 500, "Unexpected error");
             }
         }
