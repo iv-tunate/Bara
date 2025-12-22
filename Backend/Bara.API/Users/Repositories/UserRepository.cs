@@ -54,7 +54,7 @@ namespace Bara.API.Users.Repositories
                 }
                 else if (userProfile?.IsDeleted == false)
                 {
-                    validationErrors.Add($"Please contact support to restore your account.");
+                    validationErrors.Add($"An account already exists...Please contact support to restore your account.");
                     return ResponseDetail<RegisterResponseDTO>.Failed(string.Join(" ; ", validationErrors), 409, "Conflict");
                 }
 
@@ -78,7 +78,7 @@ namespace Bara.API.Users.Repositories
                 var verificationMail = MailNotifications.RegistrationConfirmationMailNotification(detail.Email, token.ToString());
                 logger.LogInformation($"A Verification mail, along with the token was sent to {detail.Email}");
                 User user;
-                var email = detail.Email.ToLower();
+                var email = detail.Email.ToLowerInvariant();
                 if (detail.Type == Role.Writer)
                 {
                     Writer writerProfile = new Writer

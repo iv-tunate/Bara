@@ -520,6 +520,7 @@ namespace Bara.API.Scripts.Repositories
                 }
 
                 var producer = await dbContext.Producers
+
                     .Include(p => p.Wallet)
                     .FirstOrDefaultAsync(p => p.Id == producerId);
 
@@ -643,8 +644,6 @@ namespace Bara.API.Scripts.Repositories
                 {
                     logger.LogWarning("Failed to create chat - CorrelationId: {CorrelationId}, ScriptId: {ScriptId}, Error: {Error}",
                         correlationId, request.ScriptId, chatResult.Message);
-                    // Decide if transaction should fail. For now, we log and proceed, or we could return failure.
-                    // Given communication is critical, let's log heavily. 
                 }
 
                 script.Status = ScriptStatus.InNegotiation;

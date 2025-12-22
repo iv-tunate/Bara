@@ -91,7 +91,7 @@ namespace Bara.API.Users.Repositories
                 if (!document.IsSuccess || document.Data == null)
                 {
                     logger.LogError($"An error occurred while uploading KYC document for {producerDetailDTO.FirstName} {producerDetailDTO.LastName}");
-                    return ResponseDetail<GetProducerDetailDTO>.Failed($"An error occurred while uploading KYC document for {producerDetailDTO.FirstName} {producerDetailDTO.LastName}", 500, "Unexpected Error");
+                    return ResponseDetail<GetProducerDetailDTO>.Failed($"An error occurred. Please try again or contact support", 500, "Unexpected Error");
                 }
 
                 producer.Document = new Document

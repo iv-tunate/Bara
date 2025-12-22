@@ -126,7 +126,7 @@ namespace Bara.API.Users.Repositories
                 {
                     await transaction.RollbackAsync();
                     logger.LogError($"An error occurred while uploading KYC document for {writerDetailDTO.FirstName} {writerDetailDTO.LastName}");
-                    return ResponseDetail<GetWriterDetailDTO>.Failed($"An error occurred while uploading KYC document", 500, "Unexpected Error");
+                    return ResponseDetail<GetWriterDetailDTO>.Failed($"An error occurred. Please try again or contact support", 500, "Unexpected Error");
                 }
 
                 // --------------------  ASSIGN DOCUMENT TO WRITER PROFILE --------------------

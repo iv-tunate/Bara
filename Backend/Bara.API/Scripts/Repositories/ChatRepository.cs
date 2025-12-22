@@ -54,8 +54,9 @@ namespace Bara.API.Scripts.Repositories
             try
             {
                 return await dbContext.Chats
+                    .Where(c => c.Id == chatId)
                     .Include(c => c.Messages.OrderBy(m => m.SentAt))
-                    .FirstOrDefaultAsync(c => c.Id == chatId);
+                    .FirstOrDefaultAsync();
             }
             catch (Exception ex)
             {
@@ -77,10 +78,11 @@ namespace Bara.API.Scripts.Repositories
             try
             {
                 return await dbContext.Chats
+                    .Where(c => c.ScriptId == scriptId &&
+                                    c.ProducerId == producerId &&
+                                    c.WriterId == writerId)
                     .Include(c => c.Messages.OrderBy(m => m.SentAt))
-                    .FirstOrDefaultAsync(c => c.ScriptId == scriptId &&
-                                            c.ProducerId == producerId &&
-                                            c.WriterId == writerId);
+                    .FirstOrDefaultAsync();
             }
             catch (Exception ex)
             {

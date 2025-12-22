@@ -44,11 +44,14 @@ namespace Bara.API.Users.Repositories
         }
         public async Task<ResponseDetail<LoginResponseDTO>> Login(AuthRequestDTO authReqBody)
         {
-            var email = authReqBody.Email.ToLower();
+            var email = authReqBody.Email.ToLowerInvariant();
             try
             {
                 var validationErrors = new List<string>();
-                var userProfile = await dbContext.Users.Select(x => new { x.AuthProfile, x.VerificationStatus, x.Email }).FirstOrDefaultAsync(u => u.Email == email);
+                var userProfile = await dbContext.Users
+                                                .Where(u => u.Email == email)
+                                                .Select(x => new { x.AuthProfile, x.VerificationStatus, x.Email })
+                                                .FirstOrDefaultAsync();
                 if (userProfile == null)
                 {
                     return ResponseDetail<LoginResponseDTO>.Failed("Login unsuccessful...Email or password is invalid");
@@ -194,7 +197,8 @@ namespace Bara.API.Users.Repositories
         {
             try
             {
-                var user = await dbContext.AuthProfiles.Select(x => new { x.Email, x.UserId }).FirstOrDefaultAsync(x => x.Email == email.ToLower());
+                var normalizedEmail = email.Trim().ToLowerInvariant();
+                var user = await dbContext.AuthProfiles.Where(x => x.Email == normalizedEmail).Select(x => new { x.Email, x.UserId }).FirstOrDefaultAsync();
                 var token = RandomNumberGenerator.GetInt32(100000, 999999);
                 if (user == null)
                 {
@@ -232,8 +236,20 @@ namespace Bara.API.Users.Repositories
         {
             try
             {
-                var userProfile = await dbContext.Users.Select(x => new { x.AuthProfile, x.VerificationStatus, x.Email }).FirstOrDefaultAsync(u => u.Email == email.ToLower());
-                if (userProfile == null)
+                var normalizedEmail = email.Trim().ToLowerInvariant();
+
+                var userProfile = await dbContext.Users
+                    .AsNoTracking()
+                    .Where(u => u.Email == normalizedEmail)
+                    .Select(u => new
+                    {
+                        u.AuthProfile,
+                        u.VerificationStatus,
+                        u.Email
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (userProfile is null)
                 {
                     logger.LogInformation($"Email verification for user with email: {email} failed because email doesn't exist");
                     return ResponseDetail<LoginResponseDTO>.Failed($"Operation can not be completed because user does not exist", 404);
@@ -293,8 +309,8 @@ namespace Bara.API.Users.Repositories
         {
             try
             {
-
-                var userProfile = await dbContext.Users.Select(x => new { x.AuthProfile, x.VerificationStatus, x.Email }).FirstOrDefaultAsync(u => u.Email == loginDetails.Email.ToLower());
+                var email = loginDetails.Email.ToLowerInvariant();
+                var userProfile = await dbContext.Users.Where(u => u.Email == email).Select(x => new { x.AuthProfile, x.VerificationStatus, x.Email }).FirstOrDefaultAsync();
                 if (userProfile == null)
                 {
                     return ResponseDetail<LoginResponseDTO>.Failed("Login unsuccessful...Email or password is invalid");
