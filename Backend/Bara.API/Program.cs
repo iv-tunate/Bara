@@ -19,6 +19,7 @@ using Bara.API.Utilities.ToolKit;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -67,6 +68,10 @@ builder.Services.AddMemoryCache();
 //});
 var cs = builder.Configuration.GetConnectionString("Connection");
 //Console.WriteLine($"ConnectionString: {cs}");
+
+builder.Services.AddDataProtection()
+    .PersistKeysToDbContext<BaraContext>()
+    .SetApplicationName("Bara");
 
 builder.Services.AddHangfire(config =>
 {

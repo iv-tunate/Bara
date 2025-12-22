@@ -2,11 +2,12 @@
 using Bara.API.Scripts.Models.ScriptRelatedChats;
 using Bara.API.Transactions.Models;
 using Bara.API.Users.Models;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bara.API.DataContext
 {
-    public class BaraContext : DbContext
+    public class BaraContext : DbContext, IDataProtectionKeyContext
     {
         public BaraContext(DbContextOptions<BaraContext> options) : base(options)
         {
@@ -47,6 +48,7 @@ namespace Bara.API.DataContext
         public DbSet<ScriptTransaction> ScriptTransactions { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<Chat> Chats { get; set; }
+        public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

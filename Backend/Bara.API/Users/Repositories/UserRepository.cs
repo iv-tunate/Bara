@@ -72,7 +72,7 @@ namespace Bara.API.Users.Repositories
                 var token = RandomNumberGenerator.GetInt32(100000, 999999);
 
                 cache.Set($"User_Verification_Token_{detail.Email}", token.ToString(), absoluteExpiration: DateTimeOffset.UtcNow.AddMinutes(10));
-                Console.WriteLine($"{detail.Type}_Verification_Token_{detail.Email}: {token}");
+                //Console.WriteLine($"{detail.Type}_Verification_Token_{detail.Email}: {token}");
                 logger.LogInformation($"{detail.Type}_Verification_Token_{detail.Email}: {token}");
 
                 var verificationMail = MailNotifications.RegistrationConfirmationMailNotification(detail.Email, token.ToString());
@@ -133,6 +133,7 @@ namespace Bara.API.Users.Repositories
                     await dbContext.Users.AddAsync(user);
                 }
                 await dbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
 
                 BackgroundJob.Enqueue(() => hangfire.SendMailAsync(verificationMail));
                 var jwt_token = authService.GenerateJwtToken(user.AuthProfile.Role, user.AuthProfile.IsVerified ? "Verified" : "Unverified", user.Id);
