@@ -70,3 +70,17 @@ input[type="text"] {
   background-position: right 0.75rem center;
   background-size: 1rem;
 }
+
+
+@layer base {
+  button:not([disabled]),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+
+  button[disabled],
+  [role="button"][aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+}
+
