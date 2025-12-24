@@ -57,7 +57,12 @@ namespace Bara.API.Services.FileStorageServices.FileRepositories
                                                                     $"Allowed Extensions are: {string.Join(", ", allowedExtensions)}..." +
                                                                     $"\n Allowed mime types are: {string.Join(", ", allowedMimeTypes)}", 415, "Invalid File Type");
                 }
-
+                //var documentNumberValidation = await KycHelper.VerifyDocumentNumber(documentDetail.VerificationNumber, documentDetail);
+                //if (documentNumberValidation is false)
+                //{
+                //    return ResponseDetail<Document>.Failed($"The number on the uploaded {documentDetail.Type} verification document doesn't match the submitted {documentDetail.Type} number." +
+                //        $" Please ensure they match ", 400, "Invalid Verification Number");
+                //}
                 var uploadResult = await storageService.UploadDocumentAsync(userDirectoryName, file);
                 if (!uploadResult.Success)
                 {

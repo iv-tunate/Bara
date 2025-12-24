@@ -345,7 +345,7 @@ namespace Bara.API.Users.Repositories
                     return ResponseDetail<bool>.Successful(true, "User is already verified");
                 }
 
-                Utilities.Helpers.KycHelper.InitiateKycProcess(
+                KycHelper.InitiateKycProcess(
                     user.Document.IdentificationNumber,
                     user.Document.DocumentType,
                     user.Id,

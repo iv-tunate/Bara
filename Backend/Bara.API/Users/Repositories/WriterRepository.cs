@@ -122,7 +122,7 @@ namespace Bara.API.Users.Repositories
                 // --------------------  UPLOAD & ASSIGN DOCUMENT ID --------------------
                 var userDirectoryName = $"Writer_{writerDetailDTO.FirstName.ToUpperInvariant()}_{writerDetailDTO.LastName.ToUpperInvariant()}-{userId}";
                 var document = await fileService.ProcessDocumentForUpload(userId, userDirectoryName, writerDetailDTO.VerificationDocument);
-                if(!document.IsSuccess)
+                if(!document.IsSuccess || document.Data == null)
                 {
                     await transaction.RollbackAsync();
                     logger.LogInformation($"An error with status code {document.StatusCode} was thrown processing document KYC document for upload for" +
@@ -153,7 +153,7 @@ namespace Bara.API.Users.Repositories
                 }
 
                 // --------------------  PREPARE KYC REQUEST --------------------
-                Bara.API.Utilities.Helpers.KycHelper.InitiateKycProcess(
+                KycHelper.InitiateKycProcess(
                     writerDetailDTO.VerificationDocument.VerificationNumber,
                     writerDetailDTO.VerificationDocument.Type,
                     writerProfile.Id,
