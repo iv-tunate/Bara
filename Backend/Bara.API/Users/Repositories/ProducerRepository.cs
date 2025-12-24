@@ -4,6 +4,7 @@ using Bara.API.Services.YouVerifyIntegration;
 using Bara.API.Transactions.DTOs;
 using Bara.API.Users.DTOs.AddressDTOs;
 using Bara.API.Users.DTOs.ProducerDTOs;
+using Bara.API.Users.DTOs.WriterDTOs;
 using Bara.API.Users.Enums;
 using Bara.API.Users.Interfaces.UserInterfaces;
 using Bara.API.Users.Models;
@@ -88,10 +89,12 @@ namespace Bara.API.Users.Repositories
                 // --------------------  UPLOAD & ASSIGN DOCUMENT ID --------------------
                 var userDirectoryName = $"Producer_{producerDetailDTO.FirstName.ToUpperInvariant()}_{producerDetailDTO.LastName.ToUpperInvariant()}-{userId}";
                 var document = await fileService.ProcessDocumentForUpload(userId, userDirectoryName, producerDetailDTO.VerificationDocument);
-                if (!document.IsSuccess || document.Data == null)
+                if (!document.IsSuccess)
                 {
-                    logger.LogError($"An error occurred while uploading KYC document for {producerDetailDTO.FirstName} {producerDetailDTO.LastName}");
-                    return ResponseDetail<GetProducerDetailDTO>.Failed($"An error occurred. Please try again or contact support", 500, "Unexpected Error");
+                    await transaction.RollbackAsync();
+                    logger.LogInformation($"An error with status code {document.StatusCode} was thrown processing document KYC document for upload for" +
+                        $" {producerDetailDTO.FirstName} {producerDetailDTO.LastName}...\n{document.Message}");
+                    return ResponseDetail<GetProducerDetailDTO>.Failed($"{document.Message}", document.StatusCode, $"{document.Error}");
                 }
 
                 producer.Document = new Document
@@ -111,15 +114,13 @@ namespace Bara.API.Users.Repositories
                 await dbContext.SaveChangesAsync();
 
                 // --------------------  PREPARE KYC REQUEST --------------------
-                var kycDetail = new YouVerifyKycDto
-                {
-                    Id = producerDetailDTO.VerificationDocument.VerificationNumber,
-                    Type = producerDetailDTO.VerificationDocument.Type.ToString(),
-                    UserId = producer.Id,
-                    LastName = producer.LastName,
-                };
+                Bara.API.Utilities.Helpers.KycHelper.InitiateKycProcess(
+                    producerDetailDTO.VerificationDocument.VerificationNumber,
+                    producerDetailDTO.VerificationDocument.Type,
+                    producer.Id,
+                    producer.LastName
+                );
 
-                BackgroundJob.Enqueue(() => hangfire.StartKycProcess(kycDetail));
                 // --------------------  BUILD RESPONSE DTO --------------------
                 var producerProfile = new GetProducerDetailDTO
                 {

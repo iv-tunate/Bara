@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -8,16 +6,17 @@ import AccountDropdown, { UserData, WalletData } from "./AccountDropdown";
 import MessageDropdown from "./MessageDropdown";
 import { getUserSession } from "@/utils/tokenManager";
 import { api } from "@/utils/api";
+import { useWallet } from "@/context/WalletContext";
 
 export default function DashboardNavbar() {
   const [showAccountDropdown, setShowAccountDropdown] = useState(false);
   const [showMessageDropdown, setShowMessageDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [walletData, setWalletData] = useState<WalletData | undefined>(
-    undefined
-  );
   const [isLoading, setIsLoading] = useState(true);
+
+  // Use wallet context instead of fetching directly
+  const { walletData, isLoading: walletLoading } = useWallet();
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -50,18 +49,6 @@ export default function DashboardNavbar() {
               ? !!profileResponse.data.isVerified
               : false,
         });
-
-        const walletResponse = await api.getWalletBalance(session.userId);
-        if (walletResponse?.success && walletResponse?.data) {
-          setWalletData({
-            totalBalance: walletResponse.data.totalBalance ?? 0,
-            availableBalance: walletResponse.data.availableBalance ?? 0,
-            lockedBalance: walletResponse.data.lockedBalance ?? 0,
-            currencySymbol: walletResponse.data.currencySymbol ?? "₦",
-          });
-        } else {
-          setWalletData(undefined);
-        }
       } catch (error) {
         console.error("Error loading user data:", error);
       } finally {
@@ -121,8 +108,8 @@ export default function DashboardNavbar() {
               <AccountDropdown
                 onClose={() => setShowAccountDropdown(false)}
                 userData={userData}
-                walletData={walletData}
-                isLoading={isLoading}
+                walletData={walletData ?? undefined}
+                isLoading={isLoading || walletLoading}
               />
             </div>
           )}
@@ -192,8 +179,8 @@ export default function DashboardNavbar() {
                   <AccountDropdown
                     onClose={() => setShowAccountDropdown(false)}
                     userData={userData}
-                    walletData={walletData}
-                    isLoading={isLoading}
+                    walletData={walletData ?? undefined}
+                    isLoading={isLoading || walletLoading}
                   />
                 </div>
               )}

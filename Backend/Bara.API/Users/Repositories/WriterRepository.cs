@@ -122,13 +122,14 @@ namespace Bara.API.Users.Repositories
                 // --------------------  UPLOAD & ASSIGN DOCUMENT ID --------------------
                 var userDirectoryName = $"Writer_{writerDetailDTO.FirstName.ToUpperInvariant()}_{writerDetailDTO.LastName.ToUpperInvariant()}-{userId}";
                 var document = await fileService.ProcessDocumentForUpload(userId, userDirectoryName, writerDetailDTO.VerificationDocument);
-                if (!document.IsSuccess || document.Data == null)
+                if(!document.IsSuccess)
                 {
                     await transaction.RollbackAsync();
-                    logger.LogError($"An error occurred while uploading KYC document for {writerDetailDTO.FirstName} {writerDetailDTO.LastName}");
-                    return ResponseDetail<GetWriterDetailDTO>.Failed($"An error occurred. Please try again or contact support", 500, "Unexpected Error");
+                    logger.LogInformation($"An error with status code {document.StatusCode} was thrown processing document KYC document for upload for" +
+                        $" {writerDetailDTO.FirstName} {writerDetailDTO.LastName}...\n{document.Message}");
+                    return ResponseDetail<GetWriterDetailDTO>.Failed($"{document.Message}", document.StatusCode, $"{document.Error}");
                 }
-
+              
                 // --------------------  ASSIGN DOCUMENT TO WRITER PROFILE --------------------
                 writerProfile.Document = new Document
                 {
@@ -152,15 +153,14 @@ namespace Bara.API.Users.Repositories
                 }
 
                 // --------------------  PREPARE KYC REQUEST --------------------
-                var kycDetail = new YouVerifyKycDto
-                {
-                    Id = writerDetailDTO.VerificationDocument.VerificationNumber,
-                    Type = writerDetailDTO.VerificationDocument.Type.ToString(),
-                    UserId = writerProfile.Id,
-                    LastName = writerProfile.LastName,
-                };
+                Bara.API.Utilities.Helpers.KycHelper.InitiateKycProcess(
+                    writerDetailDTO.VerificationDocument.VerificationNumber,
+                    writerDetailDTO.VerificationDocument.Type,
+                    writerProfile.Id,
+                    writerProfile.LastName
+                );
 
-                BackgroundJob.Enqueue(() => hangfire.StartKycProcess(kycDetail));
+
                 // --------------------  BUILD RESPONSE DTO --------------------
                 var writer = new GetWriterDetailDTO
                 {

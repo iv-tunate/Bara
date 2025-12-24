@@ -109,8 +109,9 @@ export default function HomePage() {
             {/* Button */}
             <div className="mt-4 relative z-10 flex justify-center md:justify-start w-full">
               <Link
-                href="/register?type=writer"
-                className="bg-[#800000] text-white px-10 py-2 rounded-md text-base font-medium hover:bg-[#550000]"
+                href="/auth/register?type=Writer"
+                className={`bg-[#800000] text-white px-10 py-2 rounded-md text-base font-medium hover:bg-[#550000] transition
+      ${role !== "Guest" ? "invisible pointer-events-none" : ""}`}
               >
                 Create Account
               </Link>
@@ -147,8 +148,9 @@ export default function HomePage() {
             {/* Button */}
             <div className="mt-4 relative z-10 flex justify-center md:justify-start w-full">
               <Link
-                href="/register?type=producer"
-                className="bg-[#800000] text-white px-10 py-2 rounded-md text-base font-medium hover:bg-[#550000]"
+                href="/auth/register?type=Producer"
+                className={`bg-[#800000] text-white px-10 py-2 rounded-md text-base font-medium hover:bg-[#550000] transition
+      ${role !== "Guest" ? "invisible pointer-events-none" : ""}`}
               >
                 Create Account
               </Link>
@@ -322,13 +324,16 @@ export default function HomePage() {
           <div className="relative z-10 flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-4 sm:gap-8 py-5 px-0 sm:px-25">
             <Link
               href="/auth/register?type=Producer"
-              className="bg-[#810306] hover:bg-red-800 text-white px-6 sm:px-10 py-3 sm:py-4 rounded-md text-sm sm:text-sm transition-all duration-300 ease-in-out hover:scale-105"
+              className={`bg-[#810306] hover:bg-red-800 text-white px-6 sm:px-10 py-3 sm:py-4 rounded-md text-sm transition-all duration-300 ease-in-out hover:scale-105
+      ${role !== "Guest" ? "invisible pointer-events-none" : ""}`}
             >
               I am a Producer
             </Link>
+
             <Link
               href="/auth/register?type=Writer"
-              className="bg-[#810306] hover:bg-red-800 text-white   py-3 sm:py-4 px-9 rounded-md text-sm sm:text-sm transition-all duration-300 ease-in-out hover:scale-105"
+              className={`bg-[#810306] hover:bg-red-800 text-white py-3 sm:py-4 px-9 rounded-md text-sm transition-all duration-300 ease-in-out hover:scale-105
+      ${role !== "Guest" ? "invisible pointer-events-none" : ""}`}
             >
               I am a Writer
             </Link>

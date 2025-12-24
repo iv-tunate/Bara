@@ -47,11 +47,12 @@ export default function IdentityVerificationForm({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
     if (!file) return;
-    const allowed = ["image/png", "image/jpeg", "application/pdf"];
-    if (!allowed.includes(file.type)) {
-      toast.error("Only PNG, JPEG and PDF files are accepted");
+
+    if (file.type !== "application/pdf") {
+      toast.error("Only PDF files are accepted for verification documents");
       return;
     }
+
     setForm((prev) => ({ ...prev, file }));
   };
 
@@ -153,18 +154,8 @@ export default function IdentityVerificationForm({
                 Upload complete
               </span>
 
-              {/* Preview for images, show filename for PDFs */}
-              {form.file.type.startsWith("image/") ? (
-                <Image
-                  src={URL.createObjectURL(form.file)}
-                  alt="Uploaded preview"
-                  width={60}
-                  height={100}
-                  className="rounded-sm border"
-                />
-              ) : (
-                <div className="text-sm">{form.file.name}</div>
-              )}
+              {/* Show filename for PDFs */}
+              <div className="text-sm font-medium">{form.file.name}</div>
 
               <div className="w-full h-1 bg-green-600 rounded" />
 
@@ -184,7 +175,7 @@ export default function IdentityVerificationForm({
             className="w-full h-40 border-2 border-dashed border-[#ABADB2] rounded-md bg-[#F5F5F5] flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-100 transition"
           >
             <p className="text-sm text-[#333740]">
-              Drag and drop file (png, jpeg, pdf) here
+              Drag and drop your PDF document here
             </p>
             <p className="text-sm text-[#333740] mt-1">
               or{" "}
@@ -197,7 +188,7 @@ export default function IdentityVerificationForm({
 
         <input
           type="file"
-          accept="image/png, image/jpeg, application/pdf"
+          accept="application/pdf"
           onChange={handleFileChange}
           ref={fileInputRef}
           className="hidden"

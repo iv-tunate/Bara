@@ -262,6 +262,7 @@ namespace Bara.API.Users.Repositories
                 var user = await dbContext.Users
                     .Include(x => x.Document)
                     .Include(x => x.AuthProfile)
+                    .AsSplitQuery()
                     .FirstOrDefaultAsync(x => x.Document.IdentificationNumber == verificationIdNumber);
 
                 var errors = new List<string>();
@@ -315,6 +316,49 @@ namespace Bara.API.Users.Repositories
             {
                 logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"updating user verification status for {name}");
                 return ResponseDetail<bool>.Failed(false, $"An error occurred while updating user verification status for {name}. Please try again later.");
+            }
+        }
+
+        public async Task<ResponseDetail<bool>> RetryKycVerification(Guid userId)
+        {
+            try
+            {
+                var user = await dbContext.Users
+                    .Include(x => x.Document)
+                    .FirstOrDefaultAsync(x => x.Id == userId);
+
+                if (user is null)
+                {
+                    logger.LogWarning($"KYC retry failed: User with ID {userId} not found");
+                    return ResponseDetail<bool>.Failed(false, "User not found", 404, "Not Found");
+                }
+
+                if (user.Document is null || string.IsNullOrEmpty(user.Document.IdentificationNumber))
+                {
+                    logger.LogWarning($"KYC retry failed: User {userId} has no verification document");
+                    return ResponseDetail<bool>.Failed(false, "User has no verification document on file", 400, "Bad Request");
+                }
+
+                if (user.VerificationStatus == VerificationStatus.Approved)
+                {
+                    logger.LogInformation($"KYC retry skipped: User {userId} is already verified");
+                    return ResponseDetail<bool>.Successful(true, "User is already verified");
+                }
+
+                Utilities.Helpers.KycHelper.InitiateKycProcess(
+                    user.Document.IdentificationNumber,
+                    user.Document.DocumentType,
+                    user.Id,
+                    user.LastName
+                );
+
+                logger.LogInformation($"KYC verification retry initiated for user {userId}");
+                return ResponseDetail<bool>.Successful(true, "KYC verification retry has been initiated successfully");
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"retrying KYC for user {userId}");
+                return ResponseDetail<bool>.Failed(false, "An error occurred while retrying KYC verification. Please try again later.");
             }
         }
     }

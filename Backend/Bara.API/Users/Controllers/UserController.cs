@@ -192,5 +192,39 @@ namespace Bara.API.Users.Controllers
                 return StatusCode(500, ResponseDetail<string>.Failed("An error occured", 500, "Internal server error"));
             }
         }
+
+        /// <summary>
+        /// Manually retries KYC verification for a user. Admin-only endpoint.
+        /// </summary>
+        /// <param name="userId">The unique identifier of the user to retry KYC for</param>
+        /// <returns>Returns 200 OK if retry was successful, 400/404 if validation fails, or 500 on error</returns>
+        [Authorize(Roles = "Admin")]
+        [HttpPost("retry-kyc/{userId}")]
+        public async Task<IActionResult> RetryKycVerification(Guid userId)
+        {
+            try
+            {
+                var response = await userService.RetryKycVerification(userId);
+                if (response.IsSuccess)
+                {
+                    return Ok(response);
+                }
+                else if (response.StatusCode == 404)
+                {
+                    logger.LogWarning("KYC retry failed for user {UserId}: User not found", userId);
+                    return NotFound(response);
+                }
+                else
+                {
+                    logger.LogWarning("KYC retry failed for user {UserId}: {Message}", userId, response.Message);
+                    return BadRequest(response);
+                }
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"Retrying KYC for user {userId}");
+                return StatusCode(500, ResponseDetail<string>.Failed("An error occurred while retrying KYC verification", 500, "Internal server error"));
+            }
+        }
     }
 }

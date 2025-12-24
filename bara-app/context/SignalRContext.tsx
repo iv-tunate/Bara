@@ -32,8 +32,13 @@ export const SignalRProvider = ({
     const session = getUserSession();
     if (!session?.accessToken) return;
 
+    
+    const apiBaseUrl =
+      process.env.NEXT_PUBLIC_API_BASE_URL;
+    const hubUrl = `${apiBaseUrl}/notification`;
+
     const newConnection = new signalR.HubConnectionBuilder()
-      .withUrl("https://localhost:7119/notificationHub", {
+      .withUrl(hubUrl, {
         accessTokenFactory: () => session.accessToken,
       })
       .withAutomaticReconnect()

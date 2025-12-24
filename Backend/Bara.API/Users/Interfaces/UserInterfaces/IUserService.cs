@@ -78,5 +78,13 @@ namespace Bara.API.Users.Interfaces.UserInterfaces
         /// <param name="userId"></param>
         /// <returns></returns>
         Task<ResponseDetail<BankDetail>> GetBankDetail(Guid bankDetailId, Guid userId);
+
+        /// <summary>
+        /// Manually retries KYC verification for a user who has previously failed verification.
+        /// This endpoint allows administrators to trigger a new KYC verification attempt.
+        /// </summary>
+        /// <param name="userId">The unique identifier of the user to retry KYC for</param>
+        /// <returns>A response indicating whether the KYC retry was successfully initiated</returns>
+        Task<ResponseDetail<bool>> RetryKycVerification(Guid userId);
     }
 }
