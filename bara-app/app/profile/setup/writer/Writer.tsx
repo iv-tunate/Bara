@@ -21,10 +21,12 @@ type TabType = "personal" | "location" | "identity";
 type Experience = {
   org: string;
   title: string;
-  description: string;
-  startDate: string;
-  endDate: string;
+  startMonth: string;
+  startYear: string;
+  endMonth: string;
+  endYear: string;
   ongoing: boolean;
+  description: string;
 };
 
 export default function WriterProfilePage() {
@@ -45,10 +47,12 @@ export default function WriterProfilePage() {
     {
       org: "",
       title: "",
-      description: "",
-      startDate: "",
-      endDate: "",
+      startMonth: "",
+      startYear: "",
+      endMonth: "",
+      endYear: "",
       ongoing: false,
+      description: "",
     },
   ]);
   const [formData, setFormData] = useState({
@@ -70,10 +74,16 @@ export default function WriterProfilePage() {
     postalCode: "",
   });
 
-  const [identityForm, setIdentityForm] = useState({
+  interface IdentityFormState {
+    documentType: string;
+    verificationNumber?: string;
+    file: File | null;
+  }
+
+  const [identityForm, setIdentityForm] = useState<IdentityFormState>({
     documentType: "",
     verificationNumber: "",
-    file: null as File | null,
+    file: null,
   });
 
   //This use effect ensures only a writer with an active session can access this page...You can comment out if you're still building
@@ -83,8 +93,7 @@ export default function WriterProfilePage() {
     if (user === null) {
       router.push("/auth/login");
       return;
-    }
-    else if (
+    } else if (
       user.userType.toLowerCase() === "producer" &&
       !user.profileComplete
     ) {
@@ -93,7 +102,7 @@ export default function WriterProfilePage() {
       user.userType.toLowerCase() === "producer" &&
       user.profileComplete
     ) {
-      router.push("/dashboard"); // This is a place holder for now because i'm not sure producer's have a page. 
+      router.push("/dashboard"); // This is a place holder for now because i'm not sure producer's have a page.
     } else if (
       user.userType.toLowerCase() === "writer" &&
       user.profileComplete
@@ -222,7 +231,7 @@ export default function WriterProfilePage() {
         form.append("VerificationDocument.Type", identityForm.documentType);
         form.append(
           "VerificationDocument.VerificationNumber",
-          identityForm.verificationNumber
+          identityForm.verificationNumber || ""
         );
         form.append(
           "VerificationDocument.Document",
@@ -247,11 +256,19 @@ export default function WriterProfilePage() {
             form.append(`Experiences[${index}].Project`, exp.title);
             form.append(`Experiences[${index}].IsCurrent`, String(exp.ongoing));
 
-            if (exp.startDate)
-              form.append(`Experiences[${index}].StartDate`, exp.startDate);
+            if (exp.startYear && exp.startMonth) {
+              form.append(
+                `Experiences[${index}].StartDate`,
+                `${exp.startYear}-${exp.startMonth}-01`
+              );
+            }
 
-            if (!exp.ongoing && exp.endDate)
-              form.append(`Experiences[${index}].EndDate`, exp.endDate);
+            if (!exp.ongoing && exp.endYear && exp.endMonth) {
+              form.append(
+                `Experiences[${index}].EndDate`,
+                `${exp.endYear}-${exp.endMonth}-01`
+              );
+            }
           });
         }
         //debugger;

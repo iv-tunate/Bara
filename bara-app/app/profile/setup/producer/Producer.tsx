@@ -53,10 +53,16 @@ export default function ProducerProfilePage() {
     additionalDetails: "",
   });
 
-  const [identityForm, setIdentityForm] = useState({
+  interface IdentityFormState {
+    documentType: string;
+    verificationNumber?: string;
+    file: File | null;
+  }
+
+  const [identityForm, setIdentityForm] = useState<IdentityFormState>({
     documentType: "",
     verificationNumber: "",
-    file: null as File | null,
+    file: null,
   });
 
   useEffect(() => {
@@ -86,7 +92,11 @@ export default function ProducerProfilePage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [activeTab]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -207,7 +217,7 @@ export default function ProducerProfilePage() {
       form.append("VerificationDocument.Type", identityForm.documentType);
       form.append(
         "VerificationDocument.VerificationNumber",
-        identityForm.verificationNumber
+        identityForm.verificationNumber || ""
       );
       form.append(
         "VerificationDocument.Document",

@@ -19,7 +19,7 @@ interface LocationFormProps {
       state: string;
       city: string;
       street: string;
-      zipCode: string;
+      postalCode: string;
       additionalDetails: string;
     }>
   >;
@@ -45,42 +45,41 @@ export default function LocationForm({ form, setForm }: LocationFormProps) {
     };
     loadCountries();
   }, []);
-useEffect(() => {
-  if (!form.country) return;
+  useEffect(() => {
+    if (!form.country) return;
 
-  const loadStates = async () => {
-    try {
-      const data = await getStates(form.country);
-      setStates(data);
-      if (!data.includes(form.state)) {
-        setForm((prev) => ({ ...prev, state: "", city: "" }));
+    const loadStates = async () => {
+      try {
+        const data = await getStates(form.country);
+        setStates(data);
+        if (!data.includes(form.state)) {
+          setForm((prev) => ({ ...prev, state: "", city: "" }));
+        }
+      } catch (e) {
+        console.error("Failed to fetch states", e);
       }
-    } catch (e) {
-      console.error("Failed to fetch states", e);
-    }
-  };
+    };
 
-  loadStates();
-}, [form.country]);
+    loadStates();
+  }, [form.country]);
 
-useEffect(() => {
-  if (!form.state || !form.country) return;
+  useEffect(() => {
+    if (!form.state || !form.country) return;
 
-  const loadCities = async () => {
-    try {
-      const data = await getCities(form.country, form.state);
-      setCities(data);
-      if (!data.includes(form.city)) {
-        setForm((prev) => ({ ...prev, city: "" }));
+    const loadCities = async () => {
+      try {
+        const data = await getCities(form.country, form.state);
+        setCities(data);
+        if (!data.includes(form.city)) {
+          setForm((prev) => ({ ...prev, city: "" }));
+        }
+      } catch (e) {
+        console.error("Failed to fetch cities", e);
       }
-    } catch (e) {
-      console.error("Failed to fetch cities", e);
-    }
-  };
+    };
 
-  loadCities();
-}, [form.state]);
-
+    loadCities();
+  }, [form.state]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>

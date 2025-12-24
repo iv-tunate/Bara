@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import AccountDropdown, { UserData, WalletData } from "./AccountDropdown";
 import MessageDropdown from "./MessageDropdown";
-import { getUserSession } from "@/utils/tokenManager";
+import { getUserSession, clearUserSession } from "@/utils/tokenManager";
 import { api } from "@/utils/api";
 import { useWallet } from "@/context/WalletContext";
 
@@ -15,7 +15,6 @@ export default function DashboardNavbar() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Use wallet context instead of fetching directly
   const { walletData, isLoading: walletLoading } = useWallet();
 
   useEffect(() => {
@@ -35,20 +34,27 @@ export default function DashboardNavbar() {
           profileResponse = await api.getProducerProfile(session.userId);
         }
 
-        setUserData({
-          userId: session.userId,
-          name: session.name,
-          email: session.email,
-          userType: session.userType,
-          verificationStatus:
-            profileResponse?.success && profileResponse.data
-              ? profileResponse.data.verificationStatus || "Pending"
-              : "Pending",
-          isVerified:
-            profileResponse?.success && profileResponse.data
-              ? !!profileResponse.data.isVerified
-              : false,
-        });
+        if (
+          !profileResponse?.success &&
+          (profileResponse?.statusCode === 404 ||
+            profileResponse?.statusCode === 401)
+        ) {
+          clearUserSession();
+          window.location.href = "/auth/login";
+          return;
+        }
+
+        if (profileResponse?.success && profileResponse.data) {
+          setUserData({
+            userId: session.userId,
+            name: session.name,
+            email: session.email,
+            userType: session.userType,
+            verificationStatus:
+              profileResponse.data.verificationStatus || "Pending",
+            isVerified: !!profileResponse.data.isVerified,
+          });
+        }
       } catch (error) {
         console.error("Error loading user data:", error);
       } finally {

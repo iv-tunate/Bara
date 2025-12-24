@@ -5,6 +5,7 @@ import { Menu, X } from "lucide-react";
 import Logo from "./Logo";
 import { useRouter } from "next/navigation";
 import { getUserSession } from "@/utils/tokenManager";
+import { api } from "@/utils/api";
 
 export default function ProfileNavbar() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -12,10 +13,32 @@ export default function ProfileNavbar() {
   const router = useRouter();
 
   useEffect(() => {
-    const role = localStorage.getItem("userType");
-    if (role) {
-      setRole(role);
-    }
+    const session = getUserSession();
+    if (!session) return;
+
+    setRole(session.userType);
+
+    const validateSession = async () => {
+      let response: any = null;
+
+      if (session.userType === "Writer") {
+        response = await api.getWriterProfile(session.userId);
+      } else if (session.userType === "Producer") {
+        response = await api.getProducerProfile(session.userId);
+      }
+
+      if (
+        response &&
+        !response.success &&
+        (response.statusCode === 404 || response.statusCode === 401)
+      ) {
+        const { clearUserSession } = await import("@/utils/tokenManager");
+        clearUserSession();
+        window.location.href = "/auth/login";
+      }
+    };
+
+    validateSession();
   }, []);
 
   const handleProfileSetup = () => {
