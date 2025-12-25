@@ -11,6 +11,7 @@ import { api } from "@/utils/api";
 import { Script, ownershipLabels } from "@/models/script";
 import { usePageGuard } from "@/app/hooks/usepageguard";
 import { useScriptContext } from "@/context/ScriptContext";
+import { toast } from "react-hot-toast";
 
 export default function ScriptDetailPage() {
   const router = useRouter();
@@ -18,28 +19,19 @@ export default function ScriptDetailPage() {
   const scriptIdParam = params?.scriptId as string;
 
   const { getScript, cacheScript } = useScriptContext();
-  const [localScript, setLocalScript] = useState<Script | null>(null);
-
+  const [script, setScript] = useState<Script | null>(null);
   const [writerProfile, setWriterProfile] = useState<any>(null);
   const [copied, setCopied] = useState(false);
-  const [selectedMethod, setSelectedMethod] = useState<"wallet" | "card">(
-    "card"
-  );
+  const [agreed, setAgreed] = useState(false); // New state for agreement
   const [walletBalance, setWalletBalance] = useState(0);
+  const [walletCurrency, setWalletCurrency] = useState("NAIRA");
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [showPaymentSuccessModal, setShowPaymentSuccessModal] = useState(false);
   const [error, setError] = useState("");
-  const [hasBankDetails, setHasBankDetails] = useState(false);
-
-  const [imgError, setImgError] = useState(false);
-  const [imgLoading, setImgLoading] = useState(true);
 
   const session = getUserSession();
   usePageGuard();
-
-  const contextScript = getScript(scriptIdParam);
-  const script = localScript || contextScript || null;
 
   const scriptLink = script
     ? `${
@@ -47,32 +39,19 @@ export default function ScriptDetailPage() {
       }/dashboard/scripts/${script.id}`
     : "";
 
-  let imgSrc = "/flowery.png";
-  if (script) {
-    imgSrc = imgError
-      ? "/flowery.png"
-      : script.imageUrl || script.imagePublicId || "/flowery.png";
-  }
-
   useEffect(() => {
     async function loadData() {
       if (!scriptIdParam || !session?.userId) return;
-
-      if (contextScript) {
-        setIsLoading(false);
-      }
 
       try {
         const scriptResponse = await api.getScriptById(scriptIdParam);
         if (scriptResponse.success && scriptResponse.data) {
           const sData = scriptResponse.data;
-
-          const mappedScript: Script = {
+          setScript({
             id: sData.id,
             title: sData.title,
             price: sData.price,
-            imageUrl: sData.imageUrl,
-            imagePublicId: sData.imagePublicId,
+            imageUrl: sData.imageUrl || "/flowery.png",
             logline: sData.logline,
             synopsis: sData.synopsis,
             genre: sData.genre,
@@ -89,57 +68,56 @@ export default function ScriptDetailPage() {
             url: sData.url,
             path: sData.path || "",
             uploadedOn: sData.uploadedOn,
-          };
+          });
 
-          setLocalScript(mappedScript);
-          cacheScript(mappedScript);
-
-          if (mappedScript.writerName) {
-            const names = mappedScript.writerName.split(" ");
-            setWriterProfile({
-              firstName: names[0] || "",
-              lastName: names.slice(1).join(" ") || "",
-              bio: "", 
-              profileImage: null,
-              portfolioUrl: null,
-            });
-          }
-
-          const writerId = mappedScript.writerId;
+          const writerId = sData.writerId;
           if (writerId) {
-            try {
-              const writerResp = await api.getWriterProfile(writerId);
-              if (writerResp.success && writerResp.data) {
-                setWriterProfile(writerResp.data);
-              }
-            } catch (wErr) {
-              console.warn("Failed to fetch writer profile", wErr);
+            const writerResp = await api.getWriterProfile(writerId);
+            // Fix: Check API response structure carefully
+            if (writerResp.success && writerResp.data) {
+              setWriterProfile(writerResp.data.data || writerResp.data);
             }
           }
-        } else if (!contextScript) {
+        } else {
           setError("Script not found");
         }
 
         const walletResponse = await api.getWalletBalance(session.userId);
         if (walletResponse.success && walletResponse.data) {
           setWalletBalance(walletResponse.data.availableBalance || 0);
-        }
-
-        const bankResp = await api.getBankDetails(session.userId);
-        if (bankResp.success && bankResp.data) {
-          setHasBankDetails(true);
+          setWalletCurrency(walletResponse.data.currency || "NAIRA");
         }
       } catch (error) {
         console.error("Error loading data:", error);
-        if (!contextScript) {
-          setError("Failed to load data");
-        }
+        setError("Failed to load data");
       } finally {
         setIsLoading(false);
       }
     }
     loadData();
-  }, [scriptIdParam, session?.userId, cacheScript, contextScript]);
+  }, [scriptIdParam, session?.userId]);
+
+  // CTO Currency Conversion Layer
+  const FALLBACK_RATES: Record<string, number> = {
+    NAIRA: 1,
+    USD: 1500, // 1 USD = 1500 Naira
+    EUR: 1820,
+    GBP: 2000,
+  };
+
+  const getBalanceInNaira = (balance: number, currency: string) => {
+    return balance * (FALLBACK_RATES[currency] || 1);
+  };
+
+  const getPriceInNaira = (price: number, currency: string) => {
+    return price * (FALLBACK_RATES[currency] || 1);
+  };
+
+  const balanceInNaira = getBalanceInNaira(walletBalance, walletCurrency);
+  const priceInNaira = script
+    ? getPriceInNaira(script.price, script.currency)
+    : 0;
+  const isHighInsufficient = balanceInNaira < priceInNaira;
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(scriptLink);
@@ -147,36 +125,18 @@ export default function ScriptDetailPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleAddNewCard = () => {
-    if (!hasBankDetails) {
-      router.push(
-        "/bank-details?returnUrl=" +
-          encodeURIComponent(`/dashboard/scripts/${scriptIdParam}`)
-      );
-      return;
-    }
-    setSelectedMethod("card");
-  };
-
   const handlePayment = async () => {
-    if (!script) return;
+    if (!script || !agreed) return;
     setIsProcessingPayment(true);
     setError("");
 
     try {
-      if (selectedMethod === "card" && !hasBankDetails) {
-        router.push(
-          "/bank-details?returnUrl=" +
-            encodeURIComponent(`/dashboard/scripts/${scriptIdParam}`)
-        );
-        return;
-      }
-
-      if (selectedMethod === "wallet" && walletBalance >= script.price) {
+      if (!isInsufficient) {
+        // Sufficient balance -> Make Payment
         const response = await api.initiateScriptTransaction(
           session.userId,
-          script.id,
-          session.writerId || script.writerId
+          script.id!,
+          script.writerId!
         );
 
         if (response.success) {
@@ -185,15 +145,18 @@ export default function ScriptDetailPage() {
           setError(response.message || "Failed to process payment");
         }
       } else {
-        const fundingResponse = await api.initiateFundWallet(
+        // Insufficient Balance -> Fund Wallet (Paystack Deposit)
+        // Calculating shortfall in Naira and converting back to script or just funding total price?
+        // Production best practice: fund the total price if wallet is low.
+        const response = await api.initiateFundWallet(
           session.userId,
           script.price
         );
 
-        if (fundingResponse.success && fundingResponse.data?.paymentUrl) {
-          window.location.href = fundingResponse.data.paymentUrl;
+        if (response.success && response.data?.paymentUrl) {
+          window.location.href = response.data.paymentUrl;
         } else {
-          setError(fundingResponse.message || "Failed to initiate payment");
+          setError(response.message || "Failed to initiate payment");
         }
       }
     } catch (error) {
@@ -204,7 +167,7 @@ export default function ScriptDetailPage() {
     }
   };
 
-  if (isLoading && !script) {
+  if (isLoading) {
     return (
       <main className="min-h-screen bg-white flex items-center justify-center">
         <p className="text-gray-500">Loading...</p>
@@ -226,7 +189,7 @@ export default function ScriptDetailPage() {
     );
   }
 
-  const walletDisabled = walletBalance < script.price;
+  const isInsufficient = walletBalance < script.price;
 
   return (
     <main className="min-h-screen bg-white overflow-x-hidden relative">
@@ -239,29 +202,17 @@ export default function ScriptDetailPage() {
             {script.title}
           </h1>
 
-          <div className="relative w-full h-auto rounded-md overflow-hidden bg-gray-100 aspect-[4/3]">
-            {imgLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#800000]" />
-              </div>
-            )}
-            <img
-              src={imgSrc}
-              alt={script.title}
-              className={`w-full h-full object-cover transition-opacity duration-500 ${
-                imgLoading ? "opacity-0" : "opacity-100"
-              }`}
-              onError={() => {
-                setImgError(true);
-                setImgLoading(false);
-              }}
-              onLoad={() => setImgLoading(false)}
-            />
-          </div>
+          <Image
+            src={script.imageUrl || "/flowery.png"}
+            alt={script.title}
+            width={400}
+            height={300}
+            className="w-full h-auto rounded-md object-cover"
+          />
 
           <p className="text-lg font-semibold text-[#22242A]">
             {script.currencySymbol}
-            {script.price}
+            {script.price.toLocaleString()}
           </p>
 
           <button className="w-full bg-[#FFEDEE] text-[#810306] text-sm font-semibold py-3 rounded-md">
@@ -337,18 +288,11 @@ export default function ScriptDetailPage() {
             {/* Payment methods */}
             <div className="space-y-3">
               <h3 className="font-semibold text-sm text-[#22242A]">
-                Payment methods
+                Payment method
               </h3>
 
-              {/* Wallet Option */}
-              <div
-                className={`flex items-center justify-between rounded-md py-3 px-3 bg-[#F5F5F5] transition-colors ${
-                  !walletDisabled
-                    ? "cursor-pointer hover:bg-gray-200"
-                    : "cursor-not-allowed opacity-75"
-                }`}
-                onClick={() => !walletDisabled && setSelectedMethod("wallet")}
-              >
+              {/* Wallet Option - Now the only option and non-selectable */}
+              <div className="flex items-center justify-between rounded-md py-3 px-3 bg-[#F5F5F5] border border-[#E5E7EB]">
                 <div className="flex items-center gap-3">
                   <Image
                     src="/wallet.png"
@@ -360,59 +304,12 @@ export default function ScriptDetailPage() {
                     <span className="text-sm font-medium text-[#333740]">
                       ₦{walletBalance.toLocaleString()}
                     </span>
-                    <span className="text-[11px] text-[#858990]">Wallet</span>
-                  </div>
-                </div>
-                <input
-                  type="radio"
-                  name="pay"
-                  value="wallet"
-                  disabled={walletDisabled}
-                  checked={selectedMethod === "wallet"}
-                  onChange={() =>
-                    !walletDisabled && setSelectedMethod("wallet")
-                  }
-                  className="accent-[#800000] cursor-pointer"
-                />
-              </div>
-
-              {/* Card Option */}
-              <div className="bg-[#F5F5F5] rounded-md transition-colors hover:bg-gray-200">
-                <div
-                  className="flex items-center justify-between py-3 px-3 cursor-pointer"
-                  onClick={() => setSelectedMethod("card")}
-                >
-                  <div className="flex items-center gap-2">
-                    <Image
-                      src="/mastercard.png"
-                      alt="Card"
-                      width={20}
-                      height={20}
-                    />
-                    <span className="text-sm text-[#333740]">
-                      Pay with Card
+                    <span className="text-[11px] text-[#858990]">
+                      Available Balance
                     </span>
                   </div>
-                  <input
-                    type="radio"
-                    name="pay"
-                    value="card"
-                    checked={selectedMethod === "card"}
-                    onChange={() => setSelectedMethod("card")}
-                    className="accent-[#800000] cursor-pointer"
-                  />
                 </div>
-                <div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent toggling radio when clicking button
-                      handleAddNewCard();
-                    }}
-                    className="w-full text-left text-xs font-medium text-[#810306] py-3 px-3 hover:underline cursor-pointer"
-                  >
-                    + Add new card (Requires Bank Details)
-                  </button>
-                </div>
+                {/* No radio button here as per requirements */}
               </div>
 
               {/* Error Display */}
@@ -421,29 +318,15 @@ export default function ScriptDetailPage() {
                   {error}
                 </div>
               )}
-              {!hasBankDetails && (
-                <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-3 py-2 rounded text-sm">
-                  Please add your bank details to enable card payments.
-                </div>
-              )}
-
-              {/* Payment Button */}
-              <button
-                type="button"
-                onClick={handlePayment}
-                disabled={isProcessingPayment}
-                className="w-full bg-[#800000] text-white py-3 rounded-md text-sm font-medium hover:bg-[#4d0000] transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isProcessingPayment
-                  ? "Processing..."
-                  : selectedMethod === "wallet" && walletBalance < script.price
-                  ? "Fund Wallet"
-                  : "Make Payment"}
-              </button>
 
               {/* NDA Agreement */}
               <div className="flex items-start gap-2 mt-2">
-                <input type="checkbox" className="mt-1 accent-[#800000]" />
+                <input
+                  type="checkbox"
+                  className="mt-1 accent-[#800000]"
+                  checked={agreed}
+                  onChange={(e) => setAgreed(e.target.checked)}
+                />
                 <p className="text-[11px] leading-snug text-[#333740]">
                   By checking this box, you agree to the Non‑Disclosure
                   Agreement, committing not to share, misuse, or reproduce the
@@ -452,6 +335,20 @@ export default function ScriptDetailPage() {
                   script, engage with the writer, and confirm the order.
                 </p>
               </div>
+
+              {/* Payment Button */}
+              <button
+                type="button"
+                onClick={handlePayment}
+                disabled={isProcessingPayment || !agreed}
+                className="w-full bg-[#800000] text-white py-3 rounded-md text-sm font-medium hover:bg-[#4d0000] transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isProcessingPayment
+                  ? "Processing..."
+                  : isInsufficient
+                  ? "Top Up Wallet"
+                  : "Make Payment"}
+              </button>
             </div>
           </div>
         </div>
@@ -460,23 +357,24 @@ export default function ScriptDetailPage() {
         <div className="lg:col-span-3">
           {writerProfile ? (
             <WriterProfileCard
-              name={`${writerProfile.firstName} ${writerProfile.lastName}`}
+              name={
+                writerProfile.name ||
+                `${writerProfile.firstName} ${writerProfile.lastName}`
+              }
               bio={writerProfile.bio || "No bio available."}
-              profileImage={writerProfile.profileImage || "/writer.png"}
+              profileImage={
+                writerProfile.profileImageUrl ||
+                writerProfile.profileImage ||
+                "/writer.png"
+              }
               portfolioLink={writerProfile.portfolioUrl || "#"}
               onViewProfile={() => {
-                // Navigate to full profile if implemented
+                router.push(`/writer/profile/${writerProfile.id}`);
               }}
             />
           ) : (
-            <div className="text-gray-500 text-sm">
-              {script.writerName ? (
-                <p className="font-semibold text-gray-700">
-                  Writer: {script.writerName}
-                </p>
-              ) : (
-                "Loading writer info..."
-              )}
+            <div className="text-gray-500 text-sm p-4 border rounded">
+              Loading writer profile...
             </div>
           )}
         </div>

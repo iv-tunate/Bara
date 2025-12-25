@@ -273,6 +273,7 @@ namespace Bara.API.Users.Repositories
             try
             {
                 var writerProfile = await dbContext.Writers.Where(x => x.IsDeleted == false).
+                                    AsSplitQuery().
                                     Select(x => new GetWriterDetailDTO
                                     {
                                         Id = x.Id,

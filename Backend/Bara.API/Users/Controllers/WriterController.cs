@@ -70,7 +70,7 @@ namespace Bara.API.Users.Controllers
         /// 400 Bad Request if the writer is not found or an error occurs during processing,  
         /// or 500 Internal Server Error if an unexpected error happens.
         /// </returns>
-        [Authorize(Roles = "Writer, Admin")]
+        [Authorize(Roles = "Writer, Admin, Producer")]
         [HttpGet("profile/{writerId}")]
         public async Task<IActionResult> GetWriterDetail(Guid writerId)
         {

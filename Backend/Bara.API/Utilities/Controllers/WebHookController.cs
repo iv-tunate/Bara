@@ -86,9 +86,11 @@ namespace Bara.API.Utilities.Controllers
 
                 if (payload == null)
                 {
+                    logger.LogWarning("Received null payload from YouVerify webhook");
                     return BadRequest("Invalid payload");
                 }
 
+                logger.LogInformation("Processing YouVerify webhook for ID: {IdNumber}", payload.Data.IdNumber);
                 var updateUserReq = await userService.UpdateUserVerificationStatus(
                     payload.Data.IdNumber,
                     payload.Data.DateOfBirth,
@@ -96,7 +98,17 @@ namespace Bara.API.Utilities.Controllers
                     payload.Data.LastName,
                     payload.Data.Type);
 
-                return Ok();
+                if (updateUserReq.IsSuccess)
+                {
+                    logger.LogInformation("Successfully updated verification status via webhook for ID: {IdNumber}", payload.Data.IdNumber);
+                    return Ok();
+                }
+                else
+                {
+                    logger.LogWarning("Failed to update verification status via webhook: {Message}", updateUserReq.Message);
+                    // Return 400 or 404 so YouVerify retries or indicates failure in their logs
+                    return StatusCode(updateUserReq.StatusCode, new { message = updateUserReq.Message });
+                }
             }
             catch (Exception ex)
             {

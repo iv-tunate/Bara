@@ -4,6 +4,7 @@ using Bara.API.Transactions.Models;
 using Bara.API.Users.Models;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace Bara.API.DataContext
 {
@@ -49,6 +50,13 @@ namespace Bara.API.DataContext
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<Chat> Chats { get; set; }
         public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            base.OnConfiguring(optionsBuilder);
+            //optionsBuilder.ConfigureWarnings(w =>
+            //                        w.Throw(RelationalEventId.MultipleCollectionIncludeWarning));
+        }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

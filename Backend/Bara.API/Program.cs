@@ -118,6 +118,7 @@ builder.Services.AddTransient<IWalletService, WalletService>();
 builder.Services.AddTransient<IChatService, ChatService>();
 builder.Services.AddTransient<IChatRepository, ChatRepository>();
 builder.Services.AddTransient<ITransactionService, TransactionRepository>();
+builder.Services.AddTransient<IExchangeRateService, ExchangeRateService>();
 builder.Services.AddScoped(typeof(LogHelper<>));
 
 builder.Services.AddSignalR();
@@ -169,6 +170,11 @@ builder.Services.AddHttpClient("YouVerify", client =>
 builder.Services.AddHttpClient("Cloudinary", client =>
 {
     client.BaseAddress = new Uri($"{builder.Configuration["AppSettings:CloudinaryBaseUrl"]}/{builder.Configuration["Secrets:CloudinaryName"]}");
+});
+
+builder.Services.AddHttpClient("ExchangeRate", client =>
+{
+    client.BaseAddress = new Uri("https://v6.exchangerate-api.com/v6/");
 });
 var secretsConfig = builder.Configuration.GetSection("Secrets").Get<Secrets>();
 builder.Services.AddAuthentication(options =>

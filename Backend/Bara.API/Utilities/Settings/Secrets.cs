@@ -21,5 +21,6 @@
         public string MailTrapApiKey { get; set; }
         public string PaystackSecret { get; set; }
         public string PaystackPublic { get; set; }
+        public string ExchangeAPIKey { get; set; }
     }
 }

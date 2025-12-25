@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import Logo from "./Logo";
 import { useRouter } from "next/navigation";
-import { getUserSession } from "@/utils/tokenManager";
+import { getUserSession, clearUserSession } from "@/utils/tokenManager";
 import { api } from "@/utils/api";
 
 export default function ProfileNavbar() {
@@ -32,7 +32,6 @@ export default function ProfileNavbar() {
         !response.success &&
         (response.statusCode === 404 || response.statusCode === 401)
       ) {
-        const { clearUserSession } = await import("@/utils/tokenManager");
         clearUserSession();
         window.location.href = "/auth/login";
       }

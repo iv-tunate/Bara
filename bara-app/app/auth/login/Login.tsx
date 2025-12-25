@@ -9,6 +9,7 @@ import { generateDeviceFingerprint } from "@/utils/deviceDetection";
 import { setUserSession } from "@/utils/tokenManager";
 import toast from "react-hot-toast";
 import BackButton from "@/components/BackButton";
+import Logo from "@/components/Logo";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -221,17 +222,12 @@ export default function LoginPage() {
         <div className="flex-1 md:w-3/5 relative flex flex-col justify-center items-center px-6 md:px-12 overflow-y-auto">
           <div className="w-full max-w-sm ">
             {" "}
-            <div className="absolute top-6 left-4">
-              <BackButton label="Back" href="/" />
+            <div className="mb-4 -ml-4 self-start cursor-pointer">
+              <Image src="/logo.png" alt="Bara Logo" width={90} height={60} onClick={() => router.push("/")}  />
             </div>
-            <div className="mb-4 self-start">
-              <Image src="/logo.png" alt="Bara Logo" width={70} height={40} />
-            </div>
-            {/* Heading (left-aligned) */}
             <h1 className="text-2xl font-semibold mb-8 text-[#22242A] text-left">
               {needsVerification ? "Verify Login" : "Log in"}
             </h1>
-            {/* Error Message */}
             {error && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
                 <p className="text-sm text-red-600">{error}</p>

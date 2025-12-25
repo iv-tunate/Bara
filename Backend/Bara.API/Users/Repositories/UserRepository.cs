@@ -265,9 +265,11 @@ namespace Bara.API.Users.Repositories
                     .AsSplitQuery()
                     .FirstOrDefaultAsync(x => x.Document.IdentificationNumber == verificationIdNumber);
 
-                var errors = new List<string>();
-
-                if (user == null) errors.Add($"User not found with the provided verification ID number {verificationIdNumber}.");
+                if (user == null)
+                {
+                    logger.LogWarning("User not found for verification ID: {VerificationId}", verificationIdNumber);
+                    return ResponseDetail<bool>.Failed(false, $"User not found with the provided verification ID number {verificationIdNumber}.", 404);
+                }
 
                 if (user.VerificationStatus == VerificationStatus.Approved)
                 {
@@ -275,9 +277,12 @@ namespace Bara.API.Users.Repositories
                     return ResponseDetail<bool>.Successful(true, "Account is already verified");
                 }
 
-                name = $"{user?.FirstName} {user?.LastName}";
+                name = $"{user.FirstName} {user.LastName}";
                 var dateOfBirthTallies = user.DateOfBirth.ToString("yyyy-MM-dd") == dateOfBirth;
-                var nameTallies = user.FirstName.Equals(firstName, StringComparison.OrdinalIgnoreCase) && user.LastName.Equals(lastName, StringComparison.OrdinalIgnoreCase);
+                var nameTallies = (user.FirstName?.Equals(firstName, StringComparison.OrdinalIgnoreCase) ?? false) && 
+                                  (user.LastName?.Equals(lastName, StringComparison.OrdinalIgnoreCase) ?? false);
+
+                var errors = new List<string>();
 
                 if (!dateOfBirthTallies) errors.Add($"The date of birth on your {type.ToUpper()} does not match the provided date of birth at the time of registration.");
                 if (!nameTallies) errors.Add(name + $"The name on your {type.ToUpper()}does not match the provided firstname and/or lastname at the time of registration.");

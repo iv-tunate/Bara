@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
+using Bara.API.Utilities.Interfaces;
 using Services.FileStorageServices.Interfaces;
 using Services.MailingService;
 
@@ -32,10 +33,11 @@ namespace Bara.API.Scripts.Repositories
         private readonly IMailService mailService;
         private readonly IHubContext<NotificationHub> notificationHub;
         private readonly IChatService chatService;
+        private readonly IExchangeRateService _exchangeRateService;
         private readonly LogHelper<ScriptRepository> logHelper;
 
         private const string ALL_SCRIPTS_CACHE_KEY = "All_Scripts_Cache";
-        public ScriptRepository(IFileStorageService fileStorageService, ILogger<ScriptRepository> logger, LogHelper<ScriptRepository> logHelper, BaraContext baraContext, IOptions<Secrets> secrets, IOptions<AppSettings> appSettings, IMemoryCache memoryCache, IWalletService walletService, IMailService mailService, IHubContext<NotificationHub> notificationHub, IChatService chatService)
+        public ScriptRepository(IFileStorageService fileStorageService, ILogger<ScriptRepository> logger, LogHelper<ScriptRepository> logHelper, BaraContext baraContext, IOptions<Secrets> secrets, IOptions<AppSettings> appSettings, IMemoryCache memoryCache, IWalletService walletService, IMailService mailService, IHubContext<NotificationHub> notificationHub, IChatService chatService, IExchangeRateService exchangeRateService)
         {
             cloudinary = fileStorageService;
             this.logger = logger;
@@ -47,6 +49,7 @@ namespace Bara.API.Scripts.Repositories
             this.mailService = mailService;
             this.notificationHub = notificationHub;
             this.chatService = chatService;
+            _exchangeRateService = exchangeRateService;
             this.logHelper = logHelper;
         }
         public async Task<ResponseDetail<ScriptDTO>> AddScript(PostScriptDetailDTO scriptDetails, Guid writerId)
@@ -547,12 +550,15 @@ namespace Bara.API.Scripts.Repositories
                     return ResponseDetail<ScriptTransactionResponse>.Failed("Writer does not own this script", 400);
                 }
 
-                if (producer.Wallet.AvailableBalance < script.Price)
+                var balanceInNaira = _exchangeRateService.ConvertToNaira(producer.Wallet.AvailableBalance, producer.Wallet.Currency);
+                var scriptPriceInNaira = _exchangeRateService.ConvertToNaira(script.Price, script.Currency);
+
+                if (balanceInNaira < scriptPriceInNaira)
                 {
-                    logger.LogWarning("Insufficient balance - CorrelationId: {CorrelationId}, ProducerId: {ProducerId}, Available: {Available}, Required: {Required}",
-                        correlationId, producerId, producer.Wallet.AvailableBalance, script.Price);
+                    logger.LogWarning("Insufficient balance - CorrelationId: {CorrelationId}, ProducerId: {ProducerId}, Available: {Available} {Curr}, Required: {Required} {ReqCurr}",
+                        correlationId, producerId, producer.Wallet.AvailableBalance, producer.Wallet.Currency, script.Price, script.Currency);
                     return ResponseDetail<ScriptTransactionResponse>.Failed("Insufficient wallet balance", 400);
-                }
+                }        
 
                 var existingTransaction = await dbContext.ScriptTransactions
                     .FirstOrDefaultAsync(st => st.ProducerId == producerId && st.ScriptId == request.ScriptId &&
