@@ -1,5 +1,4 @@
-
-const catalogImages = [
+const catalogImages: any[] = [
   // { id: "1", name: "Action Scene", src: Image1 },
   // { id: "2", name: "Drama Moment", src: Image2 },
 ];
@@ -14,7 +13,7 @@ export default function ImageCatalogModal({
   onClose,
 }: ImageCatalogModalProps) {
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10000] p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
@@ -38,22 +37,32 @@ export default function ImageCatalogModal({
         <div className="p-6 overflow-auto flex-1">
           {catalogImages.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
-              <svg 
-                className="mx-auto h-12 w-12 text-gray-400 mb-4" 
-                fill="none" 
-                viewBox="0 0 24 24" 
+              <svg
+                className="mx-auto h-12 w-12 text-gray-400 mb-4"
+                fill="none"
+                viewBox="0 0 24 24"
                 stroke="currentColor"
               >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" 
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
-              <p className="text-base font-medium mb-2">No catalog images available yet</p>
+              <p className="text-base font-medium mb-2">
+                No catalog images available yet
+              </p>
               <p className="text-sm text-gray-400 max-w-md mx-auto">
-                Add your cover image catalog by placing images in <code className="bg-gray-100 px-2 py-1 rounded text-xs">public/catalog/</code> and updating the <code className="bg-gray-100 px-2 py-1 rounded text-xs">catalogImages</code> array in this component.
+                Add your cover image catalog by placing images in{" "}
+                <code className="bg-gray-100 px-2 py-1 rounded text-xs">
+                  public/catalog/
+                </code>{" "}
+                and updating the{" "}
+                <code className="bg-gray-100 px-2 py-1 rounded text-xs">
+                  catalogImages
+                </code>{" "}
+                array in this component.
               </p>
             </div>
           ) : (

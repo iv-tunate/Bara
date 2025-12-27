@@ -28,6 +28,8 @@ export default function LoadingButton({
       "border-2 border-[#810306] text-[#810306] hover:bg-[#810306] hover:text-white disabled:border-gray-300 disabled:text-gray-400",
     danger:
       "bg-red-600 text-white hover:bg-red-700 disabled:bg-red-300 disabled:text-gray-100",
+    secondary:
+      "bg-[#F59E0B] text-white hover:bg-[#D97706] disabled:bg-gray-200 disabled:text-gray-400",
   };
 
   return (

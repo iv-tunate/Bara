@@ -60,9 +60,9 @@ export async function apiRequest<T = any>(
     let responseData: any = null;
 
     try {
-      if (contentType.includes("application/json")) {
+      if (contentType && contentType.includes("application/json")) {
         responseData = await response.json();
-      } else if (contentType.includes("text/")) {
+      } else if (contentType && contentType.includes("text/")) {
         responseData = await response.text();
       } else {
         responseData = null;

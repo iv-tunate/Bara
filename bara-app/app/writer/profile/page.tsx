@@ -34,7 +34,7 @@ export default function WriterProfile() {
   }, []);
 
   useEffect(() => {
-    if (!writerId) return; 
+    if (!writerId) return;
 
     async function fetchProfile() {
       setIsLoading(true);
@@ -48,7 +48,7 @@ export default function WriterProfile() {
           setProfileData(cachedData);
         }
 
-        const res = await api.getWriterProfile(writerId);
+        const res = await api.getWriterProfile(writerId!);
         if (res?.data?.data) {
           const userData = res.data.data;
 
@@ -119,7 +119,7 @@ export default function WriterProfile() {
 
       try {
         const imageUrl = await downloadImage(
-          profileData?.profileImageUrl || profileData?.profileImagePublicId,
+          (profileData?.profileImageUrl || profileData?.profileImagePublicId)!,
           "cloudinary"
         );
         setProfileImage(imageUrl);

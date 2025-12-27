@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Check, X } from "lucide-react";
 
-export type ProcessingStatus = "loading" | "success" | "error" | "conflict"| "failed";
+export type ProcessingStatus =
+  | "loading"
+  | "success"
+  | "error"
+  | "conflict"
+  | "failed";
 
 interface ProcessingModalProps {
   isOpen: boolean;
@@ -19,7 +24,7 @@ export function ProcessingModal({
   successMessage = "Success!",
   errorMessage = "Something went wrong",
   onClose,
-}){
+}: ProcessingModalProps) {
   const [dots, setDots] = useState("");
 
   useEffect(() => {
@@ -92,4 +97,4 @@ export function ProcessingModal({
       </div>
     </div>
   );
-};
+}

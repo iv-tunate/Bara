@@ -411,3 +411,6 @@ UpgradeLog
 UpgradeLog.htm
 /Backend/Bara.API/appsettings.Development.json
 /Backend/BaraTests/Utils/test.config.json
+bara-app/tsc_errors.txt
+bara-app/tsc_errors_final.txt
+bara-app/tsc_errors_final_final.txt

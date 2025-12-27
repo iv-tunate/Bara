@@ -26,7 +26,9 @@ interface Bank {
   id: number;
 }
 
-export default function BankDetailsPage() {
+import { Suspense } from "react";
+
+function BankDetailsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const returnUrl = searchParams?.get("returnUrl");
@@ -45,29 +47,29 @@ export default function BankDetailsPage() {
     bankName: "",
   });
 
+  const loadData = async (id: string) => {
+    try {
+      setIsLoading(true);
+      const bankDetailsResponse = await api.getBankDetails(id);
+      if (bankDetailsResponse.success && bankDetailsResponse.data) {
+        setBankDetails(bankDetailsResponse.data);
+      }
+      const banksResponse = await api.getBanks();
+      if (banksResponse.success && banksResponse.data) {
+        setBanks(banksResponse.data);
+      }
+    } catch (error) {
+      console.error("Error loading data:", error);
+      setError("Failed to load bank details");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     const session = getUserSession();
     if (!session?.userId) return;
     setUserId(session.userId);
-
-    const loadData = async (id: string) => {
-      try {
-        setIsLoading(true);
-        const bankDetailsResponse = await api.getBankDetails(id);
-        if (bankDetailsResponse.success && bankDetailsResponse.data) {
-          setBankDetails(bankDetailsResponse.data);
-        }
-        const banksResponse = await api.getBanks();
-        if (banksResponse.success && banksResponse.data) {
-          setBanks(banksResponse.data);
-        }
-      } catch (error) {
-        console.error("Error loading data:", error);
-        setError("Failed to load bank details");
-      } finally {
-        setIsLoading(false);
-      }
-    };
 
     loadData(session.userId);
   }, []);
@@ -326,5 +328,13 @@ export default function BankDetailsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function BankDetailsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <BankDetailsContent />
+    </Suspense>
   );
 }

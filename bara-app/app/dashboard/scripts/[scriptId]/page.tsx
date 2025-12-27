@@ -22,7 +22,7 @@ export default function ScriptDetailPage() {
   const [script, setScript] = useState<Script | null>(null);
   const [writerProfile, setWriterProfile] = useState<any>(null);
   const [copied, setCopied] = useState(false);
-  const [agreed, setAgreed] = useState(false); // New state for agreement
+  const [agreed, setAgreed] = useState(false); //
   const [walletBalance, setWalletBalance] = useState(0);
   const [walletCurrency, setWalletCurrency] = useState("NAIRA");
   const [isLoading, setIsLoading] = useState(true);
@@ -126,12 +126,12 @@ export default function ScriptDetailPage() {
   };
 
   const handlePayment = async () => {
-    if (!script || !agreed) return;
+    if (!script || !agreed || !session) return;
     setIsProcessingPayment(true);
     setError("");
 
     try {
-      if (!isInsufficient) {
+      if (!isHighInsufficient) {
         // Sufficient balance -> Make Payment
         const response = await api.initiateScriptTransaction(
           session.userId,

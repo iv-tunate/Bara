@@ -1,7 +1,7 @@
 let baseUrl = "";
 let clientUrl = "";
 //const env = "local";
-const env = "dev";
+const env: string = "dev";
 //-------------------------------------------------
 if (env === "local") {
   baseUrl = "http://localhost:5001";

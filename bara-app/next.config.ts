@@ -3,6 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
 
+  // Fix for Next.js 16.0.10 type mismatch
+  // @ts-ignore
   eslint: {
     ignoreDuringBuilds: true,
   },

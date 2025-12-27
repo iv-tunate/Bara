@@ -16,7 +16,7 @@ export interface Script {
   imageUrl?: string;
   logline: string;
   synopsis: string;
-  genre: string[];
+  genre: Genre[];
   writerId?: string;
   writerName: string;
   status: string;

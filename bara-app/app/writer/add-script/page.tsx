@@ -43,15 +43,15 @@ export default function AddScriptPage() {
   const router = useRouter();
 
   const [title, setTitle] = useState("");
-  const [selectedGenres, setSelectedGenres] = useState([]);
+  const [selectedGenres, setSelectedGenres] = useState<any[]>([]);
   const [genreOpen, setGenreOpen] = useState(false);
-  const [availableGenres, setAvailableGenres] = useState([]);
+  const [availableGenres, setAvailableGenres] = useState<any[]>([]);
 
   const [logline, setLogline] = useState("");
   const [synopsis, setSynopsis] = useState("");
   const [ownership, setOwnership] = useState("");
-  const [currency, setCurrency] = useState("NAIRA");
-  const [price, setPrice] = useState("");
+  const [currency, setCurrency] = useState<Currency>("NAIRA");
+  const [price, setPrice] = useState<number | "">("");
 
   const [isRegistered, setIsRegistered] = useState(false);
   const [registrationBody, setRegistrationBody] = useState("");
@@ -59,9 +59,9 @@ export default function AddScriptPage() {
   const [isOriginal, setIsOriginal] = useState(false);
   const [agreeCommission, setAgreeCommission] = useState(false);
   const [copyrightNumber, setCopyrightNumber] = useState<string | null>(null);
-  const [scriptFile, setScriptFile] = useState(null);
-  const [mediaFile, setMediaFile] = useState(null);
-  const [mediaPreviewUrl, setMediaPreviewUrl] = useState(null);
+  const [scriptFile, setScriptFile] = useState<File | null>(null);
+  const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [mediaPreviewUrl, setMediaPreviewUrl] = useState<string | null>(null);
 
   const [showCatalogModal, setShowCatalogModal] = useState(false);
   const [showAiImageModal, setShowAiImageModal] = useState(false);
@@ -80,7 +80,6 @@ export default function AddScriptPage() {
 
   usePageGuard();
   useEffect(() => {
-  
     setRole(getUserType());
     setUserId(getUserId());
     (async () => {
@@ -110,7 +109,7 @@ export default function AddScriptPage() {
   const handleBrowseScript = () => scriptInputRef.current?.click();
   const handleBrowseImage = () => imageInputRef.current?.click();
 
-  const handleImageChange = async (e) => {
+  const handleImageChange = async (e: any) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -131,7 +130,6 @@ export default function AddScriptPage() {
 
       setMediaUploading(true);
 
-      
       const result = await uploadImage(file, "Writer", user);
 
       setMediaUrl(result.url);
@@ -146,7 +144,7 @@ export default function AddScriptPage() {
     }
   };
 
-  const handleScriptChange = (e) => {
+  const handleScriptChange = (e: any) => {
     const file = e.target.files?.[0];
     if (!file) return;
     // if (file.size > 100 * 1024) {
@@ -167,7 +165,7 @@ export default function AddScriptPage() {
     setScriptFile(file);
   };
 
-  const handleCatalogSelect = async (url, name) => {
+  const handleCatalogSelect = async (url: string, name: string) => {
     try {
       const blob = await fetch(url).then((r) => r.blob());
       const file = new File([blob], name ?? "catalog-image.jpg", {
@@ -185,7 +183,7 @@ export default function AddScriptPage() {
     }
   };
 
-  const toggleSelectGenre = (g) => {
+  const toggleSelectGenre = (g: any) => {
     setSelectedGenres((prev) =>
       prev.some((x) => x.id === g.id)
         ? prev.filter((x) => x.id !== g.id)
@@ -257,7 +255,7 @@ export default function AddScriptPage() {
       //    console.log(pair[0], pair[1]);
       //  }
       debugger;
-      const res = await api.addScript(fd, userId);
+      const res = await api.addScript(fd, userId ?? "");
       console.log("Add script response:", res);
 
       if (res?.success) {
@@ -265,10 +263,10 @@ export default function AddScriptPage() {
         router.push(`/writer/profile`);
       } else {
         if (res?.statusCode === 400) {
-          toast.error(res?.message);
+          toast.error(res?.message || "Invalid request");
           return;
         } else {
-          toast.error(res?.message ?? "Error uploading script");
+          toast.error(res?.message || "Error uploading script");
         }
       }
     } catch (err: any) {
@@ -414,7 +412,7 @@ export default function AddScriptPage() {
             <div className="flex items-center gap-2">
               <select
                 value={currency}
-                onChange={(e) => setCurrency(e.target.value)}
+                onChange={(e) => setCurrency(e.target.value as Currency)}
                 className="border border-[#ABADB2] rounded-md px-2 py-2 text-sm"
               >
                 {currencyOptions.map((opt) => (

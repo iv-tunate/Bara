@@ -51,12 +51,12 @@ namespace Bara.API.DataContext
         public DbSet<Chat> Chats { get; set; }
         public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            base.OnConfiguring(optionsBuilder);
-            //optionsBuilder.ConfigureWarnings(w =>
-            //                        w.Throw(RelationalEventId.MultipleCollectionIncludeWarning));
-        }
+        //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        //{
+        //    base.OnConfiguring(optionsBuilder);
+        //    optionsBuilder.ConfigureWarnings(w =>
+        //                            w.Throw(RelationalEventId.MultipleCollectionIncludeWarning));
+        //}
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
