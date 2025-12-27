@@ -135,7 +135,7 @@ namespace Bara.API.Utilities.Controllers
                     return Unauthorized("Signature header missing");
                 }
 
-                string secret = secrets.PaystackSecret; // Fixed: Use PaystackSecret not PaystackPublic for webhook verification
+                string secret = secrets.PaystackSecret;
                 if (!PaystackWebhookVerifier.IsValidPaystackSignature(rawBody, signatureHeader, secret))
                 {
                     logger.LogWarning("Invalid webhook signature from Paystack");
@@ -146,7 +146,7 @@ namespace Bara.API.Utilities.Controllers
 
                 var payload = JsonConvert.DeserializeObject<PaystackWebhookPayload>(rawBody);
 
-                if (payload == null || payload.Data == null) // Fixed: Use || not &&
+                if (payload == null || payload.Data == null) 
                 {
                     logger.LogError("Invalid payload received from Paystack webhook");
                     return BadRequest("Invalid payload");
@@ -159,11 +159,11 @@ namespace Bara.API.Utilities.Controllers
                 string reference = payload.Data.Metadata.Reference;
                 if (payload.Event.Contains("charge"))
                 {
-                    await transactionService.VerifyTransactionAsync(reference); // Fixed: Use TransactionService
+                    await transactionService.VerifyTransactionAsync(reference); 
                 }
                 else if (payload.Event.Contains("transfer"))
                 {
-                    await transactionService.VerifyTransferAsync(reference); // Fixed: Use TransactionService
+                    await transactionService.VerifyTransferAsync(reference); 
                 }
 
                 return Ok();
