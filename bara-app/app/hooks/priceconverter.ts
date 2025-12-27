@@ -97,3 +97,15 @@ export function useMinPrice(
 
   return { minAllowed, rate, fetchError, resError, loading, validatePrice };
 }
+
+// Utility function for converting amounts to Naira for comparison
+export function convertToNaira(amount: number, currency: string): number {
+  const conversionRates: Record<string, number> = {
+    NAIRA: 1,
+    USD: 1500,
+    EUR: 1820,
+    GBP: 2000,
+  };
+
+  return amount * (conversionRates[currency] || 1);
+}

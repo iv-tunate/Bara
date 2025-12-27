@@ -11,6 +11,7 @@ import { api } from "@/utils/api";
 import { Script, ownershipLabels } from "@/models/script";
 import { usePageGuard } from "@/app/hooks/usepageguard";
 import { useScriptContext } from "@/context/ScriptContext";
+import { convertToNaira } from "@/app/hooks/priceconverter";
 import { toast } from "react-hot-toast";
 
 export default function ScriptDetailPage() {
@@ -22,7 +23,7 @@ export default function ScriptDetailPage() {
   const [script, setScript] = useState<Script | null>(null);
   const [writerProfile, setWriterProfile] = useState<any>(null);
   const [copied, setCopied] = useState(false);
-  const [agreed, setAgreed] = useState(false); //
+  const [agreed, setAgreed] = useState(false);
   const [walletBalance, setWalletBalance] = useState(0);
   const [walletCurrency, setWalletCurrency] = useState("NAIRA");
   const [isLoading, setIsLoading] = useState(true);
@@ -41,13 +42,26 @@ export default function ScriptDetailPage() {
 
   useEffect(() => {
     async function loadData() {
-      if (!scriptIdParam || !session?.userId) return;
+      if (!scriptIdParam) {
+        setIsLoading(false);
+        return;
+      }
+
+      const cachedScript = getScript(scriptIdParam);
+      if (cachedScript) {
+        setScript(cachedScript);
+        setIsLoading(false);
+      }
 
       try {
         const scriptResponse = await api.getScriptById(scriptIdParam);
+        // console.log("Script API Response:", scriptResponse);
+
         if (scriptResponse.success && scriptResponse.data) {
-          const sData = scriptResponse.data;
-          setScript({
+          const sData = scriptResponse.data.data || scriptResponse.data;
+          // console.log("Script Data:", sData);
+
+          const mappedScript: Script = {
             id: sData.id,
             title: sData.title,
             price: sData.price,
@@ -68,54 +82,50 @@ export default function ScriptDetailPage() {
             url: sData.url,
             path: sData.path || "",
             uploadedOn: sData.uploadedOn,
-          });
+          };
 
-          const writerId = sData.writerId;
-          if (writerId) {
-            const writerResp = await api.getWriterProfile(writerId);
-            // Fix: Check API response structure carefully
+          console.log("Mapped Script:", mappedScript);
+          setScript(mappedScript);
+          cacheScript(mappedScript);
+
+          if (sData.writerId) {
+            const writerResp = await api.getWriterProfile(sData.writerId);
+            // console.log("Writer API Response:", writerResp);
             if (writerResp.success && writerResp.data) {
-              setWriterProfile(writerResp.data.data || writerResp.data);
+              // Backend returns ResponseDetail wrapper, so actual data is nested
+              const writerData = writerResp.data.data || writerResp.data;
+              // console.log("Writer Data:", writerData);
+              setWriterProfile(writerData);
             }
           }
-        } else {
+        } else if (!cachedScript) {
+          // console.log("Script not found or unsuccessful response");
           setError("Script not found");
         }
 
-        const walletResponse = await api.getWalletBalance(session.userId);
-        if (walletResponse.success && walletResponse.data) {
-          setWalletBalance(walletResponse.data.availableBalance || 0);
-          setWalletCurrency(walletResponse.data.currency || "NAIRA");
+        if (session?.userId) {
+          const walletResponse = await api.getWalletBalance(session.userId);
+          if (walletResponse.success && walletResponse.data) {
+            setWalletBalance(walletResponse.data.availableBalance || 0);
+            setWalletCurrency(walletResponse.data.currency || "NAIRA");
+          }
         }
       } catch (error) {
         console.error("Error loading data:", error);
-        setError("Failed to load data");
+        if (!cachedScript) {
+          setError("Failed to load data");
+        }
       } finally {
+        // console.log("Setting isLoading to false");
         setIsLoading(false);
       }
     }
     loadData();
   }, [scriptIdParam, session?.userId]);
 
-  // CTO Currency Conversion Layer
-  const FALLBACK_RATES: Record<string, number> = {
-    NAIRA: 1,
-    USD: 1500, // 1 USD = 1500 Naira
-    EUR: 1820,
-    GBP: 2000,
-  };
-
-  const getBalanceInNaira = (balance: number, currency: string) => {
-    return balance * (FALLBACK_RATES[currency] || 1);
-  };
-
-  const getPriceInNaira = (price: number, currency: string) => {
-    return price * (FALLBACK_RATES[currency] || 1);
-  };
-
-  const balanceInNaira = getBalanceInNaira(walletBalance, walletCurrency);
+  const balanceInNaira = convertToNaira(walletBalance, walletCurrency);
   const priceInNaira = script
-    ? getPriceInNaira(script.price, script.currency)
+    ? convertToNaira(script.price, script.currency)
     : 0;
   const isHighInsufficient = balanceInNaira < priceInNaira;
 
@@ -132,7 +142,6 @@ export default function ScriptDetailPage() {
 
     try {
       if (!isHighInsufficient) {
-        // Sufficient balance -> Make Payment
         const response = await api.initiateScriptTransaction(
           session.userId,
           script.id!,
@@ -145,23 +154,17 @@ export default function ScriptDetailPage() {
           setError(response.message || "Failed to process payment");
         }
       } else {
-        // Insufficient Balance -> Fund Wallet (Paystack Deposit)
-        // Calculating shortfall in Naira and converting back to script or just funding total price?
-        // Production best practice: fund the total price if wallet is low.
-        const response = await api.initiateFundWallet(
-          session.userId,
-          script.price
-        );
+        // Insufficient Balance -> Redirect to Fund Wallet Page
+        const deficit = priceInNaira - balanceInNaira;
+        const roundedDeficit = Math.ceil(deficit);
 
-        if (response.success && response.data?.paymentUrl) {
-          window.location.href = response.data.paymentUrl;
-        } else {
-          setError(response.message || "Failed to initiate payment");
-        }
+        toast.error("Insufficient balance. Redirecting to fund wallet...");
+        router.push(`/wallet/fund?amount=${roundedDeficit}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Payment error:", error);
-      setError("An error occurred while processing payment");
+      setIsProcessingPayment(false);
+      toast.error(error.message || "Payment failed");
     } finally {
       setIsProcessingPayment(false);
     }
@@ -202,7 +205,7 @@ export default function ScriptDetailPage() {
             {script.title}
           </h1>
 
-          <Image
+          <img
             src={script.imageUrl || "/flowery.png"}
             alt={script.title}
             width={400}
@@ -212,7 +215,7 @@ export default function ScriptDetailPage() {
 
           <p className="text-lg font-semibold text-[#22242A]">
             {script.currencySymbol}
-            {script.price.toLocaleString()}
+            {script.price?.toLocaleString() ?? "0"}
           </p>
 
           <button className="w-full bg-[#FFEDEE] text-[#810306] text-sm font-semibold py-3 rounded-md">
@@ -225,7 +228,7 @@ export default function ScriptDetailPage() {
           <hr className="border-t border-[#ABADB2] my-2" />
 
           {/* Copy script section */}
-          <div>
+          {/* <div>
             <p className="text-sm text-[#333740] mb-1 font-medium">
               Copy this script
             </p>
@@ -244,7 +247,7 @@ export default function ScriptDetailPage() {
                 </span>
               )}
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* MIDDLE SECTION */}

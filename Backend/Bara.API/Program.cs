@@ -43,7 +43,8 @@ builder.Services.AddSwaggerGen();
 //   options.UseSqlServer(builder.Configuration.GetConnectionString("Connection")));
 builder.Services.AddDbContext<BaraContext>(options =>
 {
-    options.UseNpgsql(builder.Configuration.GetConnectionString("Connection"));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Connection"),
+        npgsqlOptions => npgsqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
 });
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: true)

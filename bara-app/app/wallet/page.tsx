@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import WithdrawFunds from "@/components/WithdrawFunds";
-import FundAccount from "@/components/FundAccount";
 import Pagination from "@/components/Pagination";
 import { getUserSession } from "@/utils/tokenManager";
 import { api } from "@/utils/api";
@@ -19,7 +19,7 @@ interface WalletData {
 }
 
 export default function WalletPage() {
-  const [isModalOpen, setModalOpen] = useState(false);
+  const router = useRouter();
   const [isWithdrawModalOpen, setWithdrawModalOpen] = useState(false);
   const [walletData, setWalletData] = useState<WalletData | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -195,7 +195,7 @@ export default function WalletPage() {
               <div className="flex gap-4">
                 {/* Fund Wallet Button (Available to Everyone) */}
                 <button
-                  onClick={() => setModalOpen(true)}
+                  onClick={() => router.push("/wallet/fund")}
                   className="rounded-md bg-[#810306] px-4 py-2 text-white hover:bg-red-800 w-fit cursor-pointer transition-all duration-300 ease-in-out hover:scale-105"
                 >
                   Fund Wallet
@@ -326,8 +326,6 @@ export default function WalletPage() {
           </>
         )}
       </div>
-
-      <FundAccount isOpen={isModalOpen} onClose={() => setModalOpen(false)} />
 
       <WithdrawFunds
         isOpen={isWithdrawModalOpen}

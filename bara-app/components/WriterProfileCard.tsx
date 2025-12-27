@@ -34,12 +34,12 @@ export default function WriterProfileCard({
     <div className="bg-white border border-[#ABADB2] rounded-lg p-4 w-[300px] mx-auto space-y-3">
       {/* Title */}
       <h3 className="font-semibold text-lg text-[#22242A] text-center">
-        Writer&apos;s profile
+        Writer's profile
       </h3>
 
       {/* Profile Image */}
       <div className="flex justify-center">
-        <Image
+        <img
           src={profileImage}
           alt={name}
           width={80}
