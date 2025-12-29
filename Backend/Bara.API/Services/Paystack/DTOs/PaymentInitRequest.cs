@@ -10,5 +10,7 @@
         public string CallbackUrl { get; set; }
         public Dictionary<string, object> Metadata { get; set; } = new();
         public Guid TransactionId { get; set; }
+        public string Reference { get; set; }
+        public List<string> Channels { get; set; }
     }
 }

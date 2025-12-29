@@ -15,6 +15,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Services.ExternalAPI_Integration;
 using Services.MailingService;
+using Microsoft.Extensions.Configuration;
 using System.Security.Cryptography;
 
 namespace Bara.API.Transactions.Repositories
@@ -30,10 +31,12 @@ namespace Bara.API.Transactions.Repositories
         private readonly Secrets secrets;
         private readonly ExternalApiIntegrationService externalServices;
         private readonly IMemoryCache cache;
+        private readonly IConfiguration config;
+
         public TransactionRepository(IPaystackService paystackService, LogHelper<TransactionRepository> logHelper,
             ILogger<TransactionRepository> logger, BaraContext context, IMailService mailer,
             IHubContext<NotificationHub> notificationHub, ExternalApiIntegrationService externalApiIntegrationService,
-            IOptions<Secrets> appSecrets, IMemoryCache cache)
+            IOptions<Secrets> appSecrets, IMemoryCache cache, IConfiguration configuration)
         {
             paystack = paystackService;
             this.logHelper = logHelper;
@@ -44,6 +47,7 @@ namespace Bara.API.Transactions.Repositories
             externalServices = externalApiIntegrationService;
             secrets = appSecrets.Value;
             this.cache = cache;
+            config = configuration;
         }
 
         public async Task<ResponseDetail<object>> InitiateTransactionAsync(TransactionInitDTO data, Guid userId)
@@ -57,6 +61,8 @@ namespace Bara.API.Transactions.Repositories
                             x.Id,
                             x.Email,
                             x.AuthProfile.FullName,
+                            x.AuthProfile.FirstName,
+                            x.AuthProfile.LastName,
                             WalletId = x.Wallet.Id
                         }).FirstOrDefaultAsync();
 
@@ -66,6 +72,8 @@ namespace Bara.API.Transactions.Repositories
                     return ResponseDetail<object>.Failed("User not found", 404);
                 }
 
+                var referenceId = Guid.NewGuid().ToString(); // Fixed: Ensure unique reference
+
                 var transaction = new PaymentTransaction
                 {
                     UserId = user.Id,
@@ -74,7 +82,7 @@ namespace Bara.API.Transactions.Repositories
                     Status = TransactionStatus.Initiated,
                     TransactionType = TransactionType.WalletFunding,
                     WalletID = user.WalletId,
-                    ReferenceId = $"PENDING-{Guid.NewGuid()}-{user.Id}",
+                    ReferenceId = referenceId, 
                     PaymentMethod = "Paystack",
                     Currency = Currency.NAIRA
                 };
@@ -90,19 +98,30 @@ namespace Bara.API.Transactions.Repositories
                 }
                 else
                 {
+                    var frontendUrl = config["FrontendBaseUrl"] ?? "http://localhost:3000";
+                    
                     var paymentInitRequest = new PaymentInitRequest
                     {
                         Amount = data.Amount,
                         Email = user.Email,
                         Currency = "NGN",
+                        Reference = referenceId, 
+                        CallbackUrl = $"{frontendUrl}/callback/paystack",
                         UserId = user.Id,
                         CustomerName = user.FullName,
+                        Channels = new List<string> { "card", "bank", "ussd", "qr", "mobile_money", "bank_transfer" },
                         Metadata = new Dictionary<string, object>
                         {
-                            { "UserId", user.Id },
-                            { "CustomerName", user.FullName },
-                            { "Email", user.Email },
-                            { "TransactionId", transaction.Id }
+                            { "user_id", user.Id },
+                            { "customer_name", user.FullName },
+                            { "email", user.Email },
+                            { "transaction_id", transaction.Id },
+                            { "reference", referenceId },
+                            { "custom_fields", new List<object> 
+                                {
+                                    new { display_name = "User Name", variable_name = "user_name", value = user.FullName }
+                                } 
+                            }
                         },
                     };
 
@@ -110,7 +129,6 @@ namespace Bara.API.Transactions.Repositories
 
                     if (paymentResponse.Status)
                     {
-                        transaction.ReferenceId = paymentResponse.Data.Reference;
                         transaction.Status = TransactionStatus.Pending;
                         transaction.AccessCode = paymentResponse.Data.AccessCode;
 
@@ -122,6 +140,7 @@ namespace Bara.API.Transactions.Repositories
                         {
                             transaction.Id,
                             paymentUrl = paymentResponse.Data.AuthorizationUrl,
+                            reference = referenceId 
                         }, "Transaction initiated successfully");
                     }
                     else

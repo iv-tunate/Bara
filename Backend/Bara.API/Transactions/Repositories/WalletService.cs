@@ -6,6 +6,8 @@ using Bara.API.Transactions.Interfaces;
 using Bara.API.Utilities.ToolKit;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Bara.API.Transactions.Enums;
+using Bara.API.Transactions.Models;
 
 namespace Bara.API.Transactions.Repositories
 {
@@ -107,6 +109,40 @@ namespace Bara.API.Transactions.Repositories
                 writer.Wallet.TotalBalance += writerShare;
 
                 dbContext.Wallets.UpdateRange(producer.Wallet, writer.Wallet);
+
+                var producerTransaction = new PaymentTransaction
+                {
+                    UserId = producerId,
+                    UserFullName = $"{producer.FirstName} {producer.LastName}",
+                    Amount = amount,
+                    Status = TransactionStatus.Escrowed,
+                    TransactionType = TransactionType.ScriptEscrow,
+                    WalletID = producer.Wallet.Id,
+                    ReferenceId = $"ESCROW-{Guid.NewGuid()}",
+                    PaymentMethod = "Wallet",
+                    Currency = Currency.NAIRA,
+                    Notes = "Funds locked for script purchase",
+                    CreatedAt = DateTimeOffset.UtcNow,
+                    CompletedAt = DateTimeOffset.UtcNow
+                };
+
+                var writerTransaction = new PaymentTransaction
+                {
+                    UserId = writerId,
+                    UserFullName = $"{writer.FirstName} {writer.LastName}",
+                    Amount = writerShare,
+                    Status = TransactionStatus.Escrowed,
+                    TransactionType = TransactionType.ScriptEscrow,
+                    WalletID = writer.Wallet.Id,
+                    ReferenceId = $"ESCROW-PEND-{Guid.NewGuid()}",
+                    PaymentMethod = "Wallet",
+                    Currency = Currency.NAIRA,
+                    Notes = "Funds held in escrow for your script",
+                    CreatedAt = DateTimeOffset.UtcNow,
+                    CompletedAt = DateTimeOffset.UtcNow
+                };
+
+                await dbContext.Transactions.AddRangeAsync(producerTransaction, writerTransaction);
                 await dbContext.SaveChangesAsync();
 
                 await notificationHub.Clients.User(producerId.ToString())
@@ -157,6 +193,40 @@ namespace Bara.API.Transactions.Repositories
                 writer.Wallet.AvailableBalance += writerShare;
 
                 dbContext.Wallets.UpdateRange(producer.Wallet, writer.Wallet);
+
+                var producerTransaction = new PaymentTransaction
+                {
+                    UserId = producerId,
+                    UserFullName = $"{producer.FirstName} {producer.LastName}",
+                    Amount = amount,
+                    Status = TransactionStatus.Completed,
+                    TransactionType = TransactionType.ScriptPurchase,
+                    WalletID = producer.Wallet.Id,
+                    ReferenceId = $"PURCHASE-{Guid.NewGuid()}",
+                    PaymentMethod = "Wallet",
+                    Currency = Currency.NAIRA,
+                    Notes = "Payment for script",
+                    CreatedAt = DateTimeOffset.UtcNow,
+                    CompletedAt = DateTimeOffset.UtcNow
+                };
+
+                var writerTransaction = new PaymentTransaction
+                {
+                    UserId = writerId,
+                    UserFullName = $"{writer.FirstName} {writer.LastName}",
+                    Amount = writerShare,
+                    Status = TransactionStatus.Completed,
+                    TransactionType = TransactionType.ScriptPurchase,
+                    WalletID = writer.Wallet.Id,
+                    ReferenceId = $"PURCHASE-CREDIT-{Guid.NewGuid()}",
+                    PaymentMethod = "Wallet",
+                    Currency = Currency.NAIRA,
+                    Notes = "Payment received for script",
+                    CreatedAt = DateTimeOffset.UtcNow,
+                    CompletedAt = DateTimeOffset.UtcNow
+                };
+
+                await dbContext.Transactions.AddRangeAsync(producerTransaction, writerTransaction);
                 await dbContext.SaveChangesAsync();
 
                 await notificationHub.Clients.User(producerId.ToString())
@@ -207,6 +277,40 @@ namespace Bara.API.Transactions.Repositories
                 writer.Wallet.TotalBalance -= writerShare;
 
                 dbContext.Wallets.UpdateRange(producer.Wallet, writer.Wallet);
+
+                var producerTransaction = new PaymentTransaction
+                {
+                    UserId = producerId,
+                    UserFullName = $"{producer.FirstName} {producer.LastName}",
+                    Amount = amount,
+                    Status = TransactionStatus.Completed, // Refunded to Available
+                    TransactionType = TransactionType.Refund,
+                    WalletID = producer.Wallet.Id,
+                    ReferenceId = $"REFUND-{Guid.NewGuid()}",
+                    PaymentMethod = "Wallet",
+                    Currency = Currency.NAIRA,
+                    Notes = "Refund for script transaction",
+                    CreatedAt = DateTimeOffset.UtcNow,
+                    CompletedAt = DateTimeOffset.UtcNow
+                };
+
+                var writerTransaction = new PaymentTransaction
+                {
+                    UserId = writerId,
+                    UserFullName = $"{writer.FirstName} {writer.LastName}",
+                    Amount = writerShare,
+                    Status = TransactionStatus.Refunded, // Removed from Locked
+                    TransactionType = TransactionType.Refund,
+                    WalletID = writer.Wallet.Id,
+                    ReferenceId = $"REFUND-REV-{Guid.NewGuid()}",
+                    PaymentMethod = "Wallet",
+                    Currency = Currency.NAIRA,
+                    Notes = "Reversal of escrowed funds",
+                    CreatedAt = DateTimeOffset.UtcNow,
+                    CompletedAt = DateTimeOffset.UtcNow
+                };
+
+                await dbContext.Transactions.AddRangeAsync(producerTransaction, writerTransaction);
                 await dbContext.SaveChangesAsync();
 
                 await notificationHub.Clients.User(producerId.ToString())

@@ -20,7 +20,9 @@
         public string SendGridApiKey { get; set; }
         public string MailTrapApiKey { get; set; }
         public string PaystackSecret { get; set; }
+        public string PaystackTestSecret { get; set; }
         public string PaystackPublic { get; set; }
+        public string PaystackTestPublic { get; set; }
         public string ExchangeAPIKey { get; set; }
     }
 }

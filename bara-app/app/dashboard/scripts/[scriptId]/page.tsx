@@ -158,7 +158,6 @@ export default function ScriptDetailPage() {
         const deficit = priceInNaira - balanceInNaira;
         const roundedDeficit = Math.ceil(deficit);
 
-        toast.error("Insufficient balance. Redirecting to fund wallet...");
         router.push(`/wallet/fund?amount=${roundedDeficit}`);
       }
     } catch (error: any) {

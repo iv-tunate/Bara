@@ -26,9 +26,9 @@ namespace Bara.API.Services.Paystack
             this.logHelper = logHelper;
             this.logger = logger;
             _httpClient = httpClient;
-            _secretKey = secrets.PaystackSecret;
+            _secretKey = secrets.PaystackTestSecret;
             _httpClient.DefaultRequestHeaders.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", secrets.PaystackSecret);
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", secrets.PaystackTestSecret);
             cache = memoryCache;
         }
 
@@ -37,24 +37,30 @@ namespace Bara.API.Services.Paystack
             var paymentInitResponse = new PaymentInitResponse();
             try
             {
-                var paystack = new PayStackApi(secrets.PaystackSecret);
-                var reference = GenerateReference(request.TransactionId);
-                var res = paystack.Transactions.Initialize(new TransactionInitializeRequest
+                var paystack = new PayStackApi(_secretKey);
+                var reference = !string.IsNullOrEmpty(request.Reference) ? request.Reference : GenerateReference(request.TransactionId);
+
+                var transactionRequest = new TransactionInitializeRequest
                 {
                     AmountInKobo = (int)(request.Amount * 100),
                     Email = request.Email,
                     Currency = request.Currency,
                     Reference = reference,
-                    //CallbackUrl = request.CallbackUrl,
-                    Metadata = JsonConvert.SerializeObject(new
-                    {
-                        request.UserId,
-                        request.CustomerName,
-                        request.Email,
-                        request.TransactionId,
-                        reference
-                    })
-                });
+                    CallbackUrl = request.CallbackUrl,
+                    Channels = request.Channels?.ToArray(),
+                    Metadata = request.Metadata != null && request.Metadata.Count > 0 
+                               ? JsonConvert.SerializeObject(request.Metadata)
+                               : JsonConvert.SerializeObject(new
+                               {
+                                   request.UserId,
+                                   request.CustomerName,
+                                   request.Email,
+                                   request.TransactionId,
+                                   reference
+                               })
+                };
+
+                var res = paystack.Transactions.Initialize(transactionRequest);
 
                 if (res.Status)
                 {
@@ -84,7 +90,7 @@ namespace Bara.API.Services.Paystack
 
         public async Task<PaymentVerifyResponse> VerifyPaymentAsync(string reference)
         {
-            var paystack = new PayStackApi(secrets.PaystackSecret);
+            var paystack = new PayStackApi(_secretKey);
             var result = new PaymentVerifyResponse();
 
             try
@@ -211,7 +217,7 @@ namespace Bara.API.Services.Paystack
         {
             try
             {
-                var paystack = new PayStackApi(secrets.PaystackSecret);
+                var paystack = new PayStackApi(_secretKey);
                 var req = paystack.Post<ApiResponse<RecipientData>, CreateRecipientRequest>($"{_baseUrl}/transferrecipient", data);
 
                 if (req.Status && req.Data != null)
@@ -229,7 +235,7 @@ namespace Bara.API.Services.Paystack
 
         public async Task<WithdrawalResponse> InitiateWithdrawalAsync(WithdrawalRequest request)
         {
-            var paystack = new PayStackApi(secrets.PaystackSecret);
+            var paystack = new PayStackApi(_secretKey);
             var amount = (int)request.Amount * 100;
 
             //var reqbody = JsonConvert.SerializeObject(request);

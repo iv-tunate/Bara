@@ -135,7 +135,7 @@ namespace Bara.API.Utilities.Controllers
                     return Unauthorized("Signature header missing");
                 }
 
-                string secret = secrets.PaystackSecret;
+                string secret = secrets.PaystackTestSecret;
                 if (!PaystackWebhookVerifier.IsValidPaystackSignature(rawBody, signatureHeader, secret))
                 {
                     logger.LogWarning("Invalid webhook signature from Paystack");
@@ -151,12 +151,12 @@ namespace Bara.API.Utilities.Controllers
                     logger.LogError("Invalid payload received from Paystack webhook");
                     return BadRequest("Invalid payload");
                 }
-                else if (payload.Data.Metadata == null || string.IsNullOrEmpty(payload.Data.Metadata.Reference))
+                else if (string.IsNullOrEmpty(payload.Data.Reference))
                 {
-                    logger.LogError("Metadata or Reference is missing in the payload");
+                    logger.LogError("Reference is missing in the payload");
                     return BadRequest("Invalid payload");
                 }
-                string reference = payload.Data.Metadata.Reference;
+                string reference = payload.Data.Reference;
                 if (payload.Event.Contains("charge"))
                 {
                     await transactionService.VerifyTransactionAsync(reference); 

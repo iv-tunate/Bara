@@ -103,14 +103,14 @@ function FundWalletContent() {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center border border-gray-100 p-1">
-                    <Image
-                      src="/paystack_logo.png"
-                      alt="Paystack"
-                      width={24}
-                      height={24}
-                      className="object-contain"
-                    />
+                  <div className="flex items-center gap-2">
+                    <div className="flex flex-col gap-[3px]">
+                      <span className="block w-3 h-1.5 rounded-sm bg-[#0AA5FF]" />
+                      <span className="block w-4 h-1.5 rounded-sm bg-[#2EC4FF]" />
+                      <span className="block w-5 h-1.5 rounded-sm bg-[#5AD8FF]" />
+                    </div>
+
+                    <span className="font-bold text-lg text-[#0AA5FF]">P</span>
                   </div>
                   <span className="font-semibold text-[#22242A]">Paystack</span>
                 </div>

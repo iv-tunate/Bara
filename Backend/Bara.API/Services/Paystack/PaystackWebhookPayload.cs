@@ -18,6 +18,9 @@ namespace Bara.API.Services.Paystack
         [JsonProperty("domain")]
         public string Domain { get; set; }
 
+        [JsonProperty("reference")]
+        public string Reference { get; set; }
+
         [JsonProperty("amount")]
         public decimal Amount { get; set; }
 
