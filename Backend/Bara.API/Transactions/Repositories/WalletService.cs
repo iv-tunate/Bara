@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Bara.API.Transactions.Enums;
 using Bara.API.Transactions.Models;
+using Bara.API.Utilities.Models;
 
 namespace Bara.API.Transactions.Repositories
 {

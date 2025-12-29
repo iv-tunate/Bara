@@ -61,8 +61,6 @@ namespace Bara.API.Transactions.Repositories
                             x.Id,
                             x.Email,
                             x.AuthProfile.FullName,
-                            x.AuthProfile.FirstName,
-                            x.AuthProfile.LastName,
                             WalletId = x.Wallet.Id
                         }).FirstOrDefaultAsync();
 
@@ -72,7 +70,9 @@ namespace Bara.API.Transactions.Repositories
                     return ResponseDetail<object>.Failed("User not found", 404);
                 }
 
-                var referenceId = Guid.NewGuid().ToString(); // Fixed: Ensure unique reference
+                var random = new Random().Next(21, 943712473);
+
+                var referenceId = Guid.NewGuid().ToString() + userId.ToString().Substring(2, 10).Reverse() + random; 
 
                 var transaction = new PaymentTransaction
                 {
