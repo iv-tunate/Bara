@@ -98,7 +98,8 @@ namespace Bara.API.Transactions.Repositories
                 }
                 else
                 {
-                    var frontendUrl = config["FrontendBaseUrl"] ?? "http://localhost:3000";
+                    // var frontendUrl = config["FrontendBaseUrl"] ?? "http://localhost:3000";
+                    var frontendUrl = "http://localhost:3000";
                     
                     var paymentInitRequest = new PaymentInitRequest
                     {
