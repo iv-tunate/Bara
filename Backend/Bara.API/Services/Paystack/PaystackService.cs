@@ -114,7 +114,7 @@ namespace Bara.API.Services.Paystack
                     CreatedAt = response.Data.TransactionDate,
                     Channel = response.Data.Channel,
                     Currency = response.Data.Currency,
-                    Fees = (decimal)response.Data.Fees / 100m,
+                    Fees = Convert.ToDecimal(response.Data.Fees) / 100m,
                     Authorization = response.Data.Authorization == null ? null : new AuthorizationData
                     {
                         AuthorizationCode = response.Data.Authorization.AuthorizationCode,

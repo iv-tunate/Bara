@@ -70,9 +70,7 @@ namespace Bara.API.Transactions.Repositories
                     return ResponseDetail<object>.Failed("User not found", 404);
                 }
 
-                var random = new Random().Next(21, 943712473);
-
-                var referenceId = Guid.NewGuid().ToString() + userId.ToString().Substring(2, 10).Reverse() + random; 
+                var referenceId = TokenGenerator.GeneratePaymentReference();
 
                 var transaction = new PaymentTransaction
                 {
@@ -364,17 +362,21 @@ namespace Bara.API.Transactions.Repositories
                             result.PaymentDetails.Add(newPaymentDetail);
                         }
                         userTransaction.Status = TransactionStatus.Completed;
+
                         userTransaction.CompletedAt = DateTimeOffset.UtcNow;
+
                         userTransaction.CreatedAt = verifyReq.Data.CreatedAt.HasValue
-                           ? DateTimeOffset.Parse(verifyReq.Data.CreatedAt.Value.ToString())
-                           : userTransaction.CreatedAt;
+                            ? verifyReq.Data.CreatedAt.Value.ToUniversalTime()
+                            : userTransaction.CreatedAt;
+
+                        userTransaction.ModifiedAt = DateTimeOffset.UtcNow;
+
                         result.Wallet.AvailableBalance += userTransaction.Amount;
                         result.Wallet.TotalBalance += userTransaction.Amount;
                         userTransaction.GatewayResponse = verifyReq.Data.GatewayResponse;
                         userTransaction.PaymentMethod = verifyReq.Data.Channel;
                         userTransaction.Fee = verifyReq.Data.Fees;
                         userTransaction.Notes = verifyReq.Message;
-                        userTransaction.ModifiedAt = DateTimeOffset.UtcNow;
 
                         dbContext.Transactions.Update(userTransaction);
                         dbContext.Wallets.Update(result.Wallet);
@@ -409,7 +411,7 @@ namespace Bara.API.Transactions.Repositories
                 else
                 {
                     logger.LogError($"Failed to verify transaction for user {result.Id}. Error: {verifyReq.Message}");
-                    await dbTransaction.RollbackAsync(); // User asked for rollback on failure
+                    await dbTransaction.RollbackAsync(); 
                     return ResponseDetail<bool>.Failed(verifyReq.Message, 500);
                 }
 
