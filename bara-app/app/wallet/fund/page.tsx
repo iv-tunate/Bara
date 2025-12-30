@@ -176,9 +176,9 @@ function FundWalletContent() {
                     <span>₦{Number(amount).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between text-gray-600">
-                    <span>Processing Fee (1.5% + ₦100):</span>
+                    <span>Processing Fee (1.8% + ₦100):</span>
                     <span>
-                      ₦{(Number(amount) * 0.015 + 100).toLocaleString()}
+                      ₦{(Number(amount) * 0.018 + 100).toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between font-bold text-[#810306] border-t border-[#FED7D7] pt-2 mt-2">
@@ -187,13 +187,13 @@ function FundWalletContent() {
                       ₦
                       {(
                         Number(amount) +
-                        Number(amount) * 0.015 +
+                        Number(amount) * 0.018 +
                         100
                       ).toLocaleString()}
                     </span>
                   </div>
                   <p className="text-[10px] text-gray-500 italic mt-1">
-                    Paystack charges a standard processing fee for every
+                    A standard processing fee of 1.6% + ₦100 is applied to every
                     transaction.
                   </p>
                 </div>

@@ -72,7 +72,7 @@ namespace Bara.API.Transactions.Repositories
 
                 var referenceId = TokenGenerator.GeneratePaymentReference();
 
-                 decimal fee = (data.Amount * 0.015m) + 100m;
+                 decimal fee = (data.Amount * 0.0177m) + 100m;
                 decimal totalCharge = data.Amount + fee;
 
                 var transaction = new PaymentTransaction
@@ -342,8 +342,8 @@ namespace Bara.API.Transactions.Repositories
                     return ResponseDetail<bool>.Failed(verifyReq.Message, 500);
                 }
 
-                var gatewayAmount = verifyReq.Data.Amount / 100m;
-                var expectedTotal = (transaction.Amount + transaction.Fee)/100m;
+                var gatewayAmount = verifyReq.Data.Amount;
+                var expectedTotal = transaction.Amount + transaction.Fee;
 
                 if (verifyReq.Data.Status == "success"
                     && gatewayAmount == expectedTotal

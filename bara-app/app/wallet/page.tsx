@@ -193,9 +193,11 @@ export default function WalletPage() {
                 <Image src="/Money.svg" alt="Close" width={20} height={20} />
                 <p className="font-semibold">Available Balance</p>
                 <div className="group-hover:block hidden absolute z-10 p-2 bg-gray-800 text-white text-xs rounded-md -top-10 left-0 w-48 shadow-lg">
-                    Funds you can currently withdraw or spend.
+                  Funds you can currently withdraw or spend.
                 </div>
-                 <span className="text-gray-400 cursor-help text-xs items-center justify-center flex border rounded-full w-4 h-4">?</span>
+                <span className="text-gray-400 cursor-help text-xs items-center justify-center flex border rounded-full w-4 h-4">
+                  ?
+                </span>
               </div>
               <h2 className="font-semibold text-2xl">
                 {walletData
@@ -326,12 +328,7 @@ export default function WalletPage() {
                               ""
                           )}
                         </p>
-                        <p>
-                          Ref:{" "}
-                          {transaction.referenceId ||
-                            transaction.reference ||
-                            "N/A"}
-                        </p>
+                        <p>Ref: {transaction.referenceId || "N/A"}</p>
                       </div>
                     </div>
                   ))}

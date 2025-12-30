@@ -39,7 +39,7 @@ export default function FundAccount({ isOpen, onClose }: FundAccountProps) {
 
       if (response.success && response.data?.paymentUrl) {
         toast.success("Redirecting to Paystack...");
-        // Redirect to Paystack Checkout
+      
         window.location.href = response.data.paymentUrl;
       } else {
         toast.error(response.message || "Failed to initiate payment");
@@ -63,7 +63,6 @@ export default function FundAccount({ isOpen, onClose }: FundAccountProps) {
           <Image src="/Arrow_left.png" alt="Back" width={20} height={20} />
         </button>
 
-        {/* Main content container */}
         <div className="max-w-2xl mx-auto mt-32 px-6 md:px-10 py-4 flex flex-col gap-10">
           <div>
             <h2 className="text-2xl font-semibold">Fund your account</h2>
@@ -73,9 +72,7 @@ export default function FundAccount({ isOpen, onClose }: FundAccountProps) {
             </p>
           </div>
 
-          {/* Payment form */}
           <form onSubmit={handlePaymentSubmit} className="flex flex-col gap-6">
-            {/* Amount input section */}
             <div>
               <label
                 htmlFor="amount"
@@ -93,7 +90,6 @@ export default function FundAccount({ isOpen, onClose }: FundAccountProps) {
                   />
                   <p className="text-sm font-medium">NGN</p>
                 </div>
-                {/* Amount input field */}
                 <input
                   type="number"
                   id="amount"
@@ -127,10 +123,9 @@ export default function FundAccount({ isOpen, onClose }: FundAccountProps) {
               alt="Paystack"
               width={80}
               height={15}
-              className="object-contain" // Use a placeholder if logo doesn't exist, but text is fine.
+              className="object-contain" 
               onError={(e) => (e.currentTarget.style.display = "none")}
             />
-            {/* Fallback text if image missing is handled by alt usually, or we just rely on text */}
             <span className="font-bold text-xs text-[#091F3E]">Paystack</span>
           </div>
         </div>
