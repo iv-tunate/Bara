@@ -10,6 +10,8 @@ import { downloadImage } from "@/utils/upload";
 import { Writer } from "@/models/user";
 import { Script } from "@/models/script";
 import { ScriptGrid } from "@/components/Script";
+import Link from "next/link";
+
 
 export default function WriterProfile() {
   const [copied, setCopied] = useState(false);
@@ -350,6 +352,14 @@ export default function WriterProfile() {
                 </svg>
               </div>
               <p className="text-gray-500">You have not uploaded any scripts</p>
+              <Link href="/writer/add-script" >
+                <button
+                  type="button"
+                  className="bg-[#800000] text-white mt-6 font-medium px-6 py-2 rounded-md hover:bg-[#1a0000] transition-colors"
+                >
+                  + Add Script
+                </button>
+              </Link>
             </div>
           ) : (
             <ScriptGrid

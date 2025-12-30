@@ -122,13 +122,13 @@ export default function DashboardNavbar() {
         </div>
 
         {/* Saved Scripts */}
-        <Link
+        {/* <Link
           href="/dashboard/saved-scripts"
           className="hover:text-[#800000] flex items-center gap-1 cursor-pointer"
         >
           <Image src="/Shape.png" alt="Saved Scripts" width={16} height={16} />{" "}
           Saved scripts
-        </Link>
+        </Link> */}
 
         {/* Messages Dropdown */}
         <div className="relative">
@@ -193,7 +193,7 @@ export default function DashboardNavbar() {
             </div>
 
             {/* Saved Scripts */}
-            <Link
+            {/* <Link
               href="/dashboard/saved-scripts"
               className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-100 rounded-md"
               onClick={() => setShowMobileMenu(false)}
@@ -205,7 +205,7 @@ export default function DashboardNavbar() {
                 height={16}
               />{" "}
               Saved scripts
-            </Link>
+            </Link> */}
 
             {/* Messages Dropdown Mobile */}
             <div className="relative w-full">

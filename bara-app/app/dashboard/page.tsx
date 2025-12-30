@@ -16,9 +16,10 @@ import { Button } from "@/components/ui/button";
 import Pagination from "@/components/Pagination";
 import { ScriptGrid } from "@/components/Script";
 import { useVerificationRecovery } from "@/app/hooks/useVerificationRecovery";
+import toast from "react-hot-toast";
 
 export default function DashboardPage() {
-  useVerificationRecovery(); 
+  useVerificationRecovery();
 
   const [scripts, setScripts] = useState<Script[]>([]);
   const [selectedGenres, setSelectedGenres] = useState<Genre[]>([]);
@@ -36,7 +37,8 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const session = getUserSession();
-    // console.log("Session Details", session);
+    debugger;
+    //  console.log("Session Details", session);
     if (session && !session.profileComplete) {
       setUserName(session.name);
       setRole(session.userType);
@@ -48,7 +50,7 @@ export default function DashboardPage() {
       return;
     }
     setUserName(session.name);
-    setRole(session.userType);
+    setRole(session.userType.toLowerCase());
     setProfileState(true);
   }, []);
 
@@ -174,7 +176,7 @@ export default function DashboardPage() {
                   producer searches, increased visibility by genre, and access
                   to valuable insights like script views and engagement.
                 </p>
-                <Button className="bg-[#810306] text-white px-6 py-2 w-fit">
+                <Button className="bg-[#810306] text-white px-6 py-2 w-fit" onClick={() => toast.error("Feature still in progress")}>
                   Get Bara Premium
                 </Button>
               </div>
