@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { api } from "@/utils/api";
 import { usePageGuard } from "@/app/hooks/usepageguard";
+import toast from "react-hot-toast";
 
-export default function PaystackCallbackPage() {
+function PaystackCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const reference =
@@ -28,6 +29,17 @@ export default function PaystackCallbackPage() {
 
     const verifyTransaction = async () => {
       hasVerified.current = true;
+
+      if (reference) {
+        localStorage.setItem(
+          "pending_verification",
+          JSON.stringify({
+            reference,
+            timestamp: Date.now(),
+          })
+        );
+      }
+
       try {
         const result = await api.verifyPayment(reference);
 
@@ -35,17 +47,22 @@ export default function PaystackCallbackPage() {
           setStatus("success");
           setMessage("Payment verified successfully!");
 
+          localStorage.removeItem("pending_verification");
+          toast.success("Payment verified successfully!");
           setTimeout(() => {
             router.push("/wallet");
           }, 2500);
         } else {
           setStatus("failed");
           setMessage(result.message || "Payment verification failed.");
+          localStorage.removeItem("pending_verification");
+          toast.error(result.message || "Payment verification failed.");
         }
       } catch (error) {
         console.error("Verification error:", error);
         setStatus("failed");
         setMessage("An unexpected error occurred while verifying.");
+        toast.error("An unexpected error occurred while verifying.");
       }
     };
 
@@ -62,7 +79,6 @@ export default function PaystackCallbackPage() {
       <DashboardNavbar />
 
       <div className="max-w-xl mx-auto px-6 py-20 flex flex-col items-center text-center gap-6">
-        {/* Status Icon */}
         <div
           className={`w-24 h-24 rounded-full flex items-center justify-center p-4 transition-all duration-500
           ${status === "verifying" ? "bg-gray-100" : ""}
@@ -109,7 +125,6 @@ export default function PaystackCallbackPage() {
           )}
         </div>
 
-        {/* Title & Message */}
         <div className="space-y-2">
           <h1 className="text-2xl font-bold text-[#22242A]">
             {status === "verifying" && "Verifying Payment"}
@@ -119,7 +134,6 @@ export default function PaystackCallbackPage() {
           <p className="text-gray-600 max-w-md mx-auto">{message}</p>
         </div>
 
-        {/* Action Buttons */}
         <div className="mt-6">
           {status === "failed" && (
             <div className="flex gap-4">
@@ -149,5 +163,19 @@ export default function PaystackCallbackPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function PaystackCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-white flex items-center justify-center">
+          <div className="w-12 h-12 border-4 border-gray-300 border-t-[#810306] rounded-full animate-spin" />
+        </main>
+      }
+    >
+      <PaystackCallbackContent />
+    </Suspense>
   );
 }

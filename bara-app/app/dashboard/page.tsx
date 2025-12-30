@@ -14,8 +14,12 @@ import Navbar from "@/components/Navbar";
 import CompleteProfileNav from "@/components/CompleteProfileNav";
 import { Button } from "@/components/ui/button";
 import Pagination from "@/components/Pagination";
-import {ScriptGrid} from "@/components/Script";
+import { ScriptGrid } from "@/components/Script";
+import { useVerificationRecovery } from "@/app/hooks/useVerificationRecovery";
+
 export default function DashboardPage() {
+  useVerificationRecovery(); 
+
   const [scripts, setScripts] = useState<Script[]>([]);
   const [selectedGenres, setSelectedGenres] = useState<Genre[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -27,7 +31,7 @@ export default function DashboardPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [profileState, setProfileState] = useState(false);
-  
+
   const pageSize = 16;
 
   useEffect(() => {
@@ -48,49 +52,47 @@ export default function DashboardPage() {
     setProfileState(true);
   }, []);
 
- const fetchScripts = async (page = currentPage, append = false) => {
-   setIsLoading(true);
-   setError("");
+  const fetchScripts = async (page = currentPage, append = false) => {
+    setIsLoading(true);
+    setError("");
 
-   try {
-     let response;
-     if (searchTerm.trim()) {
-       response = await api.searchScripts(searchTerm, page, pageSize);
-     } else if (selectedGenres.length > 0) {
-       response = await api.getScriptsByGenre(
-         selectedGenres[0].id,
-         page,
-         pageSize
-       );
-     } else {
-       response = await api.getAllScripts(page, pageSize);
-     }
+    try {
+      let response;
+      if (searchTerm.trim()) {
+        response = await api.searchScripts(searchTerm, page, pageSize);
+      } else if (selectedGenres.length > 0) {
+        response = await api.getScriptsByGenre(
+          selectedGenres[0].id,
+          page,
+          pageSize
+        );
+      } else {
+        response = await api.getAllScripts(page, pageSize);
+      }
 
-     if (response.success && response.data) {
-       setScripts((prev) =>
-         append
-           ? [...prev, ...(response.data.data || [])]
-           : response.data.data || []
-       );
-       setTotalPages(response.totalPages || 1);
-     } else {
-       setError(response.message || "Failed to load scripts");
-       if (!append) setScripts([]);
-     }
-   } catch (error) {
-     console.error(error);
-     setError("An unexpected error occurred");
-     if (!append) setScripts([]);
-   } finally {
-     setIsLoading(false);
-   }
- };
-
+      if (response.success && response.data) {
+        setScripts((prev) =>
+          append
+            ? [...prev, ...(response.data.data || [])]
+            : response.data.data || []
+        );
+        setTotalPages(response.totalPages || 1);
+      } else {
+        setError(response.message || "Failed to load scripts");
+        if (!append) setScripts([]);
+      }
+    } catch (error) {
+      console.error(error);
+      setError("An unexpected error occurred");
+      if (!append) setScripts([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchScripts();
   }, [currentPage, selectedGenres, searchTerm]);
-
 
   const handleGenreChange = (genres: Genre[]) => {
     setSelectedGenres(genres);
@@ -237,7 +239,7 @@ export default function DashboardPage() {
               hasMore={currentPage < totalPages && scripts.length < 36}
               onLoadMore={async () => {
                 setIsLoading(true);
-                await fetchScripts(currentPage + 1, true); 
+                await fetchScripts(currentPage + 1, true);
                 setCurrentPage((p) => p + 1);
                 setIsLoading(false);
               }}

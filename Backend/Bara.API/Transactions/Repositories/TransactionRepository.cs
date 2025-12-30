@@ -72,7 +72,7 @@ namespace Bara.API.Transactions.Repositories
 
                 var referenceId = TokenGenerator.GeneratePaymentReference();
 
-                 decimal fee = (data.Amount * 0.0177m) + 100m;
+                 decimal fee = (data.Amount * 0.018m) + 100m;
                 decimal totalCharge = data.Amount + fee;
 
                 var transaction = new PaymentTransaction
