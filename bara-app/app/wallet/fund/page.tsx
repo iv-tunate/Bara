@@ -167,6 +167,37 @@ function FundWalletContent() {
                 />
               </div>
               <p className="text-xs text-gray-500">Minimum deposit: ₦100</p>
+
+              {/* Fee Breakdown */}
+              {amount && Number(amount) >= 100 && (
+                <div className="bg-[#FFF5F5] border border-[#FED7D7] rounded-lg p-4 text-sm space-y-2">
+                  <div className="flex justify-between text-gray-600">
+                    <span>Amount to Fund:</span>
+                    <span>₦{Number(amount).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-600">
+                    <span>Processing Fee (1.5% + ₦100):</span>
+                    <span>
+                      ₦{(Number(amount) * 0.015 + 100).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between font-bold text-[#810306] border-t border-[#FED7D7] pt-2 mt-2">
+                    <span>Total Payable:</span>
+                    <span>
+                      ₦
+                      {(
+                        Number(amount) +
+                        Number(amount) * 0.015 +
+                        100
+                      ).toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-gray-500 italic mt-1">
+                    Paystack charges a standard processing fee for every
+                    transaction.
+                  </p>
+                </div>
+              )}
             </div>
 
             <button

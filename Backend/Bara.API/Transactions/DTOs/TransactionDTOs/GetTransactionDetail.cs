@@ -23,6 +23,7 @@
         /// Represents the status of the transaction (e.g., Completed, Pending, Failed).
         /// </summary>
         public string Status { get; init; }
+        public string TransactionType { get; init; }
         /// <summary>
         /// Represents any additional details or notes about the transaction.
         /// </summary>

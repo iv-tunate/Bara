@@ -72,11 +72,15 @@ namespace Bara.API.Transactions.Repositories
 
                 var referenceId = TokenGenerator.GeneratePaymentReference();
 
+                 decimal fee = (data.Amount * 0.015m) + 100m;
+                decimal totalCharge = data.Amount + fee;
+
                 var transaction = new PaymentTransaction
                 {
                     UserId = user.Id,
                     UserFullName = user.FullName,
-                    Amount = data.Amount,
+                    Amount = data.Amount, 
+                    Fee = fee,           
                     Status = TransactionStatus.Initiated,
                     TransactionType = TransactionType.WalletFunding,
                     WalletID = user.WalletId,
@@ -100,7 +104,7 @@ namespace Bara.API.Transactions.Repositories
                     
                     var paymentInitRequest = new PaymentInitRequest
                     {
-                        Amount = data.Amount,
+                        Amount = totalCharge, 
                         Email = user.Email,
                         Currency = "NGN",
                         Reference = referenceId, 
@@ -117,7 +121,8 @@ namespace Bara.API.Transactions.Repositories
                             { "reference", referenceId },
                             { "custom_fields", new List<object> 
                                 {
-                                    new { display_name = "User Name", variable_name = "user_name", value = user.FullName }
+                                    new { display_name = "User Name", variable_name = "user_name", value = user.FullName },
+                                    new { display_name = "Fee", variable_name = "fee", value = fee }
                                 } 
                             }
                         },
@@ -338,16 +343,17 @@ namespace Bara.API.Transactions.Repositories
                 }
 
                 var gatewayAmount = verifyReq.Data.Amount / 100m;
+                var expectedTotal = transaction.Amount + transaction.Fee;
 
                 if (verifyReq.Data.Status == "success"
-                    && gatewayAmount == transaction.Amount
+                    && gatewayAmount == expectedTotal
                     && transaction.Status == TransactionStatus.Completed)
                 {
                     cache.Remove($"User_{user.Id}_Transactions");
                     return ResponseDetail<bool>.Successful(true, "Transaction already verified");
                 }
 
-                if (verifyReq.Data.Status == "success" && gatewayAmount == transaction.Amount)
+                if (verifyReq.Data.Status == "success" && gatewayAmount == expectedTotal)
                 {
                     await using var dbTransaction = await dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
 
@@ -381,7 +387,7 @@ namespace Bara.API.Transactions.Repositories
                         transaction.ModifiedAt = DateTimeOffset.UtcNow;
                         transaction.GatewayResponse = verifyReq.Data.GatewayResponse;
                         transaction.PaymentMethod = verifyReq.Data.Channel;
-                        transaction.Fee = verifyReq.Data.Fees;
+                        transaction.Fee = verifyReq.Data.Fees / 100m;
                         transaction.Notes = verifyReq.Message;
 
                         wallet.AvailableBalance += transaction.Amount;
@@ -583,6 +589,7 @@ namespace Bara.API.Transactions.Repositories
                             Status = t.Status.ToString(),
                             Notes = t.Notes,
                             ReferenceId = t.ReferenceId,
+                            TransactionType = t.TransactionType.ToString(),
                             GatewayResponse = t.GatewayResponse,
                             CompletedAt = t.ModifiedAt,
                             DateCompleted = t.ModifiedAt.HasValue ? DateOnly.FromDateTime(t.ModifiedAt.Value.DateTime) : null,

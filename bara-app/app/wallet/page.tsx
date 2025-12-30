@@ -9,6 +9,7 @@ import Pagination from "@/components/Pagination";
 import { getUserSession } from "@/utils/tokenManager";
 import { api } from "@/utils/api";
 import { Transaction } from "@/models/transaction";
+import PaymentLogo from "@/components/PaymentLogo";
 import { usePageGuard } from "@/app/hooks/usepageguard";
 
 interface WalletData {
@@ -188,9 +189,13 @@ export default function WalletPage() {
           <>
             {/* Balance Card */}
             <div className="flex flex-col items-left justify-start bg-[#FFEDEE] bg-[url('/whisk-bg.png')] bg-contain bg-no-repeat bg-right py-5 px-7 rounded-md gap-10">
-              <div className=" flex flex-row gap-3">
+              <div className=" flex flex-row gap-3 items-center relative group">
                 <Image src="/Money.svg" alt="Close" width={20} height={20} />
                 <p className="font-semibold">Available Balance</p>
+                <div className="group-hover:block hidden absolute z-10 p-2 bg-gray-800 text-white text-xs rounded-md -top-10 left-0 w-48 shadow-lg">
+                    Funds you can currently withdraw or spend.
+                </div>
+                 <span className="text-gray-400 cursor-help text-xs items-center justify-center flex border rounded-full w-4 h-4">?</span>
               </div>
               <h2 className="font-semibold text-2xl">
                 {walletData
@@ -222,9 +227,15 @@ export default function WalletPage() {
             {/* Summary */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Total Balance */}
-              <div className="bg-white  border-2 border-gray-800/20 rounded-xl p-4 flex flex-col gap-3">
-                <div className=" flex flex-row gap-3">
+              <div className="bg-white  border-2 border-gray-800/20 rounded-xl p-4 flex flex-col gap-3 relative group">
+                <div className=" flex flex-row gap-3 items-center">
                   <p className="text-md font-medium">Total Balance</p>
+                  <div className="group-hover:block hidden absolute z-10 p-2 bg-gray-800 text-white text-xs rounded-md -top-10 left-0 w-48 shadow-lg">
+                    The sum of your Available and Locked funds.
+                  </div>
+                  <span className="text-gray-400 cursor-help text-xs items-center justify-center flex border rounded-full w-4 h-4">
+                    ?
+                  </span>
                 </div>
                 <p className="text-xl font-semibold">
                   {walletData
@@ -236,27 +247,24 @@ export default function WalletPage() {
                 </p>
               </div>
 
-              {/* Locked Balance or Amount Withdrawn */}
-              <div className="bg-white  border-2 border-gray-800/20 rounded-xl p-4 flex flex-col gap-3">
-                <div className=" flex flex-row gap-3">
-                  <p className="text-md font-medium">
-                    {userSession?.userType?.toLowerCase() === "producer"
-                      ? "Locked Balance"
-                      : "Amount Withdrawn"}
-                  </p>
+              {/* Locked Balance */}
+              <div className="bg-white  border-2 border-gray-800/20 rounded-xl p-4 flex flex-col gap-3 relative group">
+                <div className=" flex flex-row gap-3 items-center">
+                  <p className="text-md font-medium">Locked Balance</p>
+                  <div className="group-hover:block hidden absolute z-10 p-2 bg-gray-800 text-white text-xs rounded-md -top-10 left-0 w-48 shadow-lg">
+                    Funds held in escrow for active scripts/transactions.
+                  </div>
+                  <span className="text-gray-400 cursor-help text-xs items-center justify-center flex border rounded-full w-4 h-4">
+                    ?
+                  </span>
                 </div>
                 <p className="text-xl font-semibold">
-                  {userSession?.userType?.toLowerCase() === "producer"
-                    ? walletData
-                      ? formatCurrency(
-                          walletData.lockedBalance,
-                          walletData.currencySymbol
-                        )
-                      : "NGN 0.00"
-                    : formatCurrency(
-                        totalWithdrawn,
-                        walletData?.currencySymbol || "NGN"
-                      )}
+                  {walletData
+                    ? formatCurrency(
+                        walletData.lockedBalance,
+                        walletData.currencySymbol
+                      )
+                    : "NGN 0.00"}
                 </p>
               </div>
             </div>
@@ -278,12 +286,9 @@ export default function WalletPage() {
                     >
                       <div className="flex flex-row justify-between gap-5">
                         <div className="flex flex-row gap-5">
-                          <Image
-                            src="/profilePic.png"
-                            alt="avatar"
-                            width={40}
-                            height={40}
-                            className="rounded-full object-cover"
+                          <PaymentLogo
+                            method={transaction.paymentMethod}
+                            type={transaction.transactionType}
                           />
                           <div>
                             <p
@@ -314,13 +319,23 @@ export default function WalletPage() {
 
                       {/* Date & Time */}
                       <div className="flex flex-row justify-between text-[10px]">
-                        <p>{formatDateTime(transaction.createdAt)}</p>
-                        <p>Ref: {transaction.reference}</p>
+                        <p>
+                          {formatDateTime(
+                            transaction.transactionDate ||
+                              transaction.createdAt ||
+                              ""
+                          )}
+                        </p>
+                        <p>
+                          Ref:{" "}
+                          {transaction.referenceId ||
+                            transaction.reference ||
+                            "N/A"}
+                        </p>
                       </div>
                     </div>
                   ))}
                 </div>
-
                 {/* Pagination */}
                 {totalPages > 1 && (
                   <Pagination

@@ -4,7 +4,11 @@ export interface Transaction {
   currencySymbol: string;
   status: string;
   transactionType: string;
-  reference: string;
-  createdAt: string;
+  referenceId: string;
+  transactionDate: string;
+  gatewayResponse?: string;
+  paymentMethod?: string;
+  notes?: string;
+  createdAt?: string;
   completedAt?: string;
 }
