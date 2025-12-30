@@ -343,7 +343,7 @@ namespace Bara.API.Transactions.Repositories
                 }
 
                 var gatewayAmount = verifyReq.Data.Amount / 100m;
-                var expectedTotal = transaction.Amount + transaction.Fee;
+                var expectedTotal = (transaction.Amount + transaction.Fee)/100m;
 
                 if (verifyReq.Data.Status == "success"
                     && gatewayAmount == expectedTotal
@@ -387,7 +387,7 @@ namespace Bara.API.Transactions.Repositories
                         transaction.ModifiedAt = DateTimeOffset.UtcNow;
                         transaction.GatewayResponse = verifyReq.Data.GatewayResponse;
                         transaction.PaymentMethod = verifyReq.Data.Channel;
-                        transaction.Fee = verifyReq.Data.Fees / 100m;
+                        transaction.Fee = verifyReq.Data.Fees;
                         transaction.Notes = verifyReq.Message;
 
                         wallet.AvailableBalance += transaction.Amount;
