@@ -327,9 +327,19 @@ export default function WriterProfile() {
         </section>
 
         <section className="border border-[#ABADB2] rounded-lg p-6 mb-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-[#22242A] mb-4">
-            My Scripts
-          </h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold text-[#22242A]">
+              My Scripts
+            </h2>
+            <Link href="/writer/add-script">
+              <button
+                type="button"
+                className="bg-[#800000] text-white font-medium px-6 py-2 rounded-md hover:bg-[#1a0000] transition-colors"
+              >
+                + Add Script
+              </button>
+            </Link>
+          </div>
           {scriptsLoading && scripts.length === 0 ? (
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#800000]"></div>
@@ -352,14 +362,6 @@ export default function WriterProfile() {
                 </svg>
               </div>
               <p className="text-gray-500">You have not uploaded any scripts</p>
-              <Link href="/writer/add-script" >
-                <button
-                  type="button"
-                  className="bg-[#800000] text-white mt-6 font-medium px-6 py-2 rounded-md hover:bg-[#1a0000] transition-colors"
-                >
-                  + Add Script
-                </button>
-              </Link>
             </div>
           ) : (
             <ScriptGrid
