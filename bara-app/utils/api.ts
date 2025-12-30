@@ -134,7 +134,7 @@ const API_ENDPOINTS = {
     `/api/producer/profile/${producerId}`,
   WRITER_PROFILE: (writerId: string) => `/api/writer/profile/${writerId}`,
   USER_TRANSACTIONS: (userId: string, pageNumber: number, pageSize: number) =>
-    `/api/transaction/users/${userId}/transactions/${pageNumber}/${pageSize}`,
+    `/api/transaction/user/${userId}/transactions/${pageNumber}/${pageSize}`,
   ADD_SCRIPT: (writerId: string) => `/api/script/${writerId}`,
   WALLET_BALANCE: (userId: string) => `/api/wallet/balance/${userId}`,
   INITIATE_FUND_WALLET: (userId: string) =>

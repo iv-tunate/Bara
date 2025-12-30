@@ -401,18 +401,18 @@ namespace Bara.API.Transactions.Repositories
                             await dbTransaction.RollbackAsync();
                             logger.LogCritical(innerEx, "CRITICAL: Paystack charged but Wallet update failed for Reference {Reference}", reference);
 
-                            bContext.ChangeTracker.Clear();
+                            dbContext.ChangeTracker.Clear();
 
                             var fallbackTrans = await dbContext.Transactions.FindAsync(userTransaction.Id);
                             if (fallbackTrans != null)
                             {
                                 fallbackTrans.Status = TransactionStatus.Failed;
                                 fallbackTrans.Notes = $"PAYSTACK CHARGED - MANUAL ATTENTION NEEDED. Error: {innerEx.Message}";
-                                fallbackTrans.GatewayResponse = "Approved"; // Evidence of external success
+                                fallbackTrans.GatewayResponse = "Approved"; 
 
                                 dbContext.Transactions.Update(fallbackTrans);
                                 await dbContext.SaveChangesAsync();
-                            }
+                            }   
                              
                             cache.Remove($"User_{result.Id}_Transactions"); 
                             

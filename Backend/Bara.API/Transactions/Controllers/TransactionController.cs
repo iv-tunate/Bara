@@ -97,7 +97,7 @@ namespace Bara.API.Transactions.Controllers
         /// <param name="pageSize">The number of items per page</param>
         /// <returns>A paginated list of user transactions</returns>
         [Authorize(Roles = "Admin, Producer, Writer")]
-        [HttpGet("users/{userId}/transactions/{pageNumber}/{pageSize}")]
+        [HttpGet("user/{userId}/transactions/{pageNumber}/{pageSize}")]
         public async Task<IActionResult> GetUserTransactions(Guid userId, int pageNumber, int pageSize)
         {
             try

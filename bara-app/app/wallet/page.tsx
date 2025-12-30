@@ -27,7 +27,7 @@ export default function WalletPage() {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const pageSize = 10;
+  const pageSize = 20;
 
   const userSession = getUserSession();
   usePageGuard();
@@ -50,20 +50,28 @@ export default function WalletPage() {
           setError(walletResponse.message || "Failed to fetch wallet balance");
         }
 
+        // debugger;
         const transactionsResponse = await api.getUserTransactions(
           userSession.userId,
           currentPage,
           pageSize
         );
+
         if (transactionsResponse.success && transactionsResponse.data) {
-          setTransactions(
-            Array.isArray(transactionsResponse.data)
-              ? transactionsResponse.data
-              : []
-          );
-          setTotalPages(
-            Math.ceil((transactionsResponse.totalCount || 0) / pageSize)
-          );
+          const responseData = transactionsResponse.data;
+
+          // Handle nested paginated response (response.data.data) or direct array
+          const transactionsList = Array.isArray(responseData)
+            ? responseData
+            : responseData.data && Array.isArray(responseData.data)
+            ? responseData.data
+            : [];
+
+          setTransactions(transactionsList);
+
+          const totalCount =
+            responseData.totalCount || responseData.totalRecords || 0;
+          setTotalPages(Math.ceil(totalCount / pageSize));
         } else {
           setError(
             transactionsResponse.message || "Failed to fetch transactions"
