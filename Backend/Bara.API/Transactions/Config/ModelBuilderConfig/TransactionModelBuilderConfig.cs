@@ -1,6 +1,7 @@
 ﻿using Bara.API.Transactions.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Reflection.Emit;
 
 namespace Bara.API.Transactions.Config.ModelBuilderConfig
 {
@@ -17,20 +18,12 @@ namespace Bara.API.Transactions.Config.ModelBuilderConfig
                 .HasMaxLength(50);
             builder.Property(t => t.Currency)
          .HasConversion<string>();
-            //builder.HasOne("Producer")
-            //    .WithMany()
-            //    .HasForeignKey("ProducerId")
-            //    .OnDelete(DeleteBehavior.Restrict);
 
-            //builder.HasOne("Producer")
-            //    .WithMany()
-            //    .HasForeignKey("WriterId")
-            //    .OnDelete(DeleteBehavior.Restrict);
-
-            //builder.HasOne("Script")
-            //    .WithMany()
-            //    .HasForeignKey("ScriptId")
-            //    .OnDelete(DeleteBehavior.Restrict);
+            builder
+            .HasOne(t => t.User)
+            .WithMany(u => u.PaymentTransactions)
+            .HasForeignKey(t => t.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasIndex(t => t.TransactionType);
             builder.HasIndex(t => t.Status);

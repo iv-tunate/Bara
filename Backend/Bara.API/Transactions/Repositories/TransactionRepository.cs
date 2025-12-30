@@ -307,143 +307,145 @@ namespace Bara.API.Transactions.Repositories
         {
             try
             {
-                var result = await (
-                                from t in dbContext.Transactions
-                                join u in dbContext.Users on t.UserId equals u.Id
-                                where t.ReferenceId == reference
-                                select new
-                                {
-                                    u.Id,
-                                    Transaction = t,
-                                    u.Wallet,
-                                    u.PaymentDetails
-                                }
-                            ).FirstOrDefaultAsync();
+                var result = await dbContext.Transactions
+                    .Where(t => t.ReferenceId == reference)
+                    .Select(t => new
+                    {
+                        Transaction = t,
+                        User = t.User,
+                        Wallet = t.User.Wallet,
+                        PaymentDetail = t.User.PaymentDetails
+                            .FirstOrDefault(pd => pd.AuthorizationCode == t.ReferenceId) 
+                    })
+                    .FirstOrDefaultAsync();
 
-                if (result == null || result.Transaction == null)
+                if (result == null)
                 {
                     logger.LogInformation($"Transaction with reference {reference} not found.");
                     return ResponseDetail<bool>.Failed("Transaction not found", 404);
                 }
 
-                var userTransaction = result.Transaction;
+                var transaction = result.Transaction;
+                var wallet = result.Wallet;
+                var user = result.User;
 
-                var verifyReq = await paystack.VerifyPaymentAsync(userTransaction.ReferenceId);
+                var verifyReq = await paystack.VerifyPaymentAsync(transaction.ReferenceId);
 
-                if (verifyReq.Status && verifyReq.Data != null)
+                if (!verifyReq.Status || verifyReq.Data == null)
                 {
-                    if (verifyReq.Data.Status == "success" && verifyReq.Data.Amount == userTransaction.Amount && userTransaction.Status == TransactionStatus.Completed)
-                    {
-                        cache.Remove($"User_{result.Id}_Transactions");
-                        return ResponseDetail<bool>.Successful(true, "Transaction already verified");
-                    }
-                    
-                    if (verifyReq.Data.Status == "success" && verifyReq.Data.Amount == userTransaction.Amount)
-                    {
-                        await using var dbTransaction = await dbContext.Database.BeginTransactionAsync();
-                        try 
-                        {
-                            var paymentDetail = result.PaymentDetails.FirstOrDefault(x => x.AuthorizationCode == verifyReq.Data.Authorization.AuthorizationCode && x.UserId == result.Id);
-                            if (paymentDetail is null)
-                            {
-                                var newPaymentDetail = new PaymentDetail
-                                {
-                                    UserId = result.Id,
-                                    AuthorizationCode = verifyReq.Data.Authorization.AuthorizationCode,
-                                    Last4 = verifyReq.Data.Authorization.Last4,
-                                    CardType = verifyReq.Data.Authorization.CardType,
-                                    ExpMonth = verifyReq.Data.Authorization.ExpMonth,
-                                    Bank = verifyReq.Data.Authorization.Bank,
-                                    CountryCode = verifyReq.Data.Authorization.CountryCode,
-                                    CustomerCode = verifyReq.Data.Customer.CustomerCode,
-                                    CustomerId = verifyReq.Data.Customer.Id.ToString(),
-                                    ExpYear = verifyReq.Data.Authorization.ExpYear,
-                                    Reusable = verifyReq.Data.Authorization.Reusable
-                                };
-                                result.PaymentDetails.Add(newPaymentDetail);
-                            }
-
-                            userTransaction.Status = TransactionStatus.Completed;
-                            userTransaction.CompletedAt = DateTimeOffset.UtcNow;
-                            userTransaction.CreatedAt = verifyReq.Data.CreatedAt.HasValue
-                                ? verifyReq.Data.CreatedAt.Value.ToUniversalTime()
-                                : userTransaction.CreatedAt;
-                            
-                            userTransaction.ModifiedAt = DateTimeOffset.UtcNow;
-                            
-                            result.Wallet.AvailableBalance += userTransaction.Amount;
-                            result.Wallet.TotalBalance += userTransaction.Amount;
-                            
-                            userTransaction.GatewayResponse = verifyReq.Data.GatewayResponse;
-                            userTransaction.PaymentMethod = verifyReq.Data.Channel;
-                            userTransaction.Fee = verifyReq.Data.Fees;
-                            userTransaction.Notes = verifyReq.Message;
-
-                            dbContext.Transactions.Update(userTransaction);
-                            dbContext.Wallets.Update(result.Wallet);
-                            
-                            await dbContext.SaveChangesAsync();
-                            await dbTransaction.CommitAsync();
-
-                            cache.Remove($"User_{result.Id}_Transactions");
-
-                            await notificationHub.Clients.User(result.Id.ToString())
-                                .SendAsync("WalletUpdated", new
-                                {
-                                    Balance = result.Wallet.AvailableBalance,
-                                    Total = result.Wallet.TotalBalance
-                                });
-
-                            return ResponseDetail<bool>.Successful(true, "Transaction verified successfully");
-                        }
-                        catch (Exception innerEx)
-                        {
-                            await dbTransaction.RollbackAsync();
-                            logger.LogCritical(innerEx, "CRITICAL: Paystack charged but Wallet update failed for Reference {Reference}", reference);
-
-                            dbContext.ChangeTracker.Clear();
-
-                            var fallbackTrans = await dbContext.Transactions.FindAsync(userTransaction.Id);
-                            if (fallbackTrans != null)
-                            {
-                                fallbackTrans.Status = TransactionStatus.Failed;
-                                fallbackTrans.Notes = $"PAYSTACK CHARGED - MANUAL ATTENTION NEEDED. Error: {innerEx.Message}";
-                                fallbackTrans.GatewayResponse = "Approved"; 
-
-                                dbContext.Transactions.Update(fallbackTrans);
-                                await dbContext.SaveChangesAsync();
-                            }   
-                             
-                            cache.Remove($"User_{result.Id}_Transactions"); 
-                            
-                            return ResponseDetail<bool>.Failed("Payment received but wallet update failed. Please contact support.", 500);
-                        }
-                    }
-                    else
-                    {
-                        userTransaction.Status = verifyReq.Data.Status switch
-                        {
-                            "failed" => TransactionStatus.Failed,
-                            "abandoned" => TransactionStatus.Abandoned,
-                            "cancelled" => TransactionStatus.Cancelled,
-                            _ => TransactionStatus.Failed
-                        };
-                        userTransaction.Notes = verifyReq.Message; // Capture why
-                        userTransaction.ModifiedAt = DateTimeOffset.UtcNow;
-
-                        dbContext.Transactions.Update(userTransaction);
-                        await dbContext.SaveChangesAsync();
-                        
-                        cache.Remove($"User_{result.Id}_Transactions");
-                        
-                        return ResponseDetail<bool>.Failed($"Transaction verification {verifyReq.Data.Status}", 400); 
-                    }
-                }
-                else
-                {
-                    logger.LogError($"Failed to verify transaction for user {result.Id}. Error: {verifyReq.Message}");
+                    logger.LogError($"Failed to verify transaction for user {user.Id}. Error: {verifyReq.Message}");
                     return ResponseDetail<bool>.Failed(verifyReq.Message, 500);
                 }
+
+                var gatewayAmount = verifyReq.Data.Amount / 100m;
+
+                if (verifyReq.Data.Status == "success"
+                    && gatewayAmount == transaction.Amount
+                    && transaction.Status == TransactionStatus.Completed)
+                {
+                    cache.Remove($"User_{user.Id}_Transactions");
+                    return ResponseDetail<bool>.Successful(true, "Transaction already verified");
+                }
+
+                if (verifyReq.Data.Status == "success" && gatewayAmount == transaction.Amount)
+                {
+                    await using var dbTransaction = await dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
+
+                    try
+                    {
+                        var authCode = verifyReq.Data.Authorization.AuthorizationCode;
+
+                        var existingPaymentDetail = await dbContext.PaymentDetail
+                            .FirstOrDefaultAsync(p => p.UserId == user.Id && p.AuthorizationCode == authCode);
+
+                        if (existingPaymentDetail == null)
+                        {
+                            dbContext.PaymentDetail.Add(new PaymentDetail
+                            {
+                                UserId = user.Id,
+                                AuthorizationCode = authCode,
+                                Last4 = verifyReq.Data.Authorization.Last4,
+                                CardType = verifyReq.Data.Authorization.CardType,
+                                ExpMonth = verifyReq.Data.Authorization.ExpMonth,
+                                ExpYear = verifyReq.Data.Authorization.ExpYear,
+                                Bank = verifyReq.Data.Authorization.Bank,
+                                CountryCode = verifyReq.Data.Authorization.CountryCode,
+                                CustomerCode = verifyReq.Data.Customer.CustomerCode,
+                                CustomerId = verifyReq.Data.Customer.Id.ToString(),
+                                Reusable = verifyReq.Data.Authorization.Reusable
+                            });
+                        }
+
+                        transaction.Status = TransactionStatus.Completed;
+                        transaction.CompletedAt = DateTimeOffset.UtcNow;
+                        transaction.ModifiedAt = DateTimeOffset.UtcNow;
+                        transaction.GatewayResponse = verifyReq.Data.GatewayResponse;
+                        transaction.PaymentMethod = verifyReq.Data.Channel;
+                        transaction.Fee = verifyReq.Data.Fees;
+                        transaction.Notes = verifyReq.Message;
+
+                        wallet.AvailableBalance += transaction.Amount;
+                        wallet.TotalBalance += transaction.Amount;
+
+                        dbContext.Transactions.Update(transaction);
+                        dbContext.Wallets.Update(wallet);
+
+                        await dbContext.SaveChangesAsync();
+                        await dbTransaction.CommitAsync();
+
+                        cache.Remove($"User_{user.Id}_Transactions");
+
+                        await notificationHub.Clients.User(user.Id.ToString())
+                            .SendAsync("WalletUpdated", new
+                            {
+                                Balance = wallet.AvailableBalance,
+                                Total = wallet.TotalBalance
+                            });
+
+                        return ResponseDetail<bool>.Successful(true, "Transaction verified successfully");
+                    }
+                    catch (Exception ex)
+                    {
+                        await dbTransaction.RollbackAsync();
+
+                        logger.LogCritical(ex, "CRITICAL: Paystack charged but Wallet update failed for Reference {Reference}", reference);
+
+                        dbContext.ChangeTracker.Clear();
+
+                        var fallbackTrans = await dbContext.Transactions.FindAsync(transaction.Id);
+                        if (fallbackTrans != null)
+                        {
+                            fallbackTrans.Status = TransactionStatus.Failed;
+                            fallbackTrans.Notes = $"PAYSTACK CHARGED - MANUAL ATTENTION NEEDED. Error: {ex.Message}";
+                            fallbackTrans.GatewayResponse = "Approved";
+
+                            dbContext.Transactions.Update(fallbackTrans);
+                            await dbContext.SaveChangesAsync();
+                        }
+
+                        cache.Remove($"User_{user.Id}_Transactions");
+
+                        return ResponseDetail<bool>.Failed("Payment received but wallet update failed. Please contact support.", 500);
+                    }
+                }
+
+                transaction.Status = verifyReq.Data.Status switch
+                {
+                    "failed" => TransactionStatus.Failed,
+                    "abandoned" => TransactionStatus.Abandoned,
+                    "cancelled" => TransactionStatus.Cancelled,
+                    _ => TransactionStatus.Failed
+                };
+
+                transaction.Notes = verifyReq.Message;
+                transaction.ModifiedAt = DateTimeOffset.UtcNow;
+
+                dbContext.Transactions.Update(transaction);
+                await dbContext.SaveChangesAsync();
+
+                cache.Remove($"User_{user.Id}_Transactions");
+
+                return ResponseDetail<bool>.Failed($"Transaction verification {verifyReq.Data.Status}", 400);
             }
             catch (Exception ex)
             {

@@ -1,4 +1,5 @@
 ﻿using Bara.API.Transactions.Enums;
+using Bara.API.Users.Models;
 using Bara.API.Utilities.Models;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -8,6 +9,7 @@ namespace Bara.API.Transactions.Models
     {
         [ForeignKey("User")]
         public Guid UserId { get; set; } = Guid.Empty;
+        public User User { get; set; }
         public string UserFullName { get; set; } = string.Empty;
 
         [Column(TypeName = "decimal(18,2)")]

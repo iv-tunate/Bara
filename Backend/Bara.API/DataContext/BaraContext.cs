@@ -42,7 +42,8 @@ namespace Bara.API.DataContext
         public DbSet<Address> Addresses { get; set; }
         //public DbSet<ScriptWritingPostByProducer> ScriptWritingPosts { get; set; }
         //public DbSet<ScriptWritingPostApplicant> Applicants { get; set; }
-        //public DbSet<Escrow> EscrowOperations { get; set; }
+        public DbSet<Escrow> Escrow { get; set; }
+        public DbSet<PaymentDetail> PaymentDetail { get; set; }
         public DbSet<BlackListedUser> BlackListedUsers { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<BankDetail> BankDetails { get; set; }
@@ -69,6 +70,7 @@ namespace Bara.API.DataContext
                     .WithMany(g => g.Scripts)
                     .UsingEntity(j => j.ToTable("ScriptGenres"));
             modelBuilder.Entity<Script>().HasIndex(x => x.IsPremiumScript);
+
             //modelBuilder.Entity<Genre>().HasData(new List<Genre>
             //    {
             //        new() { Id = Guid.NewGuid(), Name = "Drama", Description = "Character-driven stories exploring emotion, conflict, and realism." },
