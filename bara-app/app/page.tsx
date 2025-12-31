@@ -176,7 +176,7 @@ export default function HomePage() {
                 {/* Card 1 */}
                 <div
                   className="w-full bg-[url('/01.png')] bg-[#FFEDEE] bg-auto bg-no-repeat bg-top-left flex flex-col items-center justify-center gap-5 px-15 py-10 rounded-md  transition-all duration-300 ease-in-out
-              hover:scale-105"
+              hover:scale-105 hover:bg-[#810306] hover:text-[#FFEDEE]"
                 >
                   <h3 className="text-3xl font-semibold">
                     Upload and set price
@@ -189,7 +189,7 @@ export default function HomePage() {
                 {/* Card 2 */}
                 <div
                   className="w-full bg-[url('/02.png')] bg-[#FFEDEE] bg-auto bg-no-repeat bg-top-left flex flex-col items-center justify-center gap-5 px-15 py-10 rounded-md transition-all duration-300 ease-in-out
-              hover:scale-105"
+              hover:scale-105 hover:bg-[#810306] hover:text-[#FFEDEE]"
                 >
                   <h3 className="text-3xl font-semibold">
                     NDA-protected previews
@@ -202,7 +202,7 @@ export default function HomePage() {
                 {/* Card 3 */}
                 <div
                   className="w-full bg-[url('/03.png')] bg-[#FFEDEE] bg-auto bg-no-repeat bg-top-left flex flex-col items-center justify-center gap-5 px-15 py-10 rounded-md transition-all duration-300 ease-in-out
-              hover:scale-105"
+              hover:scale-105 hover:bg-[#810306] hover:text-[#FFEDEE]"
                 >
                   <h3 className="text-3xl font-semibold">
                     Get paid after confirmation
@@ -225,7 +225,7 @@ export default function HomePage() {
                 {/* Card 1 */}
                 <div
                   className="w-full bg-[url('/01.png')] bg-[#FFEDEE] bg-auto bg-no-repeat bg-top-left flex flex-col items-center justify-center gap-5 px-15 py-10 rounded-md transition-all duration-300 ease-in-out
-              hover:scale-105"
+              hover:scale-105 hover:bg-[#810306] hover:text-[#FFEDEE]"
                 >
                   <h3 className="text-3xl font-semibold">
                     Explore and sign NDA
@@ -238,7 +238,7 @@ export default function HomePage() {
                 {/* Card 2 */}
                 <div
                   className="w-full bg-[url('/02.png')] bg-[#FFEDEE] bg-auto bg-no-repeat bg-top-left flex flex-col items-center justify-center gap-5 px-15 py-10 rounded-md transition-all duration-300 ease-in-out
-              hover:scale-105"
+              hover:scale-105 hover:bg-[#810306] hover:text-[#FFEDEE]"
                 >
                   <h3 className="text-3xl font-semibold">
                     Make payment for script
@@ -251,7 +251,7 @@ export default function HomePage() {
                 {/* Card 3 */}
                 <div
                   className="w-full bg-[url('/03.png')] bg-[#FFEDEE] bg-auto bg-no-repeat bg-top-left flex flex-col items-center justify-center gap-5 px-15 py-10 rounded-md transition-all duration-300 ease-in-out
-              hover:scale-105"
+              hover:scale-105 hover:bg-[#810306] hover:text-[#FFEDEE]"
                 >
                   <h3 className="text-3xl font-semibold">
                     Review script and confirmm
