@@ -16,6 +16,7 @@ export default function HomePage() {
   const [role, setRole] = useState<string>("Guest");
   const [profileState, setProfileState] = useState(false);
   const [exploreBtnState, setExploreBtnState] = useState(false);
+  const [hoveredImage, setHoveredImage] = useState<number | null>(null);
   useEffect(() => {
     const session = getUserSession();
 
@@ -266,42 +267,109 @@ export default function HomePage() {
         </div>
 
         {/* Gallery */}
-        <div className="mx-auto w-full max-w-7xl flex flex-wrap justify-center md:justify-between items-center gap-5 bg-[url('/galleryquote.png')] bg-auto bg-no-repeat py-16 px-4 md:px-10">
-          <Image
-            src="/Testimonial-1.png"
-            alt="Gallery Image"
-            width={150}
-            height={60}
-            className="flex-shrink-0"
-          />
-          <Image
-            src="/Testimonial-2.png"
-            alt="Gallery Image"
-            width={150}
-            height={60}
-            className="flex-shrink-0"
-          />
-          <Image
-            src="/Testimonial-3.png"
-            alt="Gallery Image"
-            width={150}
-            height={60}
-            className="flex-shrink-0"
-          />
-          <Image
-            src="/Testimonial-4.png"
-            alt="Gallery Image"
-            width={150}
-            height={60}
-            className="flex-shrink-0"
-          />
-          <Image
-            src="/Testimonial-5.png"
-            alt="Gallery Image"
-            width={150}
-            height={60}
-            className="flex-shrink-0"
-          />
+        <div className="mx-auto w-full max-w-7xl flex flex-col items-left bg-[url('/galleryquote.png')] bg-auto bg-no-repeat py-16 px-4 md:px-15">
+          <div className="flex flex-wrap justify-center md:justify-around items-center gap-0 mb-8">
+            <div
+              className="relative group cursor-pointer"
+              onMouseEnter={() => setHoveredImage(1)}
+              onMouseLeave={() => setHoveredImage(null)}
+            >
+              <Image
+                src="/Testimonial-1.png"
+                alt="Gallery Image"
+                width={150}
+                height={60}
+                className="flex-shrink-0 transition-transform duration-300 group-hover:scale-x-185 z-10 relative"
+              />
+            </div>
+            <div
+              className="relative group cursor-pointer"
+              onMouseEnter={() => setHoveredImage(2)}
+              onMouseLeave={() => setHoveredImage(null)}
+            >
+              <Image
+                src="/Testimonial-2.png"
+                alt="Gallery Image"
+                width={150}
+                height={60}
+                className="flex-shrink-0 transition-transform duration-300 group-hover:scale-x-185 z-10 relative"
+              />
+            </div>
+            <div
+              className="relative group cursor-pointer"
+              onMouseEnter={() => setHoveredImage(3)}
+              onMouseLeave={() => setHoveredImage(null)}
+            >
+              <Image
+                src="/Testimonial-3.png"
+                alt="Gallery Image"
+                width={150}
+                height={60}
+                className="flex-shrink-0 transition-transform duration-300 group-hover:scale-x-185 z-10 relative"
+              />
+            </div>
+            <div
+              className="relative group cursor-pointer"
+              onMouseEnter={() => setHoveredImage(4)}
+              onMouseLeave={() => setHoveredImage(null)}
+            >
+              <Image
+                src="/Testimonial-4.png"
+                alt="Gallery Image"
+                width={150}
+                height={60}
+                className="flex-shrink-0 transition-transform duration-300 group-hover:scale-x-185 z-10 relative"
+              />
+            </div>
+            <div
+              className="relative group cursor-pointer"
+              onMouseEnter={() => setHoveredImage(5)}
+              onMouseLeave={() => setHoveredImage(null)}
+            >
+              <Image
+                src="/Testimonial-5.png"
+                alt="Gallery Image"
+                width={150}
+                height={60}
+                className="flex-shrink-0 transition-transform duration-300 group-hover:scale-x-185 z-10 relative"
+              />
+            </div>
+          </div>
+
+          {/* Testimony Display */}
+          <div className="min-h-[60px] flex items-center justify-center">
+            {hoveredImage === 1 && (
+              <p className="text-center text-gray-700 italic max-w-2xl animate-fadeIn">
+                "Bara has revolutionized how we discover new talent. The
+                platform's security and NDA protection give us complete
+                confidence."
+              </p>
+            )}
+            {hoveredImage === 2 && (
+              <p className="text-center text-gray-700 italic max-w-2xl animate-fadeIn">
+                "As a writer, I've finally found a platform that values my work
+                and protects my rights. The payment system is brilliant."
+              </p>
+            )}
+            {hoveredImage === 3 && (
+              <p className="text-center text-gray-700 italic max-w-2xl animate-fadeIn">
+                "The collaboration features are outstanding. We can work
+                seamlessly with writers from anywhere in the world."
+              </p>
+            )}
+            {hoveredImage === 4 && (
+              <p className="text-center text-gray-700 italic max-w-2xl animate-fadeIn">
+                "Bara's genre-based search and secure transactions have made our
+                production process incredibly efficient."
+              </p>
+            )}
+            {hoveredImage === 5 && (
+              <p className="text-center text-gray-700 italic max-w-2xl animate-fadeIn">
+                "Finally, a platform that understands the needs of both writers
+                and producers. It's a game-changer for the industry."
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Section 5 => Bara Bridge */}
