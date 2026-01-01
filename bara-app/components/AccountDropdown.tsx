@@ -130,7 +130,7 @@ export default function AccountDropdown({
       )}
 
       <div className="py-2">
-        {userData?.userType === "Writer" && (
+        {/* {userData?.userType === "Writer" && (
           <Link
             href={`/writer/profile`}
             onClick={onClose}
@@ -151,7 +151,7 @@ export default function AccountDropdown({
             </svg>
             My Profile
           </Link>
-        )}
+        )} */}
 
         <Link
           href="/account/id"

@@ -41,7 +41,6 @@ export default function MyScriptDetailPage() {
         if (scriptResponse.success && scriptResponse.data) {
           const sData = scriptResponse.data.data || scriptResponse.data;
 
-          // Verify ownership
           if (sData.writerId !== userId) {
             router.push(`/dashboard/scripts/${scriptIdParam}`);
             return;
@@ -67,7 +66,7 @@ export default function MyScriptDetailPage() {
             registrationBody: sData.registrationBody,
             url: sData.url,
             path: sData.path || "",
-            uploadedOn: sData.uploadedOn,
+            uploadedOn: sData.createdAt,
           };
 
           setScript(mappedScript);
@@ -88,7 +87,6 @@ export default function MyScriptDetailPage() {
     if (!script) return;
 
     try {
-      // Open the download endpoint directly in a new tab
       window.open(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/script/download/${script.id}`,
         "_blank"
@@ -105,7 +103,6 @@ export default function MyScriptDetailPage() {
   };
 
   const handleEditSuccess = () => {
-    // Reload script data
     window.location.reload();
   };
 
@@ -186,7 +183,7 @@ export default function MyScriptDetailPage() {
                     {script.status}
                   </span>
                   <span className="text-gray-500 text-sm">
-                    Uploaded {new Date(script.uploadedOn).toLocaleDateString()}
+                    Uploaded on: {new Date(script.uploadedOn).toLocaleDateString()}
                   </span>
                 </div>
               </div>
