@@ -275,11 +275,11 @@ export default function HomePage() {
               onMouseLeave={() => setHoveredImage(null)}
             >
               <Image
-                src="/Testimonial-1.png"
+                src="/sample1.png"
                 alt="Gallery Image"
                 width={150}
                 height={60}
-                className="flex-shrink-0 transition-transform duration-300 group-hover:scale-x-185 z-10 relative"
+                className="h-[330px] w-[180px] object-cover hover:w-[350px] flex-shrink-0 transition-transform duration-300 z-10 relative border-1 rounded-md"
               />
             </div>
             <div
