@@ -130,7 +130,7 @@ export default function AddScriptPage() {
 
       setMediaUploading(true);
 
-      const result = await uploadImage(file, "Writer", user);
+      const result = await uploadImage(file, "Writer", user, "script-cover");
 
       setMediaUrl(result.url);
       setMediaPublicId(result.publicId || "");
@@ -661,7 +661,7 @@ export default function AddScriptPage() {
                 : "bg-[#800000] text-white hover:bg-[#660000]"
             }`}
           >
-            {isSubmitting ? "Adding script..." : "Add script"}
+            {isSubmitting ? "Processing..." : "Add script"}
           </button>
         </div>
 

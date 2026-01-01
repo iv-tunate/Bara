@@ -13,14 +13,13 @@ interface UserInfo {
 export async function uploadImage(
   file: File,
   userType: "Writer" | "Producer",
-  user: UserInfo
+  user: UserInfo,
+  imageType: "profile-picture" | "script-cover" = "profile-picture"
 ): Promise<UploadResult> {
   if (!file) throw new Error("No file provided");
-debugger;
+  debugger;
   const provider = process.env.NEXT_PUBLIC_UPLOAD_PROVIDER || "cloudinary";
-  const folder = `bara/${userType}_${user.name.toUpperCase()}-${
-    user.id
-  }`;
+  const folder = `bara/${userType}_${user.name.toUpperCase()}-${user.id}`;
 
   if (provider === "cloudinary") {
     const formData = new FormData();
@@ -30,7 +29,13 @@ debugger;
       process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
     );
     formData.append("folder", folder);
-    formData.append("public_id", "profile-picture");
+
+    const publicId =
+      imageType === "script-cover"
+        ? `script-cover-${Date.now()}`
+        : "profile-picture";
+
+    formData.append("public_id", publicId);
 
     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!;
     const res = await fetch(

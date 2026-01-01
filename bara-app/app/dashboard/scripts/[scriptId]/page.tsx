@@ -61,6 +61,12 @@ export default function ScriptDetailPage() {
           const sData = scriptResponse.data.data || scriptResponse.data;
           // console.log("Script Data:", sData);
 
+          const userId = session?.userId;
+          if (userId && sData.writerId === userId) {
+            router.push(`/writer/my-scripts/${scriptIdParam}`);
+            return;
+          }
+
           const mappedScript: Script = {
             id: sData.id,
             title: sData.title,

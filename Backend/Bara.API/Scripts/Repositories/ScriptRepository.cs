@@ -486,14 +486,118 @@ namespace Bara.API.Scripts.Repositories
             }
         }
 
-        public Task<ResponseDetail<Script>> UpdateScript(PostScriptDetailDTO scriptDetails, Guid writerId, Guid scriptId)
+        public async Task<ResponseDetail<Script>> UpdateScript(PostScriptDetailDTO scriptDetails, Guid writerId, Guid scriptId)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var writer = await dbContext.Writers
+                    .Select(x => new { x.Id, x.FirstName, x.LastName, x.AuthProfile.IsVerified })
+                    .FirstOrDefaultAsync(x => x.Id == writerId);
+
+                if (writer is null)
+                {
+                    return ResponseDetail<Script>.Failed($"Writer with ID {writerId} does not exist", 404, "Not Found");
+                }
+
+                if (writer.IsVerified is false)
+                {
+                    return ResponseDetail<Script>.Failed("You cannot access this resource yet because your account has not been verified", 403, "Forbidden");
+                }
+
+                var script = await dbContext.Scripts
+                    .Include(s => s.Genres)
+                    .FirstOrDefaultAsync(s => s.Id == scriptId);
+
+                if (script is null)
+                {
+                    return ResponseDetail<Script>.Failed($"Script with ID {scriptId} does not exist", 404, "Not Found");
+                }
+
+                if (script.WriterId != writerId)
+                {
+                    return ResponseDetail<Script>.Failed("You do not have permission to update this script", 403, "Forbidden");
+                }
+
+                var genres = await dbContext.Genres
+                    .Where(g => scriptDetails.GenreId.Contains(g.Id))
+                    .ToListAsync();
+
+                if (!genres.Any())
+                {
+                    return ResponseDetail<Script>.Failed("Invalid genres selected", 400, "Bad Request");
+                }
+
+                script.Title = scriptDetails.Title.ToUpper();
+                script.Logline = scriptDetails.Logline;
+                script.Synopsis = scriptDetails.Synopsis;
+                script.Price = scriptDetails.Price;
+                script.Currency = scriptDetails.Currency;
+                script.IsScriptRegistered = scriptDetails.IsScriptRegistered;
+                script.RegistrationBody = scriptDetails.RegistrationBody;
+                script.CopyrightNumber = scriptDetails.CopyrightNumber ?? " ";
+                script.OwnershipRights = scriptDetails.OwnershipRights;
+                script.ProofUrl = scriptDetails.ProofUrl;
+                script.Genres = genres;
+                script.ModifiedAt = DateTimeOffset.UtcNow;
+
+                dbContext.Scripts.Update(script);
+                await dbContext.SaveChangesAsync();
+
+                memoryCache.Remove(ALL_SCRIPTS_CACHE_KEY);
+                memoryCache.Remove($"Writer_{writerId}_Scripts");
+                memoryCache.Remove($"Writer_{writerId}'s_Scripts");
+
+                logger.LogInformation($"Script {scriptId} updated successfully by writer {writerId}");
+
+                return ResponseDetail<Script>.Successful(script, "Script updated successfully");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"An exception was thrown while updating script {scriptId}. \\nException: {ex.GetType().Name}\\n Base Exception: {ex.GetBaseException().GetType().Name}", $"Exception Code: {ex.HResult}");
+                return ResponseDetail<Script>.Failed("Your request cannot be completed at this time... Please try again later", 500, "Unexpected error");
+            }
         }
 
-        public Task<ResponseDetail<Script>> UpdateScriptStatus(ScriptStatus status, Guid scriptId, Guid writerId)
+        public async Task<ResponseDetail<Script>> UpdateScriptStatus(ScriptStatus status, Guid scriptId, Guid writerId)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var script = await dbContext.Scripts.FirstOrDefaultAsync(s => s.Id == scriptId);
+
+                if (script is null)
+                {
+                    return ResponseDetail<Script>.Failed($"Script with ID {scriptId} does not exist", 404, "Not Found");
+                }
+
+                if (script.WriterId != writerId)
+                {
+                    return ResponseDetail<Script>.Failed("You do not have permission to update this script's status", 403, "Forbidden");
+                }
+
+                if (!Enum.IsDefined(typeof(ScriptStatus), status))
+                {
+                    return ResponseDetail<Script>.Failed("Invalid script status value", 400, "Bad Request");
+                }
+
+                script.Status = status;
+                script.ModifiedAt = DateTimeOffset.UtcNow;
+
+                dbContext.Scripts.Update(script);
+                await dbContext.SaveChangesAsync();
+
+                memoryCache.Remove(ALL_SCRIPTS_CACHE_KEY);
+                memoryCache.Remove($"Writer_{writerId}_Scripts");
+                memoryCache.Remove($"Writer_{writerId}'s_Scripts");
+
+                logger.LogInformation($"Script {scriptId} status updated to {status} by writer {writerId}");
+
+                return ResponseDetail<Script>.Successful(script, "Script status updated successfully");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"An exception was thrown while updating script status for {scriptId}. \\nException: {ex.GetType().Name}\\n Base Exception: {ex.GetBaseException().GetType().Name}", $"Exception Code: {ex.HResult}");
+                return ResponseDetail<Script>.Failed("Your request cannot be completed at this time... Please try again later", 500, "Unexpected error");
+            }
         }
 
         public async Task<ResponseDetail<ScriptTransactionResponse>> InitiateScriptTransactionAsync(Guid producerId, InitiateScriptTransactionRequest request)

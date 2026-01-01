@@ -4,10 +4,21 @@ import Link from "next/link";
 import { Script } from "@/models/script";
 import { downloadImage } from "@/utils/upload";
 import { useState, useEffect } from "react";
+import { getUserId } from "@/utils/tokenManager";
 
 export const ScriptCard = ({ script }: { script: Script }) => {
   const [imgError, setImgError] = useState(false);
   const [imgLoading, setImgLoading] = useState(true);
+  const [scriptUrl, setScriptUrl] = useState("");
+
+  useEffect(() => {
+    const userId = getUserId();
+    if (userId && script.writerId === userId) {
+      setScriptUrl(`/writer/my-scripts/${script.id}`);
+    } else {
+      setScriptUrl(`/dashboard/scripts/${script.id}`);
+    }
+  }, [script.id, script.writerId]);
 
   const imgSrc = imgError
     ? "/flowery.png"
@@ -58,7 +69,7 @@ export const ScriptCard = ({ script }: { script: Script }) => {
           {script.price.toLocaleString()}
         </p>
 
-        <Link href={`/dashboard/scripts/${script.id}`} className="mt-auto">
+        <Link href={scriptUrl} className="mt-auto">
           <button className="w-full bg-[#800000] text-white py-2 rounded opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-700 ease-in-out">
             See more
           </button>

@@ -290,5 +290,109 @@ namespace Bara.API.Scripts.Controllers
                 return StatusCode(500, ResponseDetail<string>.Failed("Your request failed...", 500, "Error"));
             }
         }
+
+        /// <summary>
+        /// Updates an existing script's details (excluding the script file and cover image).
+        /// </summary>
+        /// <param name="scriptId">The unique identifier of the script to update</param>
+        /// <param name="writerId">The unique identifier of the writer who owns the script</param>
+        /// <param name="scriptDetails">The updated script details</param>
+        /// <returns>
+        /// Returns a 200 OK response with the updated script if successful,
+        /// 400 Bad Request for validation errors,
+        /// 403 Forbidden if the writer doesn't own the script,
+        /// 404 Not Found if the script doesn't exist,
+        /// or 500 Internal Server Error for unexpected failures.
+        /// </returns>
+        [Authorize(Roles = "Writer", Policy = "VerifiedOnly")]
+        [HttpPut("script/{scriptId}/{writerId}")]
+        public async Task<IActionResult> UpdateScript(Guid scriptId, Guid writerId, [FromBody] PostScriptDetailDTO scriptDetails)
+        {
+            try
+            {
+                if (scriptDetails == null || !ModelState.IsValid)
+                {
+                    return BadRequest("Script update request body is null or invalid");
+                }
+
+                var response = await scriptService.UpdateScript(scriptDetails, writerId, scriptId);
+
+                if (response.IsSuccess is false && response.StatusCode == 403)
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden, response);
+                }
+                else if (response.IsSuccess is false && response.StatusCode == 404)
+                {
+                    return NotFound(response);
+                }
+                else if (response.IsSuccess is false && response.StatusCode >= 400 && response.StatusCode < 500)
+                {
+                    return BadRequest(response);
+                }
+                else if (response.IsSuccess is false && response.StatusCode == 500)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, response);
+                }
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"An exception: {ex.GetType().Name} was thrown at {ex.Source} while updating script...\\nBase Exception: {ex.GetBaseException().GetType().Name}", $"Exception Code: {ex.HResult}");
+                return StatusCode(500, ResponseDetail<string>.Failed("Your request failed...", 500, "Error"));
+            }
+        }
+
+        /// <summary>
+        /// Updates the status of an existing script.
+        /// </summary>
+        /// <param name="scriptId">The unique identifier of the script</param>
+        /// <param name="writerId">The unique identifier of the writer who owns the script</param>
+        /// <param name="request">The status update request containing the new status</param>
+        /// <returns>
+        /// Returns a 200 OK response with the updated script if successful,
+        /// 400 Bad Request for invalid status,
+        /// 403 Forbidden if the writer doesn't own the script,
+        /// 404 Not Found if the script doesn't exist,
+        /// or 500 Internal Server Error for unexpected failures.
+        /// </returns>
+        [Authorize(Roles = "Writer", Policy = "VerifiedOnly")]
+        [HttpPut("script/{scriptId}/{writerId}/status")]
+        public async Task<IActionResult> UpdateScriptStatus(Guid scriptId, Guid writerId, [FromBody] UpdateScriptStatusRequest request)
+        {
+            try
+            {
+                if (request == null || !ModelState.IsValid)
+                {
+                    return BadRequest("Status update request is null or invalid");
+                }
+
+                var response = await scriptService.UpdateScriptStatus(request.Status, scriptId, writerId);
+
+                if (response.IsSuccess is false && response.StatusCode == 403)
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden, response);
+                }
+                else if (response.IsSuccess is false && response.StatusCode == 404)
+                {
+                    return NotFound(response);
+                }
+                else if (response.IsSuccess is false && response.StatusCode >= 400 && response.StatusCode < 500)
+                {
+                    return BadRequest(response);
+                }
+                else if (response.IsSuccess is false && response.StatusCode == 500)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, response);
+                }
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"An exception: {ex.GetType().Name} was thrown at {ex.Source} while updating script status...\\nBase Exception: {ex.GetBaseException().GetType().Name}", $"Exception Code: {ex.HResult}");
+                return StatusCode(500, ResponseDetail<string>.Failed("Your request failed...", 500, "Error"));
+            }
+        }
     }
 }

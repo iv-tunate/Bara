@@ -154,6 +154,12 @@ const API_ENDPOINTS = {
   MARK_MESSAGES_READ: (chatId: string) =>
     `/api/v1/chats/${chatId}/messages/mark-read`,
   CLOSE_CHAT: (chatId: string) => `/api/v1/chats/${chatId}/close`,
+  UPDATE_SCRIPT: (scriptId: string, writerId: string) =>
+    `/api/script/${scriptId}/${writerId}`,
+  UPDATE_SCRIPT_STATUS: (scriptId: string, writerId: string) =>
+    `/api/script/${scriptId}/${writerId}/status`,
+  DELETE_SCRIPT: (scriptId: string, writerId: string) =>
+    `/api/script/delete/${scriptId}/${writerId}`,
 };
 
 export const api = {
@@ -484,6 +490,42 @@ export const api = {
       method: "PATCH",
       requireAuth: true,
     });
+  },
+
+  updateScript: async (scriptId: string, writerId: string, scriptData: any) => {
+    return apiRequest(
+      `${BASE_URL}${API_ENDPOINTS.UPDATE_SCRIPT(scriptId, writerId)}`,
+      {
+        method: "PUT",
+        requireAuth: true,
+        body: JSON.stringify(scriptData),
+      }
+    );
+  },
+
+  updateScriptStatus: async (
+    scriptId: string,
+    writerId: string,
+    status: string
+  ) => {
+    return apiRequest(
+      `${BASE_URL}${API_ENDPOINTS.UPDATE_SCRIPT_STATUS(scriptId, writerId)}`,
+      {
+        method: "PUT",
+        requireAuth: true,
+        body: JSON.stringify({ status }),
+      }
+    );
+  },
+
+  deleteScript: async (scriptId: string, writerId: string) => {
+    return apiRequest(
+      `${BASE_URL}${API_ENDPOINTS.DELETE_SCRIPT(scriptId, writerId)}`,
+      {
+        method: "DELETE",
+        requireAuth: true,
+      }
+    );
   },
 };
 
