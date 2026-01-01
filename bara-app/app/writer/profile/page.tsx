@@ -12,7 +12,6 @@ import { Script } from "@/models/script";
 import { ScriptGrid } from "@/components/Script";
 import Link from "next/link";
 
-
 export default function WriterProfile() {
   const [copied, setCopied] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -287,50 +286,108 @@ export default function WriterProfile() {
           </div>
         </section>
 
-        <section className="border border-[#ABADB2] rounded-lg p-6 mb-6 shadow-sm flex justify-between gap-4 flex-col">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-[#22242A]">
-                Experience(s)
-              </h2>
-            </div>
-
-            <div className="space-y-4">
-              {profileData?.experiences?.length ? (
-                profileData.experiences.map((exp: any) => (
-                  <div key={exp.id}>
-                    <h3 className="text-sm font-medium text-[#333740]">
-                      {exp.organization} • {exp.project}
-                    </h3>
-                    <p className="text-xs text-[#333740]">{exp.description}</p>
-                    <p className="flex items-center gap-1 text-xs text-[#858990] mt-1">
-                      <Image
-                        src="/calendar.png"
-                        alt="Calendar"
-                        width={12}
-                        height={12}
-                      />
-                      {new Date(exp.startDate).toLocaleDateString()} –
-                      {exp.isCurrent
-                        ? " present"
-                        : ` ${new Date(exp.endDate).toLocaleDateString()}`}
-                    </p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-gray-500">
-                  No experiences added yet.
-                </p>
-              )}
-            </div>
+        <section className="border border-[#ABADB2] rounded-lg p-6 mb-6 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold text-[#22242A]">
+              Experience(s)
+            </h2>
           </div>
+
+          {profileData?.experiences?.length ? (
+            <div className="space-y-4">
+              {profileData.experiences.map((exp: any) => (
+                <div
+                  key={exp.id}
+                  className="bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-xl p-5 hover:shadow-md transition-all duration-200"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-[#800000] to-[#660000] rounded-full flex items-center justify-center flex-shrink-0">
+                          <svg
+                            className="w-5 h-5 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <h3 className="text-base font-semibold text-gray-900">
+                            {exp.project}
+                          </h3>
+                          <p className="text-sm text-[#800000] font-medium">
+                            {exp.organization}
+                          </p>
+                        </div>
+                      </div>
+
+                      <p className="text-sm text-gray-700 leading-relaxed mb-3 ml-13">
+                        {exp.description}
+                      </p>
+
+                      <div className="flex items-center gap-2 text-xs text-gray-600 ml-13">
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                        <span>
+                          {new Date(exp.startDate).toLocaleDateString("en-US", {
+                            month: "short",
+                            year: "numeric",
+                          })}{" "}
+                          –{" "}
+                          {exp.isCurrent
+                            ? "Present"
+                            : new Date(exp.endDate).toLocaleDateString(
+                                "en-US",
+                                { month: "short", year: "numeric" }
+                              )}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-gray-50 rounded-lg">
+              <svg
+                className="mx-auto h-12 w-12 text-gray-400 mb-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                />
+              </svg>
+              <p className="text-sm text-gray-500">No experiences added yet.</p>
+            </div>
+          )}
         </section>
 
         <section className="border border-[#ABADB2] rounded-lg p-6 mb-6 shadow-sm">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-[#22242A]">
-              My Scripts
-            </h2>
+            <h2 className="text-lg font-semibold text-[#22242A]">My Scripts</h2>
             <Link href="/writer/add-script">
               <button
                 type="button"

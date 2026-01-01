@@ -5,6 +5,11 @@ import Image from "next/image";
 import { Writer } from "@/models/user";
 import { api } from "@/utils/api";
 import { getCountries, getStates, getCities } from "@/utils/geoservices";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
+import toast from "react-hot-toast";
+import { getUserId } from "@/utils/tokenManager";
+import AddExperienceModal from "./AddExperienceModal";
 
 interface EditWriterProfileModalProps {
   isOpen: boolean;
@@ -13,6 +18,17 @@ interface EditWriterProfileModalProps {
   initialData: Writer;
 }
 
+type Experience = {
+  org: string;
+  title: string;
+  startMonth: string;
+  startYear: string;
+  endMonth: string;
+  endYear: string;
+  ongoing: boolean;
+  description: string;
+};
+
 export default function EditWriterProfileModal({
   isOpen,
   onClose,
@@ -20,6 +36,8 @@ export default function EditWriterProfileModal({
   initialData,
 }: EditWriterProfileModalProps) {
   const [formData, setFormData] = useState<Writer>(initialData);
+  const [experiences, setExperiences] = useState<Experience[]>([]);
+  const [showExperienceModal, setShowExperienceModal] = useState(false);
 
   const [countryOpen, setCountryOpen] = useState(false);
   const [stateOpen, setStateOpen] = useState(false);
@@ -35,7 +53,30 @@ export default function EditWriterProfileModal({
   const [loadingCities, setLoadingCities] = useState(false);
 
   useEffect(() => {
-    if (isOpen) setFormData(initialData);
+    if (isOpen) {
+      setFormData(initialData);
+
+      if (initialData.experiences) {
+        const mappedExp = initialData.experiences.map((exp: any) => {
+          const startDate = new Date(exp.startDate);
+          const endDate = exp.endDate ? new Date(exp.endDate) : null;
+
+          return {
+            org: exp.organization || "",
+            title: exp.project || "",
+            startMonth: String(startDate.getMonth() + 1).padStart(2, "0"),
+            startYear: String(startDate.getFullYear()),
+            endMonth: endDate
+              ? String(endDate.getMonth() + 1).padStart(2, "0")
+              : "",
+            endYear: endDate ? String(endDate.getFullYear()) : "",
+            ongoing: exp.isCurrent || false,
+            description: exp.description || "",
+          };
+        });
+        setExperiences(mappedExp);
+      }
+    }
   }, [isOpen, initialData]);
 
   useEffect(() => {
@@ -103,7 +144,9 @@ export default function EditWriterProfileModal({
   if (!isOpen) return null;
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
     if (name in (formData.address || {})) {
@@ -140,62 +183,205 @@ export default function EditWriterProfileModal({
     setCityOpen(false);
   };
 
+  const handleAddExperiences = (newExperiences: Experience[]) => {
+    setExperiences(newExperiences);
+  };
+
   const handleSave = async () => {
     try {
       setLoading(true);
-      // const updated = await api.updateWriterProfile(formData);
-      // onSave?.(updated);
-      onSave?.(formData);
-      onClose();
+      const writerId = getUserId();
+
+      if (!writerId) {
+        toast.error("User ID not found");
+        return;
+      }
+
+      const form = new FormData();
+
+      const nameParts = (formData.name || "").split(" ");
+      const firstName = nameParts[0] || "";
+      const lastName =
+        nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
+      const middleName =
+        nameParts.length > 2 ? nameParts.slice(1, -1).join(" ") : "";
+
+      form.append("FirstName", firstName);
+      form.append("LastName", lastName);
+      form.append("MiddleName", middleName || "none");
+      form.append("PhoneNumber", formData.phoneNumber || "");
+      form.append("Gender", formData.gender || "");
+      form.append("Bio", formData.bio || "");
+      form.append("DateOfBirth", formData.dateOfBirth || "");
+      form.append("IsPremiumMember", "false");
+      form.append("AddressDetail.Street", formData.address?.street || "");
+      form.append("AddressDetail.City", formData.address?.city || "");
+      form.append("AddressDetail.State", formData.address?.state || "");
+      form.append(
+        "AddressDetail.Country",
+        formData.address?.country || "Nigeria"
+      );
+      form.append(
+        "AddressDetail.PostalCode",
+        formData.address?.postalCode || ""
+      );
+      form.append("PortfolioUrl", formData.portfolioUrl || "");
+      form.append(
+        "AddressDetail.AdditionalDetails",
+        formData.address?.additionalDetails || ""
+      );
+
+      if (formData.profileImageUrl) {
+        form.append("ProfileImageUrl", formData.profileImageUrl);
+      }
+      if (formData.profileImagePublicId) {
+        form.append("ProfileImagePublicId", formData.profileImagePublicId);
+      }
+
+      const validExperiences = experiences.filter(
+        (exp) => exp.org?.trim() && exp.title?.trim() && exp.description?.trim()
+      );
+
+      if (validExperiences.length > 0) {
+        validExperiences.forEach((exp, index) => {
+          form.append(`Experiences[${index}].Description`, exp.description);
+          form.append(`Experiences[${index}].Organization`, exp.org);
+          form.append(`Experiences[${index}].Project`, exp.title);
+          form.append(`Experiences[${index}].IsCurrent`, String(exp.ongoing));
+
+          if (exp.startYear && exp.startMonth) {
+            form.append(
+              `Experiences[${index}].StartDate`,
+              `${exp.startYear}-${exp.startMonth}-01`
+            );
+          }
+
+          if (!exp.ongoing && exp.endYear && exp.endMonth) {
+            form.append(
+              `Experiences[${index}].EndDate`,
+              `${exp.endYear}-${exp.endMonth}-01`
+            );
+          }
+        });
+      }
+
+      form.append("VerificationDocument.Type", "NationalID");
+      form.append("VerificationDocument.VerificationNumber", "N/A");
+
+      const response = await api.updateWriterProfile(writerId, form);
+
+      if (response.data?.isSuccess) {
+        toast.success("Profile updated successfully!");
+        onSave?.(response.data.data);
+        onClose();
+
+        setTimeout(() => window.location.reload(), 500);
+      } else {
+        toast.error(response.data?.message || "Failed to update profile");
+      }
     } catch (err) {
       console.error("Error updating writer profile:", err);
-      alert("Failed to update profile. Please try again later.");
+      toast.error("Failed to update profile. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl p-10 relative">
-        {/* Back Button */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm overflow-y-auto p-4">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 md:p-10 relative">
+        {/* Header */}
         <button
           type="button"
-          className="inline-flex items-center gap-2 whitespace-nowrap text-sm text-[#22242A] mb-4 font-bold cursor-pointer"
+          className="inline-flex items-center gap-2 whitespace-nowrap text-sm text-[#22242A] mb-4 font-bold cursor-pointer hover:text-[#800000] transition-colors"
           onClick={onClose}
         >
           <Image src="/Arrow_left.png" alt="Back" width={20} height={20} />
           <span>Back</span>
         </button>
 
-        <h2 className="text-xl font-semibold text-[#333740] mb-4">
-          Edit profile
+        <h2 className="text-2xl font-semibold text-[#333740] mb-6">
+          Edit Profile
         </h2>
 
         {/* Name + Portfolio */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium mb-1 text-[#22242A]">
-              Name
+              Full Name
             </label>
             <input
               name="name"
               value={formData.name || ""}
               onChange={handleChange}
               className="border border-[#ABADB2] rounded px-3 py-2 w-full text-sm focus:outline-none focus:border-[#810306]"
+              placeholder="First Middle Last"
             />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1 text-[#22242A]">
-              Portfolio
+              Portfolio URL
             </label>
             <input
               name="portfolioUrl"
               value={formData.portfolioUrl || ""}
               onChange={handleChange}
               className="border border-[#ABADB2] rounded px-3 py-2 w-full text-sm focus:outline-none focus:border-[#810306]"
+              placeholder="https://..."
             />
           </div>
+        </div>
+
+        {/* Phone + Gender */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="block text-sm font-medium mb-1 text-[#22242A]">
+              Phone Number
+            </label>
+            <div className="border border-[#ABADB2] rounded px-2 py-1">
+              <PhoneInput
+                country={"ng"}
+                value={formData.phoneNumber || ""}
+                onChange={(phone) =>
+                  setFormData({ ...formData, phoneNumber: `+${phone}` })
+                }
+                inputClass="!bg-transparent !border-none !text-sm !w-full"
+                containerClass="!w-full"
+                buttonClass="!border-none"
+                enableSearch={true}
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1 text-[#22242A]">
+              Gender
+            </label>
+            <select
+              name="gender"
+              value={formData.gender || ""}
+              onChange={handleChange}
+              className="border border-[#ABADB2] rounded px-3 py-2 w-full text-sm focus:outline-none focus:border-[#810306]"
+            >
+              <option value="">Select gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Date of Birth */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1 text-[#22242A]">
+            Date of Birth
+          </label>
+          <input
+            type="date"
+            name="dateOfBirth"
+            value={formData.dateOfBirth || ""}
+            onChange={handleChange}
+            className="border border-[#ABADB2] rounded px-3 py-2 w-full text-sm focus:outline-none focus:border-[#810306]"
+          />
         </div>
 
         {/* Bio */}
@@ -208,10 +394,34 @@ export default function EditWriterProfileModal({
             value={formData.bio || ""}
             onChange={handleChange}
             className="border border-[#ABADB2] rounded px-3 py-2 w-full text-sm focus:outline-none focus:border-[#810306]"
-            rows={3}
+            rows={4}
+            placeholder="Tell us about yourself..."
           />
         </div>
 
+        {/* Experiences */}
+        <div className="mb-4">
+          <div className="flex justify-between items-center mb-2">
+            <label className="block text-sm font-medium text-[#22242A]">
+              Experiences
+            </label>
+            <button
+              type="button"
+              onClick={() => setShowExperienceModal(true)}
+              className="flex items-center gap-1 text-[#810306] font-semibold text-sm hover:text-[#a22] transition-colors"
+            >
+              <Image src="/plus-icon.png" alt="Add" width={18} height={18} />
+              <span>{experiences.length > 0 ? "Edit" : "Add"} Experiences</span>
+            </button>
+          </div>
+          {experiences.length > 0 && (
+            <div className="text-xs text-gray-600">
+              {experiences.length} experience(s) added
+            </div>
+          )}
+        </div>
+
+        {/* Address */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div className="relative">
             <label className="block text-sm font-medium mb-1 text-[#22242A]">
@@ -253,7 +463,7 @@ export default function EditWriterProfileModal({
 
           <div className="relative">
             <label className="block text-sm font-medium mb-1 text-[#22242A]">
-              State/province
+              State/Province
             </label>
             <button
               type="button"
@@ -328,8 +538,7 @@ export default function EditWriterProfileModal({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div>
             <label className="block text-sm font-medium mb-1 text-[#22242A]">
               Street
@@ -343,7 +552,7 @@ export default function EditWriterProfileModal({
           </div>
           <div>
             <label className="block text-sm font-medium mb-1 text-[#22242A]">
-              Zip code
+              Zip Code
             </label>
             <input
               name="postalCode"
@@ -354,22 +563,54 @@ export default function EditWriterProfileModal({
           </div>
         </div>
 
+        {/* Actions */}
         <div className="flex justify-end gap-3 mt-6">
           <button
-            className="border border-[#810306] text-[#810306] px-10 py-2 rounded-md text-sm cursor-pointer"
+            className="border border-[#810306] text-[#810306] px-10 py-2 rounded-md text-sm cursor-pointer hover:bg-red-50 transition-colors"
             onClick={onClose}
             disabled={loading}
           >
             Cancel
           </button>
           <button
-            className="bg-[#810306] text-white px-4 py-2 rounded-md text-sm cursor-pointer disabled:opacity-70"
+            className="bg-[#810306] text-white px-8 py-2 rounded-md text-sm cursor-pointer disabled:opacity-70 hover:bg-[#660000] transition-colors flex items-center gap-2"
             onClick={handleSave}
             disabled={loading}
           >
-            {loading ? "Saving..." : "Save changes"}
+            {loading ? (
+              <>
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                Saving...
+              </>
+            ) : (
+              "Save Changes"
+            )}
           </button>
         </div>
+
+        {/* Experience Modal */}
+        {showExperienceModal && (
+          <AddExperienceModal
+            initial={experiences}
+            onClose={() => setShowExperienceModal(false)}
+            onSave={handleAddExperiences}
+          />
+        )}
       </div>
     </div>
   );

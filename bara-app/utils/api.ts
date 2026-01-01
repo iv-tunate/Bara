@@ -160,6 +160,10 @@ const API_ENDPOINTS = {
     `/api/script/${scriptId}/${writerId}/status`,
   DELETE_SCRIPT: (scriptId: string, writerId: string) =>
     `/api/script/delete/${scriptId}/${writerId}`,
+  UPDATE_WRITER_PROFILE: (writerId: string) =>
+    `/api/writer/profile/${writerId}`,
+  UPDATE_PRODUCER_PROFILE: (producerId: string) =>
+    `/api/producer/profile/${producerId}`,
 };
 
 export const api = {
@@ -524,6 +528,28 @@ export const api = {
       {
         method: "DELETE",
         requireAuth: true,
+      }
+    );
+  },
+
+  updateWriterProfile: async (writerId: string, formData: FormData) => {
+    return apiRequest(
+      `${BASE_URL}${API_ENDPOINTS.UPDATE_WRITER_PROFILE(writerId)}`,
+      {
+        method: "PUT",
+        requireAuth: true,
+        body: formData,
+      }
+    );
+  },
+
+  updateProducerProfile: async (producerId: string, formData: FormData) => {
+    return apiRequest(
+      `${BASE_URL}${API_ENDPOINTS.UPDATE_PRODUCER_PROFILE(producerId)}`,
+      {
+        method: "PUT",
+        requireAuth: true,
+        body: formData,
       }
     );
   },

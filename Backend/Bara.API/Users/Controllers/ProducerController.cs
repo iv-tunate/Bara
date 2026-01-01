@@ -88,5 +88,56 @@ namespace Bara.API.Users.Controllers
                 return StatusCode(500, ResponseDetail<string>.Failed("Your request failed...", 500, "Error"));
             }
         }
+
+        /// <summary>
+        /// Updates an existing producer's profile with new information.
+        /// </summary>
+        /// <param name="producerId">
+        /// The unique ID of the producer whose profile is being updated.
+        /// </param>
+        /// <param name="updateProducerDetail">
+        /// The updated producer information including name, bio, address, etc.
+        /// </param>
+        /// <returns>
+        /// Returns 200 OK with the updated producer profile if successful,
+        /// 400 Bad Request if the update fails validation or the producer is not found,
+        /// 403 Forbidden if the user is not authorized to update this profile,
+        /// or 500 Internal Server Error if an unexpected error occurs.
+        /// </returns>
+        [Authorize(Roles = "Producer, Admin")]
+        [HttpPut("profile/{producerId}")]
+        public async Task<IActionResult> UpdateProducer(Guid producerId, [FromForm] PostProducerDetailDTO updateProducerDetail)
+        {
+            try
+            {
+                if (updateProducerDetail == null || !ModelState.IsValid)
+                {
+                    return BadRequest("Producer update request is null or invalid");
+                }
+
+                var res = await producerService.UpdateProducer(updateProducerDetail, producerId);
+                
+                if (res.IsSuccess is false && res.StatusCode == 404)
+                {
+                    return NotFound(res);
+                }
+                else if (res.IsSuccess is false && res.StatusCode == 403)
+                {
+                    return StatusCode(403, res);
+                }
+                else if (res.IsSuccess is false)
+                {
+                    return BadRequest(res);
+                }
+                
+                return Ok(res);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"An exception {ex.GetType().Name} was thrown at {ex.Source} while updating producer profile for ProducerId: {producerId}..." +
+                    $"\nBase Exception: {ex.GetBaseException().GetType().Name}", $"Exception Code: {ex.HResult}", ex.Message);
+                return StatusCode(500, ResponseDetail<string>.Failed("Your request failed...", 500, "Error"));
+            }
+        }
     }
 }

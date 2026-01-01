@@ -90,5 +90,56 @@ namespace Bara.API.Users.Controllers
                 return StatusCode(500, ResponseDetail<string>.Failed("Your request failed...", 500, "Error"));
             }
         }
+
+        /// <summary>
+        /// Updates an existing writer's profile with new information.
+        /// </summary>
+        /// <param name="writerId">
+        /// The unique ID of the writer whose profile is being updated.
+        /// </param>
+        /// <param name="updateWriterDetail">
+        /// The updated writer information including name, bio, address, portfolio, etc.
+        /// </param>
+        /// <returns>
+        /// Returns 200 OK with the updated writer profile if successful,
+        /// 400 Bad Request if the update fails validation or the writer is not found,
+        /// 403 Forbidden if the user is not authorized to update this profile,
+        /// or 500 Internal Server Error if an unexpected error occurs.
+        /// </returns>
+        [Authorize(Roles = "Writer, Admin")]
+        [HttpPut("profile/{writerId}")]
+        public async Task<IActionResult> UpdateWriter(Guid writerId, [FromForm] PostWriterDetailDTO updateWriterDetail)
+        {
+            try
+            {
+                if (updateWriterDetail == null || !ModelState.IsValid)
+                {
+                    return BadRequest("Writer update request is null or invalid");
+                }
+
+                var res = await writerService.UpdateWriterDetail(writerId, updateWriterDetail);
+                
+                if (res.IsSuccess is false && res.StatusCode == 404)
+                {
+                    return NotFound(res);
+                }
+                else if (res.IsSuccess is false && res.StatusCode == 403)
+                {
+                    return StatusCode(403, res);
+                }
+                else if (res.IsSuccess is false)
+                {
+                    return BadRequest(res);
+                }
+                
+                return Ok(res);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"An exception {ex.GetType().Name} was thrown at {ex.Source} while updating writer profile for WriterId: {writerId}..." +
+                    $"\nBase Exception: {ex.GetBaseException().GetType().Name}", $"Exception Code: {ex.HResult}", ex.Message);
+                return StatusCode(500, ResponseDetail<string>.Failed("Your request failed...", 500, "Error"));
+            }
+        }
     }
 }

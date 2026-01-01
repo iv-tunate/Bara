@@ -5,7 +5,11 @@ import { useRouter, useParams } from "next/navigation";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import ScriptEditModal from "@/components/ScriptEditModal";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
-import { getUserSession, getUserId } from "@/utils/tokenManager";
+import {
+  getUserSession,
+  getUserId,
+  getAccessToken,
+} from "@/utils/tokenManager";
 import { api } from "@/utils/api";
 import { Script, ownershipLabels } from "@/models/script";
 import { usePageGuard } from "@/app/hooks/usepageguard";
@@ -21,6 +25,7 @@ export default function MyScriptDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState("");
 
   usePageGuard();
@@ -83,17 +88,41 @@ export default function MyScriptDetailPage() {
     loadScript();
   }, [scriptIdParam]);
 
-  const handleViewContent = () => {
+  const handleViewContent = async () => {
     if (!script) return;
 
+    setDownloading(true);
     try {
-      window.open(
+      const token = getAccessToken();
+      if (!token) {
+        toast.error("Please login to view content");
+        return;
+      }
+
+      const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/script/download/${script.id}`,
-        "_blank"
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
+
+      if (!response.ok) {
+        toast.error("Failed to load script content");
+        return;
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+
+      setTimeout(() => URL.revokeObjectURL(url), 100);
     } catch (error) {
       console.error("Download error:", error);
       toast.error("Failed to access script content");
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -183,7 +212,8 @@ export default function MyScriptDetailPage() {
                     {script.status}
                   </span>
                   <span className="text-gray-500 text-sm">
-                    Uploaded on: {new Date(script.uploadedOn).toLocaleDateString()}
+                    Uploaded on:{" "}
+                    {new Date(script.uploadedOn).toLocaleDateString()}
                   </span>
                 </div>
               </div>
@@ -238,28 +268,53 @@ export default function MyScriptDetailPage() {
             <div className="space-y-3">
               <button
                 onClick={handleViewContent}
-                className="w-full bg-gradient-to-r from-[#800000] to-[#660000] hover:from-[#660000] hover:to-[#4d0000] text-white py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+                disabled={downloading}
+                className="w-full bg-gradient-to-r from-[#800000] to-[#660000] hover:from-[#660000] hover:to-[#4d0000] text-white py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                  />
-                </svg>
-                View Content
+                {downloading ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
+                    </svg>
+                    View Content
+                  </>
+                )}
               </button>
 
               <button
