@@ -277,52 +277,56 @@ export default function HomePage() {
                 className="h-[330px] w-[180px] object-cover hover:w-[350px] flex-shrink-0 transition-all duration-300 z-10 relative border-1 rounded-md grayscale hover:grayscale-0"
               />
             </div>
+
             <div
               className="relative group cursor-pointer"
               onMouseEnter={() => setHoveredImage(2)}
               onMouseLeave={() => setHoveredImage(null)}
             >
               <Image
-                src="/Testimonial-2.png"
+                src="/testimonial-2.png"
                 alt="Gallery Image"
                 width={150}
                 height={60}
                 className="h-[330px] w-[180px] object-cover hover:w-[350px] flex-shrink-0 transition-all duration-300 z-10 relative border-1 rounded-md grayscale hover:grayscale-0"
               />
             </div>
+
             <div
               className="relative group cursor-pointer"
               onMouseEnter={() => setHoveredImage(3)}
               onMouseLeave={() => setHoveredImage(null)}
             >
               <Image
-                src="/Testimonial-3.png"
+                src="/testimonial-3.png"
                 alt="Gallery Image"
                 width={150}
                 height={60}
                 className="h-[330px] w-[180px] object-cover hover:w-[350px] flex-shrink-0 transition-all duration-300 z-10 relative border-1 rounded-md grayscale hover:grayscale-0"
               />
             </div>
+
             <div
               className="relative group cursor-pointer"
               onMouseEnter={() => setHoveredImage(4)}
               onMouseLeave={() => setHoveredImage(null)}
             >
               <Image
-                src="/Testimonial-4.png"
+                src="/testimonial-4.png"
                 alt="Gallery Image"
                 width={150}
                 height={60}
                 className="h-[330px] w-[180px] object-cover hover:w-[350px] flex-shrink-0 transition-all duration-300 z-10 relative border-1 rounded-md grayscale hover:grayscale-0"
               />
             </div>
+
             <div
               className="relative group cursor-pointer"
               onMouseEnter={() => setHoveredImage(5)}
               onMouseLeave={() => setHoveredImage(null)}
             >
               <Image
-                src="/Testimonial-5.png"
+                src="/testimonial-5.png"
                 alt="Gallery Image"
                 width={150}
                 height={60}
@@ -335,46 +339,61 @@ export default function HomePage() {
           <div className="min-h-[60px] flex items-center justify-center">
             {hoveredImage === 1 && (
               <div>
-                <p className="text-center text-[#FFEDEE] italic max-w-2xl mb-4 animate-fadeIn">
+                <p className="text-center text-[#FFEDEE] text-2xl max-w-2xl mb-4 animate-fadeIn">
                   "BARA has completely changed how I pitch my scripts. I no
-                  longer have to send endless emails, producers see my wors
+                  longer have to send endless emails, producers see my works
                   instantly, and I can track who's interested"
                 </p>
                 <p className="text-center text-[#FFEDEE] text-2xl font-semi-bold italic max-w-2xl animate-fadeIn">
                   Chika A.
                 </p>
+                <p className="text-center text-[#FFEDEE] text-sm italic max-w-2xl mb-4 animate-fadeIn">
+                  Scriptwriter, Lagos
+                </p>
               </div>
             )}
             {hoveredImage === 2 && (
               <div>
-                <p className="text-center text-[#FFEDEE] italic max-w-2xl mb-4 animate-fadeIn">
-                  "BARA has completely changed how I pitch my scripts. I no longer have to send endless emails, producers see my wors instantly, and I can track who's interested"
+                <p className="text-center text-[#FFEDEE] text-2xl max-w-2xl mb-4 animate-fadeIn">
+                  "Bara saves me hours of scouting, I can quickly filter scripts by genre, budget and quality, exactly what I need for my next project."
                 </p>
-                <p className="text-center text-[#FFEDEE] text-2xl font-semi-bold italic max-w-2xl animate-fadeIn">Chika A.</p>
+                <p className="text-center text-[#FFEDEE] text-2xl font-semi-bold italic max-w-2xl animate-fadeIn">Ifeanyi M.</p>
+                <p className="text-center text-[#FFEDEE] text-sm italic max-w-2xl mb-4 animate-fadeIn">
+                  Producer, Abuja
+                </p>
               </div>
             )}
             {hoveredImage === 3 && (
               <div>
-                <p className="text-center text-[#FFEDEE] italic max-w-2xl mb-4 animate-fadeIn">
-                  "BARA has completely changed how I pitch my scripts. I no longer have to send endless emails, producers see my wors instantly, and I can track who's interested"
+                <p className="text-center text-[#FFEDEE] text-2xl max-w-2xl mb-4 animate-fadeIn">
+                  "Before BARA, it was a struggle to get my scripts notices. Now my work reaches the right producers in days instead of months."
                 </p>
-                <p className="text-center text-[#FFEDEE] text-2xl font-semi-bold italic max-w-2xl animate-fadeIn">Chika A.</p>
+                <p className="text-center text-[#FFEDEE] text-2xl font-semi-bold italic max-w-2xl animate-fadeIn">David K.</p>
+                <p className="text-center text-[#FFEDEE] text-sm italic max-w-2xl mb-4 animate-fadeIn">
+                  Script writer, Lagos
+                </p>
               </div>
             )}
             {hoveredImage === 4 && (
               <div>
-                <p className="text-center text-[#FFEDEE] italic max-w-2xl mb-4 animate-fadeIn">
-                  "BARA has completely changed how I pitch my scripts. I no longer have to send endless emails, producers see my wors instantly, and I can track who's interested"
+                <p className="text-center text-[#FFEDEE] text-2xl max-w-2xl mb-4 animate-fadeIn">
+                  "As a beginner, I felt invisible in the industry. BARA gave me my first big opportunity when a producer contacted me just two weeks after uploading my script."
                 </p>
-                <p className="text-center text-[#FFEDEE] text-2xl font-semi-bold italic max-w-2xl animate-fadeIn">Chika A.</p>
+                <p className="text-center text-[#FFEDEE] text-2xl font-semi-bold italic max-w-2xl animate-fadeIn">Fola L.</p>
+                <p className="text-center text-[#FFEDEE] text-sm italic max-w-2xl mb-4 animate-fadeIn">
+                  Scriptwriter, Kenya
+                </p>
               </div>
             )}
             {hoveredImage === 5 && (
               <div>
-                <p className="text-center text-[#FFEDEE] italic max-w-2xl mb-4 animate-fadeIn">
-                  "BARA has completely changed how I pitch my scripts. I no longer have to send endless emails, producers see my wors instantly, and I can track who's interested"
+                <p className="text-center text-[#FFEDEE] text-2xl max-w-2xl mb-4 animate-fadeIn">
+                  "BARA has completely changed how I pitch my scripts. I no longer have to send endless emails, producers see my works instantly, and I can track who's interested"
                 </p>
-                <p className="text-center text-[#FFEDEE] text-2xl font-semi-bold italic max-w-2xl animate-fadeIn">Chika A.</p>
+                <p className="text-center text-[#FFEDEE] text-2xl font-semi-bold italic max-w-2xl animate-fadeIn">Stephanie E.</p>
+                <p className="text-center text-[#FFEDEE] text-sm italic max-w-2xl mb-4 animate-fadeIn">
+                  Web developer, Lagos
+                </p>
               </div>
             )}
           </div>
