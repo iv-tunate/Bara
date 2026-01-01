@@ -279,7 +279,7 @@ export default function HomePage() {
                 alt="Gallery Image"
                 width={150}
                 height={60}
-                className="h-[330px] w-[180px] object-cover hover:w-[350px] flex-shrink-0 transition-transform duration-300 z-10 relative border-1 rounded-md"
+                className="h-[330px] w-[180px] object-cover hover:w-[350px] flex-shrink-0 transition-all duration-300 z-10 relative border-1 rounded-md"
               />
             </div>
             <div
