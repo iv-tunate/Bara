@@ -81,12 +81,7 @@ export default function HomePage() {
         <div className="flex flex-col md:flex-row items-stretch justify-between gap-2 md:gap-4 w-full">
           {/* Writers */}
           <div
-            className="
-      w-full px-6 md:px-12 lg:px-20 py-10
-      flex flex-col items-center md:items-start justify-center gap-4 
-       relative overflow-hidden
-    "
-          >
+            className="w-full px-6 md:px-12 lg:px-20 py-10 flex flex-col items-center md:items-start justify-center gap-4 relative overflow-hidden">
             {/* Background Image */}
             <div
               className="absolute inset-0 bg-cover bg-center"
@@ -267,7 +262,7 @@ export default function HomePage() {
         </div>
 
         {/* Gallery */}
-        <div className="mx-auto w-full max-w-7xl flex flex-col items-left bg-[url('/galleryquote.png')] bg-auto bg-no-repeat py-16 px-4 md:px-15">
+        <div className="mx-auto w-full max-w-7xl flex flex-col items-left bg-[#810306] bg-[url('/galleryquote.png')] bg-auto bg-no-repeat py-16 px-4 md:px-15">
           <div className="flex flex-wrap justify-center md:justify-around items-center gap-0 mb-8">
             <div
               className="relative group cursor-pointer"
@@ -339,35 +334,48 @@ export default function HomePage() {
           {/* Testimony Display */}
           <div className="min-h-[60px] flex items-center justify-center">
             {hoveredImage === 1 && (
-              <p className="text-center text-gray-700 italic max-w-2xl animate-fadeIn">
-                "Bara has revolutionized how we discover new talent. The
-                platform's security and NDA protection give us complete
-                confidence."
-              </p>
+              <div>
+                <p className="text-center text-[#FFEDEE] italic max-w-2xl mb-4 animate-fadeIn">
+                  "BARA has completely changed how I pitch my scripts. I no
+                  longer have to send endless emails, producers see my wors
+                  instantly, and I can track who's interested"
+                </p>
+                <p className="text-center text-[#FFEDEE] text-2xl font-semi-bold italic max-w-2xl animate-fadeIn">
+                  Chika A.
+                </p>
+              </div>
             )}
             {hoveredImage === 2 && (
-              <p className="text-center text-gray-700 italic max-w-2xl animate-fadeIn">
-                "As a writer, I've finally found a platform that values my work
-                and protects my rights. The payment system is brilliant."
-              </p>
+              <div>
+                <p className="text-center text-[#FFEDEE] italic max-w-2xl mb-4 animate-fadeIn">
+                  "BARA has completely changed how I pitch my scripts. I no longer have to send endless emails, producers see my wors instantly, and I can track who's interested"
+                </p>
+                <p className="text-center text-[#FFEDEE] text-2xl font-semi-bold italic max-w-2xl animate-fadeIn">Chika A.</p>
+              </div>
             )}
             {hoveredImage === 3 && (
-              <p className="text-center text-gray-700 italic max-w-2xl animate-fadeIn">
-                "The collaboration features are outstanding. We can work
-                seamlessly with writers from anywhere in the world."
-              </p>
+              <div>
+                <p className="text-center text-[#FFEDEE] italic max-w-2xl mb-4 animate-fadeIn">
+                  "BARA has completely changed how I pitch my scripts. I no longer have to send endless emails, producers see my wors instantly, and I can track who's interested"
+                </p>
+                <p className="text-center text-[#FFEDEE] text-2xl font-semi-bold italic max-w-2xl animate-fadeIn">Chika A.</p>
+              </div>
             )}
             {hoveredImage === 4 && (
-              <p className="text-center text-gray-700 italic max-w-2xl animate-fadeIn">
-                "Bara's genre-based search and secure transactions have made our
-                production process incredibly efficient."
-              </p>
+              <div>
+                <p className="text-center text-[#FFEDEE] italic max-w-2xl mb-4 animate-fadeIn">
+                  "BARA has completely changed how I pitch my scripts. I no longer have to send endless emails, producers see my wors instantly, and I can track who's interested"
+                </p>
+                <p className="text-center text-[#FFEDEE] text-2xl font-semi-bold italic max-w-2xl animate-fadeIn">Chika A.</p>
+              </div>
             )}
             {hoveredImage === 5 && (
-              <p className="text-center text-gray-700 italic max-w-2xl animate-fadeIn">
-                "Finally, a platform that understands the needs of both writers
-                and producers. It's a game-changer for the industry."
-              </p>
+              <div>
+                <p className="text-center text-[#FFEDEE] italic max-w-2xl mb-4 animate-fadeIn">
+                  "BARA has completely changed how I pitch my scripts. I no longer have to send endless emails, producers see my wors instantly, and I can track who's interested"
+                </p>
+                <p className="text-center text-[#FFEDEE] text-2xl font-semi-bold italic max-w-2xl animate-fadeIn">Chika A.</p>
+              </div>
             )}
           </div>
         </div>
