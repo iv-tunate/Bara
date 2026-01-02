@@ -164,6 +164,11 @@ const API_ENDPOINTS = {
     `/api/writer/profile/${writerId}`,
   UPDATE_PRODUCER_PROFILE: (producerId: string) =>
     `/api/producer/profile/${producerId}`,
+  SCRIPTS_BY_PRODUCER: (
+    producerId: string,
+    pageNumber: number,
+    pageSize: number
+  ) => `/api/scripts/producer/${producerId}/${pageNumber}/${pageSize}`,
 };
 
 export const api = {
@@ -550,6 +555,24 @@ export const api = {
         method: "PUT",
         requireAuth: true,
         body: formData,
+      }
+    );
+  },
+
+  getProducerScripts: async (
+    producerId: string,
+    pageNumber: number,
+    pageSize: number
+  ) => {
+    return apiRequest(
+      `${BASE_URL}${API_ENDPOINTS.SCRIPTS_BY_PRODUCER(
+        producerId,
+        pageNumber,
+        pageSize
+      )}`,
+      {
+        method: "GET",
+        requireAuth: true,
       }
     );
   },

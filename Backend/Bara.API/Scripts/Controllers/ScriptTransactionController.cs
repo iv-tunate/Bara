@@ -124,44 +124,47 @@ namespace Bara.API.Scripts.Controllers
         /// Cancels a script transaction by refunding escrowed funds to the producer.
         /// This action can only be performed within 14 days of transaction initiation.
         /// </summary>
-        /// <param name="producerId">The ID of the producer cancelling the transaction</param>
+        /// <param name="userId">The ID of whoever is cancelling the transaction</param>
         /// <param name="scriptId">The ID of the script transaction to cancel</param>
         /// <returns>A response containing the cancelled transaction details</returns>
         [HttpPost("{scriptId}/transactions:cancel")]
         public async Task<ActionResult<ResponseDetail<ScriptTransactionResponse>>> CancelScriptTransaction(
-            [FromRoute] Guid producerId,
+            [FromRoute] Guid userId,
             [FromRoute] Guid scriptId)
         {
             try
             {
-                // Validate that the authenticated user matches the producer ID
                 var authenticatedUserId = GetAuthenticatedUserId();
-                if (authenticatedUserId != producerId)
+                if (authenticatedUserId != userId)
                 {
-                    logger.LogWarning("Unauthorized access attempt - AuthenticatedUserId: {AuthenticatedUserId}, RequestedProducerId: {ProducerId}",
-                        authenticatedUserId, producerId);
-                    return Forbid("You can only cancel transactions for your own account");
+                    var scriptRes = await scriptService.GetScriptById(scriptId, authenticatedUserId);
+                    if (!scriptRes.IsSuccess || scriptRes.Data == null)
+                    {
+                        logger.LogWarning("Unauthorized access attempt - AuthenticatedUserId: {AuthenticatedUserId}, RequestedId: {userId}",
+                            authenticatedUserId, userId);
+                        return Forbid("You can only cancel transactions for your own account");
+                    }
                 }
 
-                var result = await scriptService.CancelScriptTransactionAsync(producerId, scriptId);
+                var result = await scriptService.CancelScriptTransactionAsync(userId, scriptId);
 
                 if (result.IsSuccess)
                 {
                     logger.LogInformation("Script transaction cancelled successfully - ProducerId: {ProducerId}, ScriptId: {ScriptId}, TransactionId: {TransactionId}",
-                        producerId, scriptId, result.Data?.ScriptTransactionId);
+                        userId, scriptId, result.Data?.ScriptTransactionId);
                     return Ok(result);
                 }
                 else
                 {
                     logger.LogWarning("Failed to cancel script transaction - ProducerId: {ProducerId}, ScriptId: {ScriptId}, Error: {Error}",
-                        producerId, scriptId, result.Message);
+                        userId, scriptId, result.Message);
                     return StatusCode(result.StatusCode, result);
                 }
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error cancelling script transaction - ProducerId: {ProducerId}, ScriptId: {ScriptId}",
-                    producerId, scriptId);
+                    userId, scriptId);
                 return StatusCode(500, ResponseDetail<ScriptTransactionResponse>.Failed("An error occurred while cancelling the transaction", 500));
             }
         }

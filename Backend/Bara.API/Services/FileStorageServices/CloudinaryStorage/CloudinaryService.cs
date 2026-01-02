@@ -57,7 +57,7 @@ namespace Services.FileStorageServices.CloudinaryStorage
             {
                 var cloudinary = new Cloudinary(new Account(secrets.CloudinaryName, secrets.CloudinaryAPIKEY, secrets.CloudinaryAPISecret));
 
-                var resourceUrl = cloudinary.Api.Url.BuildUrl(publicId);
+                var resourceUrl = cloudinary.Api.Url.ResourceType("raw").BuildUrl(publicId);
                 //var resourceUrl = cloudinary.Api.Url
                 //.Transform(new Transformation().FetchFormat("auto"))
                 //.BuildUrl(publicId);

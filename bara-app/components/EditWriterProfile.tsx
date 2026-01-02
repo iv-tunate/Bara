@@ -199,16 +199,9 @@ export default function EditWriterProfileModal({
 
       const form = new FormData();
 
-      const nameParts = (formData.name || "").split(" ");
-      const firstName = nameParts[0] || "";
-      const lastName =
-        nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
-      const middleName =
-        nameParts.length > 2 ? nameParts.slice(1, -1).join(" ") : "";
-
-      form.append("FirstName", firstName);
-      form.append("LastName", lastName);
-      form.append("MiddleName", middleName || "none");
+      form.append("FirstName", formData.firstName || "");
+      form.append("LastName", formData.lastName || "");
+      form.append("MiddleName", formData.middleName || "");
       form.append("PhoneNumber", formData.phoneNumber || "");
       form.append("Gender", formData.gender || "");
       form.append("Bio", formData.bio || "");
@@ -304,20 +297,46 @@ export default function EditWriterProfileModal({
           Edit Profile
         </h2>
 
-        {/* Name + Portfolio */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        {/* Name Fields */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium mb-1 text-[#22242A]">
-              Full Name
+              First Name
             </label>
             <input
-              name="name"
-              value={formData.name || ""}
+              name="firstName"
+              value={formData.firstName || ""}
               onChange={handleChange}
               className="border border-[#ABADB2] rounded px-3 py-2 w-full text-sm focus:outline-none focus:border-[#810306]"
-              placeholder="First Middle Last"
+              placeholder="First Name"
             />
           </div>
+          <div>
+            <label className="block text-sm font-medium mb-1 text-[#22242A]">
+              Middle Name
+            </label>
+            <input
+              name="middleName"
+              value={formData.middleName || ""}
+              onChange={handleChange}
+              className="border border-[#ABADB2] rounded px-3 py-2 w-full text-sm focus:outline-none focus:border-[#810306]"
+              placeholder="Middle Name"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1 text-[#22242A]">
+              Last Name
+            </label>
+            <input
+              name="lastName"
+              value={formData.lastName || ""}
+              onChange={handleChange}
+              className="border border-[#ABADB2] rounded px-3 py-2 w-full text-sm focus:outline-none focus:border-[#810306]"
+              placeholder="Last Name"
+            />
+          </div>
+        </div>
+        <div>
           <div>
             <label className="block text-sm font-medium mb-1 text-[#22242A]">
               Portfolio URL
@@ -380,8 +399,14 @@ export default function EditWriterProfileModal({
             name="dateOfBirth"
             value={formData.dateOfBirth || ""}
             onChange={handleChange}
-            className="border border-[#ABADB2] rounded px-3 py-2 w-full text-sm focus:outline-none focus:border-[#810306]"
+            readOnly
+            disabled
+            className="border border-[#ABADB2] bg-gray-100 rounded px-3 py-2 w-full text-sm focus:outline-none cursor-not-allowed"
           />
+          <p className="text-xs text-gray-500 mt-1">
+            Date of birth cannot be changed as it is used for identity
+            verification.
+          </p>
         </div>
 
         {/* Bio */}
