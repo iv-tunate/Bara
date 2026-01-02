@@ -81,7 +81,7 @@ export default function HomePage() {
         <div className="flex flex-col md:flex-row items-stretch justify-between gap-2 md:gap-4 w-full">
           {/* Writers */}
           <div
-            className="w-full px-6 md:px-12 lg:px-20 py-10 flex flex-col items-center md:items-start justify-center gap-4 relative overflow-hidden bg-white transition-all duration-300 group"
+            className="w-full px-6 md:px-12 lg:px-20 py-10 flex flex-col items-center md:items-start justify-center gap-4 relative overflow-hidden bg-[#FFEDEE] transition-all duration-300 group"
           >
             {/* Background Image - Only visible on hover */}
             <div
@@ -117,7 +117,7 @@ export default function HomePage() {
 
           {/* Producers */}
           <div
-            className="w-full px-6 md:px-12 lg:px-20 py-10 flex flex-col items-center md:items-start justify-center gap-4 relative overflow-hidden bg-white transition-all duration-300 group"
+            className="w-full px-6 md:px-12 lg:px-20 py-10 flex flex-col items-center md:items-start justify-center gap-4 relative overflow-hidden bg-[#FFEDEE] transition-all duration-300 group"
           >
             {/* Background Image - Only visible on hover */}
             <div
@@ -259,7 +259,7 @@ export default function HomePage() {
         </div>
 
         {/* Gallery */}
-        <div className="mx-auto w-full flex flex-col items-left bg-[#810306] bg-[url('/galleryquote.png')] bg-auto bg-position-[left_80px_top_30px] bg-no-repeat py-16 px-4 md:px-25">
+        <div className="mx-auto w-full flex flex-col items-left bg-[#810306] bg-[url('/galleryquote.png')] bg-auto md:bg-position-[left_80px_top_30px] bg-no-repeat py-16 px-4 md:px-25">
           <div className="flex flex-wrap justify-center md:justify-center items-center gap-10 mb-8">
             <div
               className="relative group cursor-pointer"
