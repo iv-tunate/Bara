@@ -259,8 +259,8 @@ export default function HomePage() {
         </div>
 
         {/* Gallery */}
-        <div className="mx-auto w-full max-w-7xl flex flex-col items-left bg-[#810306] bg-[url('/galleryquote.png')] bg-auto bg-no-repeat py-16 px-4 md:px-15">
-          <div className="flex flex-wrap justify-center md:justify-around items-center gap-0 mb-8">
+        <div className="mx-auto w-full flex flex-col items-left bg-[#810306] bg-[url('/galleryquote.png')] bg-auto bg-position-[left_80px_top_30px] bg-no-repeat py-16 px-4 md:px-25">
+          <div className="flex flex-wrap justify-center md:justify-center items-center gap-10 mb-8">
             <div
               className="relative group cursor-pointer"
               onMouseEnter={() => setHoveredImage(1)}
