@@ -29,6 +29,11 @@ namespace Bara.API.Scripts.DTOs
         public bool IsPremiumScript { get; set; }
         public DateTimeOffset CreatedAt { get; set; }
         public List<GenreDTO> Genre { get; set; }
+        
+        public Guid? ActiveNegotiatorId { get; set; }
+        public DateTimeOffset? TransactionCreatedAt { get; set; }
+        public DateTimeOffset? TransactionExpiresAt { get; set; }
+        public bool HasActiveTransaction { get; set; }
     }
 
     public class GenreDTO

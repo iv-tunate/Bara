@@ -114,5 +114,15 @@ namespace Bara.API.Scripts.Interfaces
         /// </summary>
         /// <returns>A list of genres</returns>
         Task<ResponseDetail<List<Genre>>> GetGenres();
+
+        /// <summary>
+        /// Retrieves scripts that a producer has initiated transactions for, filtered by transaction status.
+        /// </summary>
+        /// <param name="producerId">The ID of the producer</param>
+        /// <param name="status">Filter by transaction status: "initiated", "completed", or "all"</param>
+        /// <param name="pageNumber">The page number for pagination</param>
+        /// <param name="pageSize">The number of items per page</param>
+        /// <returns>A paginated list of scripts with transaction metadata</returns>
+        Task<ResponseDetail<List<ScriptDTO>>> GetProducerScriptsByTransaction(Guid producerId, string status, int pageNumber, int pageSize);
     }
 }

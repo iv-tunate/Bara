@@ -169,6 +169,17 @@ const API_ENDPOINTS = {
     pageNumber: number,
     pageSize: number
   ) => `/api/scripts/producer/${producerId}/${pageNumber}/${pageSize}`,
+  PRODUCER_SCRIPTS_BY_TRANSACTION: (
+    producerId: string,
+    status: string,
+    pageNumber: number,
+    pageSize: number
+  ) =>
+    `/api/scripts/producer/${producerId}/transactions/${status}/${pageNumber}/${pageSize}`,
+  COMPLETE_SCRIPT_TRANSACTION: (producerId: string, scriptId: string) =>
+    `/api/producers/${producerId}/scripts/${scriptId}/transactions:complete`,
+  CANCEL_SCRIPT_TRANSACTION: (userId: string, scriptId: string) =>
+    `/api/producers/${userId}/scripts/${scriptId}/transactions:cancel`,
 };
 
 export const api = {
@@ -572,6 +583,49 @@ export const api = {
       )}`,
       {
         method: "GET",
+        requireAuth: true,
+      }
+    );
+  },
+
+  getProducerScriptsByTransaction: async (
+    producerId: string,
+    status: "initiated" | "completed" | "all",
+    pageNumber: number,
+    pageSize: number
+  ) => {
+    return apiRequest(
+      `${BASE_URL}${API_ENDPOINTS.PRODUCER_SCRIPTS_BY_TRANSACTION(
+        producerId,
+        status,
+        pageNumber,
+        pageSize
+      )}`,
+      {
+        method: "GET",
+        requireAuth: true,
+      }
+    );
+  },
+
+  completeScriptTransaction: async (producerId: string, scriptId: string) => {
+    return apiRequest(
+      `${BASE_URL}${API_ENDPOINTS.COMPLETE_SCRIPT_TRANSACTION(
+        producerId,
+        scriptId
+      )}`,
+      {
+        method: "POST",
+        requireAuth: true,
+      }
+    );
+  },
+
+  cancelScriptTransaction: async (userId: string, scriptId: string) => {
+    return apiRequest(
+      `${BASE_URL}${API_ENDPOINTS.CANCEL_SCRIPT_TRANSACTION(userId, scriptId)}`,
+      {
+        method: "POST",
         requireAuth: true,
       }
     );

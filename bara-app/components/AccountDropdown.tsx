@@ -81,44 +81,77 @@ export default function AccountDropdown({
   return (
     <div
       ref={dropdownRef}
-      className="w-80 bg-white shadow-lg rounded-md border border-gray-200 z-50 overflow-hidden"
+      className="w-80 bg-white shadow-2xl rounded-xl border border-gray-100 z-50 overflow-hidden"
     >
-      <div className="p-4 border-b border-gray-200 bg-gray-50">
+      {/* Header with gradient */}
+      <div className="p-5 bg-gradient-to-br from-[#800000] to-[#a00000] text-white">
         <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-semibold text-[#22242A] text-sm">
+          <div className="flex-1">
+            <h3 className="font-bold text-base mb-1">
               {userData?.name ?? "Anonymous"}
             </h3>
-            <p className="text-xs text-[#666] truncate">{userData?.email}</p>
+            <p className="text-xs text-white/90 truncate">{userData?.email}</p>
+          </div>
+          <div className="ml-3">
+            <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <svg
+                className="w-6 h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
+            </div>
           </div>
         </div>
       </div>
 
       {walletData && (
-        <div className="p-4 border-b border-gray-200">
-          <h4 className="font-medium text-[#22242A] text-sm mb-2">Wallet</h4>
-          <div className="space-y-1 text-xs">
-            <div className="flex justify-between">
-              <span className="text-[#666]">Total:</span>
-              <span className="font-medium">
+        <div className="p-4 bg-gradient-to-br from-gray-50 to-white border-b border-gray-100">
+          <h4 className="font-semibold text-[#22242A] text-sm mb-3 flex items-center gap-2">
+            <svg
+              className="w-4 h-4 text-[#800000]"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-2"
+              />
+            </svg>
+            Wallet Balance
+          </h4>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between items-center p-2 bg-white rounded-lg shadow-sm">
+              <span className="text-gray-600 font-medium">Total:</span>
+              <span className="font-bold text-[#800000]">
                 {formatCurrency(
                   walletData.totalBalance,
                   walletData.currencySymbol
                 )}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-[#666]">Available:</span>
-              <span className="font-medium text-green-600">
+            <div className="flex justify-between items-center p-2 bg-green-50 rounded-lg">
+              <span className="text-gray-600 font-medium">Available:</span>
+              <span className="font-semibold text-green-700">
                 {formatCurrency(
                   walletData.availableBalance,
                   walletData.currencySymbol
                 )}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-[#666]">Locked:</span>
-              <span className="font-medium text-orange-600">
+            <div className="flex justify-between items-center p-2 bg-orange-50 rounded-lg">
+              <span className="text-gray-600 font-medium">Locked:</span>
+              <span className="font-semibold text-orange-700">
                 {formatCurrency(
                   walletData.lockedBalance,
                   walletData.currencySymbol
@@ -134,10 +167,10 @@ export default function AccountDropdown({
           <Link
             href={`/writer/profile`}
             onClick={onClose}
-            className="flex items-center px-4 py-2 text-sm text-[#333740] hover:bg-[#F5F5F5] transition-colors"
+            className="flex items-center px-4 py-3 text-sm text-[#333740] hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 transition-all duration-200 group"
           >
             <svg
-              className="w-4 h-4 mr-3"
+              className="w-5 h-5 mr-3 text-gray-600 group-hover:text-[#800000] transition-colors"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -149,7 +182,7 @@ export default function AccountDropdown({
                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
               />
             </svg>
-            My Profile
+            <span className="font-medium">My Profile</span>
           </Link>
         )}
 
@@ -177,10 +210,10 @@ export default function AccountDropdown({
         <Link
           href="/wallet"
           onClick={onClose}
-          className="flex items-center px-4 py-2 text-sm text-[#333740] hover:bg-[#F5F5F5] transition-colors"
+          className="flex items-center px-4 py-3 text-sm text-[#333740] hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 transition-all duration-200 group"
         >
           <svg
-            className="w-4 h-4 mr-3"
+            className="w-5 h-5 mr-3 text-gray-600 group-hover:text-[#800000] transition-colors"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -198,30 +231,28 @@ export default function AccountDropdown({
               d="M15 12a1 1 0 110-2 1 1 0 010 2z"
             />
           </svg>
-          My Wallet
+          <span className="font-medium">My Wallet</span>
         </Link>
-        
+
         <Link
           href="/help"
           onClick={onClose}
-          className="flex items-center px-4 py-2 text-sm text-[#333740] hover:bg-[#F5F5F5] transition-colors"
+          className="flex items-center px-4 py-3 text-sm text-[#333740] hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 transition-all duration-200 group"
         >
-  <svg
-  className="w-5 h-5 mr-2"
-  fill="none"
-  stroke="currentColor"
-  viewBox="0 0 24 24"
->
-  <path
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    strokeWidth={2}
-    d="M12 18h.01M12 6a6 6 0 00-6 6c0 2.5 3 2.5 3 5h6c0-2.5 3-2.5 3-5a6 6 0 00-6-6z"
-  />
-</svg>
-
-
-          Help and Support
+          <svg
+            className="w-5 h-5 mr-3 text-gray-600 group-hover:text-[#800000] transition-colors"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 18h.01M12 6a6 6 0 00-6 6c0 2.5 3 2.5 3 5h6c0-2.5 3-2.5 3-5a6 6 0 00-6-6z"
+            />
+          </svg>
+          <span className="font-medium">Help and Support</span>
         </Link>
 
         <hr className="my-2 border-gray-200" />
@@ -229,10 +260,10 @@ export default function AccountDropdown({
         <button
           type="button"
           onClick={handleLogout}
-          className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+          className="flex items-center w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-all duration-200 group"
         >
           <svg
-            className="w-4 h-4 mr-3"
+            className="w-5 h-5 mr-3 group-hover:translate-x-1 transition-transform"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -244,7 +275,7 @@ export default function AccountDropdown({
               d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
             />
           </svg>
-          Logout
+          <span className="font-semibold">Logout</span>
         </button>
       </div>
     </div>

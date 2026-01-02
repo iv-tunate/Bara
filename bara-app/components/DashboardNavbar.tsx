@@ -100,11 +100,60 @@ export default function DashboardNavbar() {
 
       {/* Desktop Links */}
       <div className="hidden md:flex items-center gap-6 text-sm font-semibold text-[#22242A]">
+        {/* Dashboard Link */}
+        <Link
+          href="/dashboard"
+          className="hover:text-[#800000] hover:bg-gray-100 flex items-center gap-2 cursor-pointer px-3 py-2 rounded-md transition-colors"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+            />
+          </svg>
+          Dashboard
+        </Link>
+
+        {/* Messages Dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setShowMessageDropdown((prev) => !prev)}
+            className="hover:text-[#800000] hover:bg-gray-100 flex items-center gap-2 cursor-pointer px-3 py-2 rounded-md transition-colors"
+          >
+            <Image src="/Message.png" alt="Messages" width={18} height={18} />{" "}
+            Messages
+          </button>
+          {showMessageDropdown && (
+            <MessageDropdown onClose={() => setShowMessageDropdown(false)} />
+          )}
+        </div>
+
+        {/* My Projects - Link to page */}
+        <Link
+          href="/dashboard/projects"
+          className="hover:text-[#800000] hover:bg-gray-100 flex items-center gap-2 cursor-pointer px-3 py-2 rounded-md transition-colors"
+        >
+          <Image
+            src="/project-icon.png"
+            alt="Projects"
+            width={16}
+            height={16}
+          />{" "}
+          My Projects
+        </Link>
+
         {/* Account */}
         <div className="relative">
           <button
             onClick={() => setShowAccountDropdown((prev) => !prev)}
-            className="hover:text-[#800000] flex items-center gap-1 cursor-pointer"
+            className="hover:text-[#800000] hover:bg-gray-100 flex items-center gap-2 cursor-pointer px-3 py-2 rounded-md transition-colors"
           >
             <Image src="/User_alt.png" alt="Account" width={16} height={16} />{" "}
             Account
@@ -120,43 +169,6 @@ export default function DashboardNavbar() {
             </div>
           )}
         </div>
-
-        {/* Saved Scripts */}
-        {/* <Link
-          href="/dashboard/saved-scripts"
-          className="hover:text-[#800000] flex items-center gap-1 cursor-pointer"
-        >
-          <Image src="/Shape.png" alt="Saved Scripts" width={16} height={16} />{" "}
-          Saved scripts
-        </Link> */}
-
-        {/* Messages Dropdown */}
-        <div className="relative">
-          <button
-            onClick={() => setShowMessageDropdown((prev) => !prev)}
-            className="hover:text-[#800000] flex items-center gap-1 cursor-pointer"
-          >
-            <Image src="/Message.png" alt="Messages" width={18} height={18} />{" "}
-            Messages
-          </button>
-          {showMessageDropdown && (
-            <MessageDropdown onClose={() => setShowMessageDropdown(false)} />
-          )}
-        </div>
-
-        {/* Projects */}
-        <Link
-          href="/dashboard/projects"
-          className="hover:text-[#800000] flex items-center gap-1 cursor-pointer"
-        >
-          <Image
-            src="/project-icon.png"
-            alt="Projects"
-            width={16}
-            height={16}
-          />{" "}
-          My projects
-        </Link>
       </div>
 
       {/* Mobile Hamburger */}
@@ -224,7 +236,7 @@ export default function DashboardNavbar() {
               )}
             </div>
 
-            {/* Projects */}
+            {/* My Projects - Link to page */}
             <Link
               href="/dashboard/projects"
               className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-100 rounded-md"
@@ -236,7 +248,33 @@ export default function DashboardNavbar() {
                 width={16}
                 height={16}
               />{" "}
-              My projects
+              My Projects
+            </Link>
+
+            {/* Dashboard Link Mobile */}
+            <Link
+              href={
+                userData?.userType === "Writer"
+                  ? "/writer/profile"
+                  : "/producer/dashboard"
+              }
+              className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-100 rounded-md"
+              onClick={() => setShowMobileMenu(false)}
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                />
+              </svg>{" "}
+              Dashboard
             </Link>
 
             {/* Mobile Search */}

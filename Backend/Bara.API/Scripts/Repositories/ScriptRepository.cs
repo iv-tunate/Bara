@@ -418,6 +418,15 @@ namespace Bara.API.Scripts.Repositories
                                                         Status = s.Status,
                                                         IsPremiumScript = s.IsPremiumScript,
                                                         CreatedAt = s.CreatedAt,
+                                                        HasActiveTransaction = dbContext.ScriptTransactions.Any(st => st.ScriptId == s.Id && st.TransactionStatus == ScriptTransactionStatus.Initiated),
+                                                        TransactionExpiresAt = dbContext.ScriptTransactions
+                                                            .Where(st => st.ScriptId == s.Id && st.TransactionStatus == ScriptTransactionStatus.Initiated)
+                                                            .Select(st => st.ExpiresAt)
+                                                            .FirstOrDefault(),
+                                                        ActiveNegotiatorId = dbContext.ScriptTransactions
+                                                            .Where(st => st.ScriptId == s.Id && st.TransactionStatus == ScriptTransactionStatus.Initiated)
+                                                            .Select(st => st.ProducerId)
+                                                            .FirstOrDefault(),
                                                         Genre = s.Genres.Select(g => new GenreDTO
                                                         {
                                                             Id = g.Id,
@@ -428,8 +437,8 @@ namespace Bara.API.Scripts.Repositories
                                                     .ToListAsync();
 
                     var cacheOptions = new MemoryCacheEntryOptions()
-                       .SetAbsoluteExpiration(TimeSpan.FromMinutes(10))
-                       .SetSlidingExpiration(TimeSpan.FromMinutes(5));
+                       .SetAbsoluteExpiration(TimeSpan.FromMinutes(2)) // Reduced cache time for transaction accuracy
+                       .SetSlidingExpiration(TimeSpan.FromMinutes(1));
                     memoryCache.Set(cacheKey, cachedScripts, cacheOptions);
                 }
 
@@ -1141,6 +1150,83 @@ namespace Bara.API.Scripts.Repositories
             {
                 logger.LogError(ex, "Error sending script to producer - CorrelationId: {CorrelationId}, ProducerId: {ProducerId}, ScriptId: {ScriptId}",
                     correlationId, producerId, scriptId);
+            }
+        }
+
+        public async Task<ResponseDetail<List<ScriptDTO>>> GetProducerScriptsByTransaction(Guid producerId, string status, int pageNumber, int pageSize)
+        {
+            try
+            {
+                var query = from st in dbContext.ScriptTransactions
+                            join s in dbContext.Scripts.Include(x => x.Genres) on st.ScriptId equals s.Id
+                            where st.ProducerId == producerId
+                            orderby st.CreatedAt descending
+                            select new { Transaction = st, Script = s };
+
+                if (status.Equals("initiated", StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.Where(x => x.Transaction.TransactionStatus == ScriptTransactionStatus.Initiated);
+                }
+                else if (status.Equals("completed", StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.Where(x => x.Transaction.TransactionStatus == ScriptTransactionStatus.Completed);
+                }
+
+                var totalCount = await query.CountAsync();
+
+                var items = await query
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                var scriptDtos = items.Select(x => new ScriptDTO
+                {
+                    Id = x.Script.Id,
+                    Title = x.Script.Title,
+                    Logline = x.Script.Logline,
+                    Synopsis = x.Script.Synopsis,
+                    Price = x.Script.Price,
+                    CurrencySymbol = x.Script.CurrencySymbol,
+                    Currency = x.Script.Currency,
+                    IsScriptRegistered = x.Script.IsScriptRegistered,
+                    RegistrationBody = x.Script.RegistrationBody,
+                    ImageUrl = x.Script.ImageUrl,
+                    ImagePublicId = x.Script.ImagePublicId,
+                    CopyrightNumber = x.Script.CopyrightNumber,
+                    OwnershipRights = x.Script.OwnershipRights,
+                    ProofUrl = x.Script.ProofUrl,
+                    WriterId = x.Script.WriterId,
+                    WriterName = x.Script.WriterName,
+                    Status = x.Script.Status,
+                    IsPremiumScript = x.Script.IsPremiumScript,
+                    CreatedAt = x.Script.CreatedAt,
+                    // Transaction metadata
+                    ActiveNegotiatorId = x.Transaction.ProducerId,
+                    TransactionCreatedAt = x.Transaction.CreatedAt,
+                    TransactionExpiresAt = x.Transaction.ExpiresAt,
+                    HasActiveTransaction = x.Transaction.TransactionStatus == ScriptTransactionStatus.Initiated,
+                    Genre = x.Script.Genres.Select(g => new GenreDTO
+                    {
+                        Id = g.Id,
+                        Name = g.Name,
+                        Description = g.Description
+                    }).ToList()
+                }).ToList();
+
+                var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+                return ResponseDetail<List<ScriptDTO>>.SuccessfulPaginatedResponse(
+                    scriptDtos,
+                    totalCount,
+                    totalPages,
+                    pageNumber,
+                    "Producer scripts retrieved successfully");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error fetching producer scripts - ProducerId: {ProducerId}, Status: {Status}", producerId, status);
+                return ResponseDetail<List<ScriptDTO>>.Failed("Failed to fetch producer scripts", 500, ex.Message);
             }
         }
 
