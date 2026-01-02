@@ -81,29 +81,30 @@ export default function HomePage() {
         <div className="flex flex-col md:flex-row items-stretch justify-between gap-2 md:gap-4 w-full">
           {/* Writers */}
           <div
-            className="w-full px-6 md:px-12 lg:px-20 py-10 flex flex-col items-center md:items-start justify-center gap-4 relative overflow-hidden">
-            {/* Background Image */}
+            className="w-full px-6 md:px-12 lg:px-20 py-10 flex flex-col items-center md:items-start justify-center gap-4 relative overflow-hidden bg-white transition-all duration-300 group"
+          >
+            {/* Background Image - Only visible on hover */}
             <div
-              className="absolute inset-0 bg-cover bg-center"
+              className="absolute inset-0 bg-cover bg-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
               style={{ backgroundImage: "url('/director.png')" }}
             ></div>
 
-            {/* Tint */}
-            <div className="absolute inset-0 "></div>
+            {/* Dark Tint - Only visible on hover */}
+            <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-70 transition-opacity duration-300"></div>
 
-            <h2 className="text-2xl md:text-3xl font-semibold relative z-10 text-center md:text-left text-[white]">
+            <h2 className="text-2xl md:text-3xl font-semibold relative z-10 text-center md:mb-20 md:text-left text-gray-800 transition-all duration-300 group-hover:text-white group-hover:opacity-0">
               For Writers
             </h2>
 
-            <p className="text-base md:text-lg leading-relaxed relative z-10 text-center md:text-left text-[white]">
+            <p className="text-base md:text-2xl leading-relaxed relative z-10 text-center md:text-left text-gray-800 transition-all duration-300 group-hover:text-white group-hover:-translate-y-25 group-hover:md:mb-20">
               Showcase your loglines, synopses, and full scripts to a global
               network of producers. Get paid securely, retain your rights or
               negotiate terms, and grow your reputation in the industry, all
               from one platform.
             </p>
 
-            {/* Button */}
-            <div className="mt-4 relative z-10 flex justify-center md:justify-start w-full">
+            {/* Button - Hidden by default, visible on hover */}
+            <div className="mt-4 relative z-10 flex justify-center md:justify-start w-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               <Link
                 href="/auth/register?type=Writer"
                 className={`bg-[#800000] text-white px-10 py-2 rounded-md text-base font-medium hover:bg-[#550000] transition
@@ -116,33 +117,29 @@ export default function HomePage() {
 
           {/* Producers */}
           <div
-            className="
-      w-full px-6 md:px-12 lg:px-20 py-10
-      flex flex-col items-center md:items-start justify-center gap-4 
-       relative overflow-hidden
-    "
+            className="w-full px-6 md:px-12 lg:px-20 py-10 flex flex-col items-center md:items-start justify-center gap-4 relative overflow-hidden bg-white transition-all duration-300 group"
           >
-            {/* Background Image */}
+            {/* Background Image - Only visible on hover */}
             <div
-              className="absolute inset-0 bg-cover bg-center"
+              className="absolute inset-0 bg-cover bg-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
               style={{ backgroundImage: "url('/lady-working.png')" }}
             ></div>
 
-            {/* Tint */}
-            <div className="absolute inset-0 "></div>
+            {/* Dark Tint - Only visible on hover */}
+            <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-70 transition-opacity duration-300"></div>
 
-            <h2 className="text-2xl md:text-3xl font-semibold relative z-10 text-center md:text-left text-[white]">
+            <h2 className="text-2xl md:text-3xl font-semibold relative z-10 text-center md:mb-20 md:text-left text-gray-800 transition-all duration-300 group-hover:text-white group-hover:opacity-0">
               For Producers
             </h2>
 
-            <p className="text-base md:text-lg leading-relaxed relative z-10 text-center md:text-left text-[white]">
+            <p className="text-base md:text-2xl leading-relaxed relative z-10 text-center md:text-left text-gray-800 transition-all duration-300 group-hover:text-white group-hover:-translate-y-25 group-hover:md:mb-20">
               Discover ready-to-produce scripts or hire writers to bring your
               vision to life. Search by genre with secure payments and clear IP
               agreements for peace of mind.
             </p>
 
-            {/* Button */}
-            <div className="mt-4 relative z-10 flex justify-center md:justify-start w-full">
+            {/* Button - Hidden by default, visible on hover */}
+            <div className="mt-4 relative z-10 flex justify-center md:justify-start w-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               <Link
                 href="/auth/register?type=Producer"
                 className={`bg-[#800000] text-white px-10 py-2 rounded-md text-base font-medium hover:bg-[#550000] transition
@@ -355,9 +352,13 @@ export default function HomePage() {
             {hoveredImage === 2 && (
               <div>
                 <p className="text-center text-[#FFEDEE] text-2xl max-w-2xl mb-4 animate-fadeIn">
-                  "Bara saves me hours of scouting, I can quickly filter scripts by genre, budget and quality, exactly what I need for my next project."
+                  "Bara saves me hours of scouting, I can quickly filter scripts
+                  by genre, budget and quality, exactly what I need for my next
+                  project."
                 </p>
-                <p className="text-center text-[#FFEDEE] text-2xl font-semi-bold italic max-w-2xl animate-fadeIn">Ifeanyi M.</p>
+                <p className="text-center text-[#FFEDEE] text-2xl font-semi-bold italic max-w-2xl animate-fadeIn">
+                  Ifeanyi M.
+                </p>
                 <p className="text-center text-[#FFEDEE] text-sm italic max-w-2xl mb-4 animate-fadeIn">
                   Producer, Abuja
                 </p>
@@ -366,9 +367,13 @@ export default function HomePage() {
             {hoveredImage === 3 && (
               <div>
                 <p className="text-center text-[#FFEDEE] text-2xl max-w-2xl mb-4 animate-fadeIn">
-                  "Before BARA, it was a struggle to get my scripts notices. Now my work reaches the right producers in days instead of months."
+                  "Before BARA, it was a struggle to get my scripts notices. Now
+                  my work reaches the right producers in days instead of
+                  months."
                 </p>
-                <p className="text-center text-[#FFEDEE] text-2xl font-semi-bold italic max-w-2xl animate-fadeIn">David K.</p>
+                <p className="text-center text-[#FFEDEE] text-2xl font-semi-bold italic max-w-2xl animate-fadeIn">
+                  David K.
+                </p>
                 <p className="text-center text-[#FFEDEE] text-sm italic max-w-2xl mb-4 animate-fadeIn">
                   Script writer, Lagos
                 </p>
@@ -377,9 +382,13 @@ export default function HomePage() {
             {hoveredImage === 4 && (
               <div>
                 <p className="text-center text-[#FFEDEE] text-2xl max-w-2xl mb-4 animate-fadeIn">
-                  "As a beginner, I felt invisible in the industry. BARA gave me my first big opportunity when a producer contacted me just two weeks after uploading my script."
+                  "As a beginner, I felt invisible in the industry. BARA gave me
+                  my first big opportunity when a producer contacted me just two
+                  weeks after uploading my script."
                 </p>
-                <p className="text-center text-[#FFEDEE] text-2xl font-semi-bold italic max-w-2xl animate-fadeIn">Fola L.</p>
+                <p className="text-center text-[#FFEDEE] text-2xl font-semi-bold italic max-w-2xl animate-fadeIn">
+                  Fola L.
+                </p>
                 <p className="text-center text-[#FFEDEE] text-sm italic max-w-2xl mb-4 animate-fadeIn">
                   Scriptwriter, Kenya
                 </p>
@@ -388,9 +397,13 @@ export default function HomePage() {
             {hoveredImage === 5 && (
               <div>
                 <p className="text-center text-[#FFEDEE] text-2xl max-w-2xl mb-4 animate-fadeIn">
-                  "BARA has completely changed how I pitch my scripts. I no longer have to send endless emails, producers see my works instantly, and I can track who's interested"
+                  "BARA has completely changed how I pitch my scripts. I no
+                  longer have to send endless emails, producers see my works
+                  instantly, and I can track who's interested"
                 </p>
-                <p className="text-center text-[#FFEDEE] text-2xl font-semi-bold italic max-w-2xl animate-fadeIn">Stephanie E.</p>
+                <p className="text-center text-[#FFEDEE] text-2xl font-semi-bold italic max-w-2xl animate-fadeIn">
+                  Stephanie E.
+                </p>
                 <p className="text-center text-[#FFEDEE] text-sm italic max-w-2xl mb-4 animate-fadeIn">
                   Web developer, Lagos
                 </p>
