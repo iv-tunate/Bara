@@ -51,17 +51,25 @@ namespace Services.FileStorageServices.CloudinaryStorage
             }
         }
 
-        public async Task<(MemoryStream?, string)> DownloadAsync(string publicId)
+        public async Task<(MemoryStream?, string)> DownloadAsync(string urlOrPublicId)
         {
             try
             {
                 var cloudinary = new Cloudinary(new Account(secrets.CloudinaryName, secrets.CloudinaryAPIKEY, secrets.CloudinaryAPISecret));
 
-                var resourceUrl = cloudinary.Api.Url
-                    .ResourceType("raw")
-                    .Action("upload")
-                    .BuildUrl(publicId);
-
+                string resourceUrl;
+                
+                if (urlOrPublicId.StartsWith("http://") || urlOrPublicId.StartsWith("https://"))
+                {
+                    resourceUrl = urlOrPublicId;
+                }
+                else
+                {
+                    resourceUrl = cloudinary.Api.Url
+                        .ResourceType("raw")
+                        .Action("upload")
+                        .BuildUrl(urlOrPublicId);
+                }
 
                 var response = await integrationService.GetRequest(resourceUrl);
                 if (!response.IsSuccessStatusCode)
@@ -71,7 +79,7 @@ namespace Services.FileStorageServices.CloudinaryStorage
                 }
                 var stream = await response.Content.ReadAsStreamAsync();
                 var contentHeader = new FileExtensionContentTypeProvider();
-                if (!contentHeader.TryGetContentType(publicId, out var contentType))
+                if (!contentHeader.TryGetContentType(resourceUrl, out var contentType))
                 {
                     contentType = "application/octet-stream";
                 }
@@ -81,7 +89,7 @@ namespace Services.FileStorageServices.CloudinaryStorage
             }
             catch (Exception ex)
             {
-                logger.LogError($"An exception: {ex.GetType().Name} was thrown while downloading file from {publicId} on Cloudinary...\n" +
+                logger.LogError($"An exception: {ex.GetType().Name} was thrown while downloading file from {urlOrPublicId} on Cloudinary...\n" +
                     $"Base Exception: {ex.GetBaseException().GetType().Name}", $"Exception Code: {ex.HResult}", ex.Message);
                 return default;
             }

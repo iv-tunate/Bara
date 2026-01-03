@@ -394,5 +394,58 @@ namespace Bara.API.Scripts.Controllers
                 return StatusCode(500, ResponseDetail<string>.Failed("Your request failed...", 500, "Error"));
             }
         }
+
+        /// <summary>
+        /// Updates the actual script content (PDF file) by replacing the existing file in storage.
+        /// This is used for PDF annotations or content updates during the 14-day negotiation period.
+        /// </summary>
+        /// <param name="scriptId">The unique identifier of the script to update</param>
+        /// <param name="writerId">The unique identifier of the writer who owns the script</param>
+        /// <param name="file">The new script PDF file to upload</param>
+        /// <returns>
+        /// Returns a 200 OK response with the updated script details if successful,
+        /// 400 Bad Request for invalid file or sold scripts,
+        /// 403 Forbidden if the writer doesn't own the script,
+        /// 404 Not Found if the script doesn't exist,
+        /// or 500 Internal Server Error for unexpected failures.
+        /// </returns>
+        [Authorize(Roles = "Writer")]
+        [HttpPut("script/{scriptId}/content/{writerId}")]
+        public async Task<IActionResult> UpdateScriptContent([FromRoute] Guid scriptId, [FromRoute] Guid writerId, [FromForm] IFormFile file)
+        {
+            try
+            {
+                if (file == null || file.Length == 0)
+                {
+                    return BadRequest(ResponseDetail<string>.Failed("No file provided", 400, "Bad Request"));
+                }
+
+                var response = await scriptService.UpdateScriptContent(scriptId, writerId, file);
+
+                if (response.IsSuccess is false && response.StatusCode == 403)
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden, response);
+                }
+                else if (response.IsSuccess is false && response.StatusCode == 404)
+                {
+                    return NotFound(response);
+                }
+                else if (response.IsSuccess is false && response.StatusCode >= 400 && response.StatusCode < 500)
+                {
+                    return BadRequest(response);
+                }
+                else if (response.IsSuccess is false && response.StatusCode == 500)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, response);
+                }
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"An exception: {ex.GetType().Name} was thrown at {ex.Source} while updating script content...\\nBase Exception: {ex.GetBaseException().GetType().Name}", $"Exception Code: {ex.HResult}");
+                return StatusCode(500, ResponseDetail<string>.Failed("Your request failed...", 500, "Error"));
+            }
+        }
     }
 }

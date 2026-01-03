@@ -478,7 +478,7 @@ namespace Bara.API.Scripts.Repositories
                     return ResponseDetail<GetScriptDTO>.Failed($"Script with id {scriptId} doesn't exist", 404, "Not Found");
                 }
 
-                var (stream, contentType) = await cloudinary.DownloadAsync(script.Path);
+                var (stream, contentType) = await cloudinary.DownloadAsync(script.Url);
                 var fileBytes = stream.ToArray();
 
                 return ResponseDetail<GetScriptDTO>.Successful(new GetScriptDTO
@@ -606,6 +606,126 @@ namespace Bara.API.Scripts.Repositories
             {
                 logger.LogError($"An exception was thrown while updating script status for {scriptId}. \\nException: {ex.GetType().Name}\\n Base Exception: {ex.GetBaseException().GetType().Name}", $"Exception Code: {ex.HResult}");
                 return ResponseDetail<Script>.Failed("Your request cannot be completed at this time... Please try again later", 500, "Unexpected error");
+            }
+        }
+
+        public async Task<ResponseDetail<ScriptDTO>> UpdateScriptContent(Guid scriptId, Guid writerId, IFormFile newFile)
+        {
+            try
+            {
+                // 1. Verify script exists
+                var script = await dbContext.Scripts
+                    .Include(s => s.Genres)
+                    .FirstOrDefaultAsync(s => s.Id == scriptId);
+
+                if (script == null)
+                {
+                    return ResponseDetail<ScriptDTO>.Failed($"Script with ID {scriptId} does not exist", 404, "Not Found");
+                }
+
+                // 2. Verify ownership
+                if (script.WriterId != writerId)
+                {
+                    return ResponseDetail<ScriptDTO>.Failed("You do not have permission to update this script", 403, "Forbidden");
+                }
+
+                // 3. Check script status (cannot edit if Sold)
+                if (script.Status == ScriptStatus.Sold)
+                {
+                    return ResponseDetail<ScriptDTO>.Failed("Cannot update script content after it has been sold", 400, "Bad Request");
+                }
+
+                // 4. Validate file
+                if (newFile == null || newFile.Length == 0)
+                {
+                    return ResponseDetail<ScriptDTO>.Failed("No file provided", 400, "Bad Request");
+                }
+
+                var fileExtension = Path.GetExtension(newFile.FileName).ToLowerInvariant();
+                if (fileExtension != ".pdf")
+                {
+                    return ResponseDetail<ScriptDTO>.Failed("Only PDF files are allowed", 400, "Bad Request");
+                }
+
+                // 5. Get writer info for directory name
+                var writer = await dbContext.Writers
+                    .Select(w => new { w.Id, w.FirstName, w.LastName })
+                    .FirstOrDefaultAsync(w => w.Id == writerId);
+
+                if (writer == null)
+                {
+                    return ResponseDetail<ScriptDTO>.Failed("Writer not found", 404, "Not Found");
+                }
+
+                // 6. Delete old file from Cloudinary using Path (publicId)
+                var deleteResult = await cloudinary.DeleteAsync(script.Path);
+                if (!deleteResult)
+                {
+                    logger.LogWarning($"Failed to delete old script file from Cloudinary - ScriptId: {scriptId}, Path: {script.Path}");
+                    // Continue anyway - we'll upload the new file
+                }
+
+                // 7. Upload new file
+                var userDirectoryName = $"Writer_{writer.FirstName.ToUpper()}-{writer.LastName.ToUpper()}_{writerId}";
+                var uploadResult = await cloudinary.UploadScriptAsync(userDirectoryName, newFile);
+
+                if (!uploadResult.Success)
+                {
+                    logger.LogError($"Failed to upload new script content - ScriptId: {scriptId}");
+                    return ResponseDetail<ScriptDTO>.Failed("Failed to upload new script content", 500, "Upload Error");
+                }
+
+                // 8. Update script Path and Url in database
+                script.Path = uploadResult.PublicId;
+                script.Url = uploadResult.Url;
+                script.ModifiedAt = DateTimeOffset.UtcNow;
+
+                dbContext.Scripts.Update(script);
+                await dbContext.SaveChangesAsync();
+
+                // 9. Clear caches
+                memoryCache.Remove(ALL_SCRIPTS_CACHE_KEY);
+                memoryCache.Remove($"Writer_{writerId}_Scripts");
+                memoryCache.Remove($"Writer_{writerId}'s_Scripts");
+
+                logger.LogInformation($"Script content updated successfully - ScriptId: {scriptId}, WriterId: {writerId}");
+
+                // 10. Return updated script DTO
+                var scriptDTO = new ScriptDTO
+                {
+                    Id = script.Id,
+                    Title = script.Title,
+                    Logline = script.Logline,
+                    Synopsis = script.Synopsis,
+                    Price = script.Price,
+                    CurrencySymbol = script.CurrencySymbol,
+                    Currency = script.Currency,
+                    IsScriptRegistered = script.IsScriptRegistered,
+                    RegistrationBody = script.RegistrationBody,
+                    ImageUrl = script.ImageUrl,
+                    ImagePublicId = script.ImagePublicId,
+                    CopyrightNumber = script.CopyrightNumber,
+                    OwnershipRights = script.OwnershipRights,
+                    ProofUrl = script.ProofUrl,
+                    WriterId = script.WriterId,
+                    WriterName = script.WriterName,
+                    Status = script.Status,
+                    IsPremiumScript = script.IsPremiumScript,
+                    CreatedAt = script.CreatedAt,
+                    Genre = script.Genres.Select(g => new GenreDTO
+                    {
+                        Id = g.Id,
+                        Name = g.Name,
+                        Description = g.Description
+                    }).ToList()
+                };
+
+                return ResponseDetail<ScriptDTO>.Successful(scriptDTO, "Script content updated successfully");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"An exception was thrown while updating script content for {scriptId}. \\nException: {ex.GetType().Name}\\n Base Exception: {ex.GetBaseException().GetType().Name}", $"Exception Code: {ex.HResult}");
+                return ResponseDetail<ScriptDTO>.Failed("Your request cannot be completed at this time... Please try again later", 500, "Unexpected error");
             }
         }
 

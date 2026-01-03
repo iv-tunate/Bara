@@ -90,40 +90,7 @@ export default function MyScriptDetailPage() {
 
   const handleViewContent = async () => {
     if (!script) return;
-
-    setDownloading(true);
-    try {
-      const token = getAccessToken();
-      if (!token) {
-        toast.error("Please login to view content");
-        return;
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/script/download/${script.id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        toast.error("Failed to load script content");
-        return;
-      }
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      window.open(url, "_blank");
-
-      setTimeout(() => URL.revokeObjectURL(url), 100);
-    } catch (error) {
-      console.error("Download error:", error);
-      toast.error("Failed to access script content");
-    } finally {
-      setDownloading(false);
-    }
+    router.push(`/dashboard/scripts/ViewScript?scriptId=${script.id}`);
   };
 
   const handleDeleteSuccess = () => {

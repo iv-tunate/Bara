@@ -180,6 +180,8 @@ const API_ENDPOINTS = {
     `/api/producers/${producerId}/scripts/${scriptId}/transactions:complete`,
   CANCEL_SCRIPT_TRANSACTION: (userId: string, scriptId: string) =>
     `/api/producers/${userId}/scripts/${scriptId}/transactions:cancel`,
+  UPDATE_SCRIPT_CONTENT: (scriptId: string, writerId: string) =>
+    `/api/script/${scriptId}/content/${writerId}`,
 };
 
 export const api = {
@@ -626,6 +628,23 @@ export const api = {
       `${BASE_URL}${API_ENDPOINTS.CANCEL_SCRIPT_TRANSACTION(userId, scriptId)}`,
       {
         method: "POST",
+        requireAuth: true,
+      }
+    );
+  },
+
+  updateScriptContent: async (
+    scriptId: string,
+    writerId: string,
+    file: File
+  ) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return apiRequest(
+      `${BASE_URL}${API_ENDPOINTS.UPDATE_SCRIPT_CONTENT(scriptId, writerId)}`,
+      {
+        method: "PUT",
+        body: formData,
         requireAuth: true,
       }
     );
