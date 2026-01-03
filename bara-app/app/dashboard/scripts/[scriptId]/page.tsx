@@ -90,7 +90,7 @@ export default function ScriptDetailPage() {
             uploadedOn: sData.uploadedOn,
           };
 
-          console.log("Mapped Script:", mappedScript);
+          // console.log("Mapped Script:", mappedScript);
           setScript(mappedScript);
           cacheScript(mappedScript);
 
@@ -147,6 +147,7 @@ export default function ScriptDetailPage() {
     setError("");
 
     try {
+      debugger;
       if (!isHighInsufficient) {
         const response = await api.initiateScriptTransaction(
           session.userId,
@@ -160,7 +161,6 @@ export default function ScriptDetailPage() {
           setError(response.message || "Failed to process payment");
         }
       } else {
-        // Insufficient Balance -> Redirect to Fund Wallet Page
         const deficit = priceInNaira - balanceInNaira;
         const roundedDeficit = Math.ceil(deficit);
 

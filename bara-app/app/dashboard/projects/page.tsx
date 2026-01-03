@@ -26,6 +26,7 @@ interface Script {
   writerName?: string;
   writerId?: string;
   currencySymbol?: string;
+  activeTransactionId?: string;
 }
 
 export default function ProjectsPage() {
@@ -142,6 +143,7 @@ export default function ProjectsPage() {
           writerId: s.writerId,
           writerName: s.writerName,
           currencySymbol: s.currencySymbol,
+          activeTransactionId: s.activeTransactionId,
         };
       });
 
@@ -170,7 +172,9 @@ export default function ProjectsPage() {
     try {
       const isWriter = userData.userType === "Writer";
       const writerId = isWriter ? userData.userId : script.writerId;
-      const negotiatorId = isWriter ? script.activeNegotiatorId : userData.userId;
+      const negotiatorId = isWriter
+        ? script.activeNegotiatorId
+        : userData.userId;
 
       if (!writerId || !negotiatorId) {
         toast.error("Cannot start chat: Missing participants", { id: toastId });
@@ -233,12 +237,16 @@ export default function ProjectsPage() {
     }
   };
 
-  const handleConfirmScript = async (scriptId: string) => {
-    if (!userData) return;
+  const handleConfirmScript = async (script: Script) => {
+    if (!userData || !script.activeTransactionId) {
+      toast.error("Invalid transaction state");
+      return;
+    }
     try {
       const response = await api.completeScriptTransaction(
-        userData.userId,
-        scriptId
+        userData.userId, // kept for compat if needed, but implementation ignores it or uses it? api.ts completeScriptTransaction signature is (producerId, scriptId, transactionId)
+        script.id,
+        script.activeTransactionId
       );
       if (response.data?.isSuccess) {
         toast.success("Script confirmed successfully!");
@@ -251,12 +259,17 @@ export default function ProjectsPage() {
     }
   };
 
-  const handleCancelTransaction = async (scriptId: string) => {
+  const handleCancelTransaction = async (script: Script) => {
     if (!confirm("Are you sure? Funds will be refunded.")) return;
+    if (!script.activeTransactionId) {
+      toast.error("Invalid transaction state");
+      return;
+    }
     try {
       const response = await api.cancelScriptTransaction(
         userData.userId,
-        scriptId
+        script.id,
+        script.activeTransactionId
       );
       if (response.data?.isSuccess) {
         toast.success("Transaction cancelled");
@@ -413,13 +426,13 @@ export default function ProjectsPage() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex flex-col gap-2 w-full md:w-auto flex-shrink-0 mt-4 md:mt-0 md:justify-between">
+                    <div className="flex flex-col gap-2 w-full md:w-auto flex-shrink-0 mt-4 md:mt-0 ">
                       {/* IN NEGOTIATION ACTIONS */}
                       {activeTab === "In Negotiation" && (
                         <>
                           {userData?.userType === "Producer" ? (
                             <button
-                              onClick={() => handleConfirmScript(script.id)}
+                              onClick={() => handleConfirmScript(script)}
                               className="bg-[#810306] text-white px-8 py-2.5 rounded-sm hover:bg-red-800 text-base font-medium transition-colors whitespace-nowrap"
                             >
                               Confirm script
@@ -431,7 +444,7 @@ export default function ProjectsPage() {
                               }
                               className="bg-[#810306] text-white px-8 py-2.5 rounded-sm hover:bg-red-800 text-base font-medium transition-colors whitespace-nowrap"
                             >
-                              View Terms
+                              View Script
                             </button>
                           )}
 
@@ -444,8 +457,8 @@ export default function ProjectsPage() {
                           </button>
 
                           <button
-                            onClick={() => handleCancelTransaction(script.id)}
-                            className="text-gray-500 hover:text-red-600 text-sm underline text-center"
+                            onClick={() => handleCancelTransaction(script)}
+                            className="text-gray-500 hover:text-red-600 text-base text-center border border-[#810306] px-8 py-2.5 rounded-sm bg-red-50 hover:bg-white hover:border-gray-500 text-red-800 font-medium transition-colors disabled:opacity-50 whitespace-nowrap"
                           >
                             Cancel
                           </button>

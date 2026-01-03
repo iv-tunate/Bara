@@ -12,7 +12,7 @@ namespace Bara.API.Scripts.Controllers
     /// Handles the initiation, completion, and cancellation of script purchases.
     /// </summary>
     [ApiController]
-    [Route("api/producers/{producerId}/scripts")]
+    [Route("api/script-transaction")]
     [Authorize(Policy = "VerifiedOnly")]
     public class ScriptTransactionController : ControllerBase
     {
@@ -34,23 +34,21 @@ namespace Bara.API.Scripts.Controllers
         /// Initiates a script transaction by escrowing funds from the producer's wallet.
         /// The funds are locked for 14 days, after which the transaction is automatically completed.
         /// </summary>
-        /// <param name="producerId">The ID of the producer purchasing the script</param>
         /// <param name="request">The transaction initiation request containing script and writer details</param>
         /// <returns>A response containing the initiated transaction details</returns>
-        [HttpPost("transactions:initiate")]
+        [HttpPost("initiate")]
         public async Task<ActionResult<ResponseDetail<ScriptTransactionResponse>>> InitiateScriptTransaction(
-            [FromRoute] Guid producerId,
             [FromBody] InitiateScriptTransactionRequest request)
         {
             try
             {
-                var authenticatedUserId = GetAuthenticatedUserId();
-                if (authenticatedUserId != producerId)
+                var producerId = GetAuthenticatedUserId();
+                if (producerId == Guid.Empty)
                 {
-                    logger.LogWarning("Unauthorized access attempt - AuthenticatedUserId: {AuthenticatedUserId}, RequestedProducerId: {ProducerId}",
-                        authenticatedUserId, producerId);
-                    return Forbid("You can only initiate transactions for your own account");
+                    return Unauthorized(ResponseDetail<ScriptTransactionResponse>.Failed("User not authenticated", 401));
                 }
+
+                logger.LogInformation("Initiating script transaction - ProducerId: {ProducerId}, ScriptId: {ScriptId}", producerId, request.ScriptId);
 
                 var result = await scriptService.InitiateScriptTransactionAsync(producerId, request);
 
@@ -69,8 +67,7 @@ namespace Bara.API.Scripts.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error initiating script transaction - ProducerId: {ProducerId}, ScriptId: {ScriptId}",
-                    producerId, request.ScriptId);
+                logger.LogError(ex, "Error initiating script transaction - ScriptId: {ScriptId}", request.ScriptId);
                 return StatusCode(500, ResponseDetail<ScriptTransactionResponse>.Failed("An error occurred while initiating the transaction", 500));
             }
         }
@@ -79,43 +76,41 @@ namespace Bara.API.Scripts.Controllers
         /// Completes a script transaction by releasing escrowed funds to the writer and delivering the script to the producer.
         /// This action finalizes the purchase and cannot be undone.
         /// </summary>
-        /// <param name="producerId">The ID of the producer completing the transaction</param>
         /// <param name="scriptId">The ID of the script being purchased</param>
+        /// <param name="scriptTransactionId">The ID of the transaction to complete</param>
         /// <returns>A response containing the completed transaction details</returns>
-        [HttpPost("{scriptId}/transactions:complete")]
+        [HttpPost("complete/{scriptId}/{scriptTransactionId}")]
         public async Task<ActionResult<ResponseDetail<ScriptTransactionResponse>>> CompleteScriptTransaction(
-            [FromRoute] Guid producerId,
-            [FromRoute] Guid scriptId)
+            [FromRoute] Guid scriptId,
+            [FromRoute] Guid scriptTransactionId)
         {
             try
             {
-                var authenticatedUserId = GetAuthenticatedUserId();
-                if (authenticatedUserId != producerId)
+                var producerId = GetAuthenticatedUserId();
+                if (producerId == Guid.Empty)
                 {
-                    logger.LogWarning("Unauthorized access attempt - AuthenticatedUserId: {AuthenticatedUserId}, RequestedProducerId: {ProducerId}",
-                        authenticatedUserId, producerId);
-                    return Forbid("You can only complete transactions for your own account");
+                    return Unauthorized(ResponseDetail<ScriptTransactionResponse>.Failed("User not authenticated", 401));
                 }
 
-                var result = await scriptService.CompleteScriptTransactionAsync(producerId, scriptId);
+                logger.LogInformation("Completing script transaction - ProducerId: {ProducerId}, ScriptId: {ScriptId}, TransactionId: {TransactionId}", 
+                    producerId, scriptId, scriptTransactionId);
+
+                var result = await scriptService.CompleteScriptTransactionAsync(producerId, scriptId, scriptTransactionId);
 
                 if (result.IsSuccess)
                 {
-                    logger.LogInformation("Script transaction completed successfully - ProducerId: {ProducerId}, ScriptId: {ScriptId}, TransactionId: {TransactionId}",
-                        producerId, scriptId, result.Data?.ScriptTransactionId);
+                    logger.LogInformation("Script transaction completed successfully - TransactionId: {TransactionId}", result.Data?.ScriptTransactionId);
                     return Ok(result);
                 }
                 else
                 {
-                    logger.LogWarning("Failed to complete script transaction - ProducerId: {ProducerId}, ScriptId: {ScriptId}, Error: {Error}",
-                        producerId, scriptId, result.Message);
+                    logger.LogWarning("Failed to complete script transaction - TransactionId: {TransactionId}, Error: {Error}", scriptTransactionId, result.Message);
                     return StatusCode(result.StatusCode, result);
                 }
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error completing script transaction - ProducerId: {ProducerId}, ScriptId: {ScriptId}",
-                    producerId, scriptId);
+                logger.LogError(ex, "Error completing script transaction - ScriptId: {ScriptId}, TransactionId: {TransactionId}", scriptId, scriptTransactionId);
                 return StatusCode(500, ResponseDetail<ScriptTransactionResponse>.Failed("An error occurred while completing the transaction", 500));
             }
         }
@@ -124,47 +119,41 @@ namespace Bara.API.Scripts.Controllers
         /// Cancels a script transaction by refunding escrowed funds to the producer.
         /// This action can only be performed within 14 days of transaction initiation.
         /// </summary>
-        /// <param name="userId">The ID of whoever is cancelling the transaction</param>
         /// <param name="scriptId">The ID of the script transaction to cancel</param>
+        /// <param name="scriptTransactionId">The ID of the transaction to cancel</param>
         /// <returns>A response containing the cancelled transaction details</returns>
-        [HttpPost("{scriptId}/transactions:cancel")]
+        [HttpPost("cancel/{scriptId}/{scriptTransactionId}")]
         public async Task<ActionResult<ResponseDetail<ScriptTransactionResponse>>> CancelScriptTransaction(
-            [FromRoute] Guid userId,
-            [FromRoute] Guid scriptId)
+            [FromRoute] Guid scriptId,
+            [FromRoute] Guid scriptTransactionId)
         {
             try
             {
-                var authenticatedUserId = GetAuthenticatedUserId();
-                if (authenticatedUserId != userId)
+                var userId = GetAuthenticatedUserId(); 
+                if (userId == Guid.Empty)
                 {
-                    var scriptRes = await scriptService.GetScriptById(scriptId, authenticatedUserId);
-                    if (!scriptRes.IsSuccess || scriptRes.Data == null)
-                    {
-                        logger.LogWarning("Unauthorized access attempt - AuthenticatedUserId: {AuthenticatedUserId}, RequestedId: {userId}",
-                            authenticatedUserId, userId);
-                        return Forbid("You can only cancel transactions for your own account");
-                    }
+                    return Unauthorized(ResponseDetail<ScriptTransactionResponse>.Failed("User not authenticated", 401));
                 }
 
-                var result = await scriptService.CancelScriptTransactionAsync(userId, scriptId);
+                logger.LogInformation("Cancelling script transaction - UserId: {UserId}, ScriptId: {ScriptId}, TransactionId: {TransactionId}", 
+                    userId, scriptId, scriptTransactionId);
+
+                var result = await scriptService.CancelScriptTransactionAsync(userId, scriptId, scriptTransactionId);
 
                 if (result.IsSuccess)
                 {
-                    logger.LogInformation("Script transaction cancelled successfully - ProducerId: {ProducerId}, ScriptId: {ScriptId}, TransactionId: {TransactionId}",
-                        userId, scriptId, result.Data?.ScriptTransactionId);
+                    logger.LogInformation("Script transaction cancelled successfully - TransactionId: {TransactionId}", result.Data?.ScriptTransactionId);
                     return Ok(result);
                 }
                 else
                 {
-                    logger.LogWarning("Failed to cancel script transaction - ProducerId: {ProducerId}, ScriptId: {ScriptId}, Error: {Error}",
-                        userId, scriptId, result.Message);
+                    logger.LogWarning("Failed to cancel script transaction - TransactionId: {TransactionId}, Error: {Error}", scriptTransactionId, result.Message);
                     return StatusCode(result.StatusCode, result);
                 }
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error cancelling script transaction - ProducerId: {ProducerId}, ScriptId: {ScriptId}",
-                    userId, scriptId);
+                logger.LogError(ex, "Error cancelling script transaction - ScriptId: {ScriptId}, TransactionId: {TransactionId}", scriptId, scriptTransactionId);
                 return StatusCode(500, ResponseDetail<ScriptTransactionResponse>.Failed("An error occurred while cancelling the transaction", 500));
             }
         }

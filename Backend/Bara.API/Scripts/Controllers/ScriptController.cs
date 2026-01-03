@@ -3,6 +3,7 @@ using Bara.API.Scripts.Interfaces;
 using Bara.API.Utilities.ToolKit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Bara.API.Scripts.Controllers
 {
@@ -282,6 +283,20 @@ namespace Bara.API.Scripts.Controllers
                 {
                     return BadRequest(response);
                 }
+
+                var userId = GetAuthenticatedUserId();
+                var script = response.Data;
+                
+                // Redact transaction details if user is not the owner or the active negotiator
+                if (script.WriterId != userId && script.ActiveNegotiatorId != userId)
+                {
+                    script.ActiveTransactionId = null;
+                    script.ActiveNegotiatorId = null;
+                    script.TransactionCreatedAt = null;
+                    script.TransactionExpiresAt = null;
+                    script.HasActiveTransaction = false; // Optional: Hide the flag too if desired, or keep it true but redacted
+                }
+
                 return Ok(response);
             }
             catch (Exception ex)
@@ -411,7 +426,7 @@ namespace Bara.API.Scripts.Controllers
         /// </returns>
         [Authorize(Roles = "Writer")]
         [HttpPut("script/{scriptId}/content/{writerId}")]
-        public async Task<IActionResult> UpdateScriptContent([FromRoute] Guid scriptId, [FromRoute] Guid writerId, [FromForm] IFormFile file)
+        public async Task<IActionResult> UpdateScriptContent(Guid scriptId, Guid writerId, IFormFile file)
         {
             try
             {
@@ -446,6 +461,15 @@ namespace Bara.API.Scripts.Controllers
                 logger.LogError($"An exception: {ex.GetType().Name} was thrown at {ex.Source} while updating script content...\\nBase Exception: {ex.GetBaseException().GetType().Name}", $"Exception Code: {ex.HResult}");
                 return StatusCode(500, ResponseDetail<string>.Failed("Your request failed...", 500, "Error"));
             }
+        }
+        
+        /// <summary>
+        /// Gets the authenticated user's ID from the JWT claims.
+        /// </summary>
+        private Guid GetAuthenticatedUserId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.Identity?.Name;
+            return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
         }
     }
 }

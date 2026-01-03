@@ -81,15 +81,16 @@ namespace Bara.API.Scripts.Interfaces
         /// <param name="producerId">The ID of the producer completing the transaction</param>
         /// <param name="scriptId">The ID of the script being purchased</param>
         /// <returns>A response containing the completed transaction details</returns>
-        Task<ResponseDetail<ScriptTransactionResponse>> CompleteScriptTransactionAsync(Guid producerId, Guid scriptId);
+        Task<ResponseDetail<ScriptTransactionResponse>> CompleteScriptTransactionAsync(Guid producerId, Guid scriptId, Guid scriptTransactionId);
 
         /// <summary>
         /// Cancels a script transaction by refunding escrowed funds to the producer.
         /// </summary>
         /// <param name="producerId">The ID of the producer cancelling the transaction</param>
         /// <param name="scriptId">The ID of the script transaction to cancel</param>
+        /// <param name="scriptTransactionId">The ID of the specific transaction to cancel</param>
         /// <returns>A response containing the cancelled transaction details</returns>
-        Task<ResponseDetail<ScriptTransactionResponse>> CancelScriptTransactionAsync(Guid producerId, Guid scriptId);
+        Task<ResponseDetail<ScriptTransactionResponse>> CancelScriptTransactionAsync(Guid producerId, Guid scriptId, Guid scriptTransactionId);
 
         /// <summary>
         /// Updates the status of a script

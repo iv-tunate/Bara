@@ -89,7 +89,7 @@ export async function apiRequest<T = any>(
       return {
         success: false,
         message:
-          responseData.message ||
+          responseData?.message ||
           `Request failed with status ${response.status}`,
         statusCode: response.status,
         data: responseData,
@@ -144,15 +144,15 @@ const API_ENDPOINTS = {
   BANK_DETAILS: (userId: string) => `/api/user/bank-details/${userId}`,
   BANKS: "/api/utility/banks",
   SCRIPT_BY_ID: (scriptId: string) => `/api/script/${scriptId}`,
-  INITIATE_SCRIPT_TRANSACTION: (producerId: string) =>
-    `/api/producers/${producerId}/scripts/transactions:initiate`,
+  INITIATE_SCRIPT_TRANSACTION: () => `/api/script-transaction/initiate`,
   SCRIPTS_BY_WRITER: (writerId: string, pageNumber: number, pageSize: number) =>
     `/api/scripts/writer/${writerId}/${pageNumber}/${pageSize}`,
   CREATE_CHAT: "/api/v1/chats",
   GET_CHAT_HISTORY: (chatId: string) => `/api/v1/chats/${chatId}/messages`,
+  GET_CHAT: (chatId: string) => `/api/v1/chats/${chatId}`,
+  GET_USER_CHATS: (userId: string) => `/api/v1/chats/user/${userId}`,
   SEND_MESSAGE: (chatId: string) => `/api/v1/chats/${chatId}/messages`,
-  MARK_MESSAGES_READ: (chatId: string) =>
-    `/api/v1/chats/${chatId}/messages/mark-read`,
+  MARK_MESSAGES_READ: (chatId: string) => `/api/v1/chats/${chatId}/read`,
   CLOSE_CHAT: (chatId: string) => `/api/v1/chats/${chatId}/close`,
   UPDATE_SCRIPT: (scriptId: string, writerId: string) =>
     `/api/script/${scriptId}/${writerId}`,
@@ -169,17 +169,17 @@ const API_ENDPOINTS = {
     pageNumber: number,
     pageSize: number
   ) => `/api/scripts/producer/${producerId}/${pageNumber}/${pageSize}`,
-  PRODUCER_SCRIPTS_BY_TRANSACTION: (
+  GET_PRODUCER_SCRIPTS_BY_TRANSACTION: (
     producerId: string,
     status: string,
     pageNumber: number,
     pageSize: number
   ) =>
     `/api/scripts/producer/${producerId}/transactions/${status}/${pageNumber}/${pageSize}`,
-  COMPLETE_SCRIPT_TRANSACTION: (producerId: string, scriptId: string) =>
-    `/api/producers/${producerId}/scripts/${scriptId}/transactions:complete`,
-  CANCEL_SCRIPT_TRANSACTION: (userId: string, scriptId: string) =>
-    `/api/producers/${userId}/scripts/${scriptId}/transactions:cancel`,
+  COMPLETE_SCRIPT_TRANSACTION: (scriptId: string, transactionId: string) =>
+    `/api/script-transaction/complete/${scriptId}/${transactionId}`,
+  CANCEL_SCRIPT_TRANSACTION: (scriptId: string, transactionId: string) =>
+    `/api/script-transaction/cancel/${scriptId}/${transactionId}`,
   UPDATE_SCRIPT_CONTENT: (scriptId: string, writerId: string) =>
     `/api/script/${scriptId}/content/${writerId}`,
 };
@@ -438,8 +438,9 @@ export const api = {
     scriptId: string,
     writerId: string
   ) {
+    debugger;
     return apiRequest(
-      `${BASE_URL}${API_ENDPOINTS.INITIATE_SCRIPT_TRANSACTION(producerId)}`,
+      `${BASE_URL}${API_ENDPOINTS.INITIATE_SCRIPT_TRANSACTION()}`,
       {
         method: "POST",
         requireAuth: true,
@@ -597,7 +598,7 @@ export const api = {
     pageSize: number
   ) => {
     return apiRequest(
-      `${BASE_URL}${API_ENDPOINTS.PRODUCER_SCRIPTS_BY_TRANSACTION(
+      `${BASE_URL}${API_ENDPOINTS.GET_PRODUCER_SCRIPTS_BY_TRANSACTION(
         producerId,
         status,
         pageNumber,
@@ -610,11 +611,15 @@ export const api = {
     );
   },
 
-  completeScriptTransaction: async (producerId: string, scriptId: string) => {
+  completeScriptTransaction: async (
+    producerId: string,
+    scriptId: string,
+    transactionId: string
+  ) => {
     return apiRequest(
       `${BASE_URL}${API_ENDPOINTS.COMPLETE_SCRIPT_TRANSACTION(
-        producerId,
-        scriptId
+        scriptId,
+        transactionId
       )}`,
       {
         method: "POST",
@@ -623,9 +628,16 @@ export const api = {
     );
   },
 
-  cancelScriptTransaction: async (userId: string, scriptId: string) => {
+  cancelScriptTransaction: async (
+    userId: string,
+    scriptId: string,
+    transactionId: string
+  ) => {
     return apiRequest(
-      `${BASE_URL}${API_ENDPOINTS.CANCEL_SCRIPT_TRANSACTION(userId, scriptId)}`,
+      `${BASE_URL}${API_ENDPOINTS.CANCEL_SCRIPT_TRANSACTION(
+        scriptId,
+        transactionId
+      )}`,
       {
         method: "POST",
         requireAuth: true,

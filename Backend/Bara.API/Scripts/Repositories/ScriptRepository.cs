@@ -305,6 +305,20 @@ namespace Bara.API.Scripts.Repositories
                     return ResponseDetail<ScriptDTO>.Failed($"Script not found", 404, "Not Found");
                 }
 
+                var activeTransaction = await dbContext.ScriptTransactions
+                    .Where(t => t.ScriptId == script.Id && t.TransactionStatus == ScriptTransactionStatus.Initiated)
+                    .OrderByDescending(t => t.CreatedAt)
+                    .FirstOrDefaultAsync();
+
+                if (activeTransaction != null)
+                {
+                    script.ActiveTransactionId = activeTransaction.Id;
+                    script.HasActiveTransaction = true;
+                    script.ActiveNegotiatorId = activeTransaction.ProducerId;
+                    script.TransactionCreatedAt = activeTransaction.CreatedAt;
+                    script.TransactionExpiresAt = activeTransaction.ExpiresAt;
+                }
+
                 return ResponseDetail<ScriptDTO>.Successful(script);
             }
             catch (Exception ex)
@@ -426,6 +440,14 @@ namespace Bara.API.Scripts.Repositories
                                                         ActiveNegotiatorId = dbContext.ScriptTransactions
                                                             .Where(st => st.ScriptId == s.Id && st.TransactionStatus == ScriptTransactionStatus.Initiated)
                                                             .Select(st => st.ProducerId)
+                                                            .FirstOrDefault(),
+                                                        ActiveTransactionId = dbContext.ScriptTransactions
+                                                            .Where(st => st.ScriptId == s.Id && st.TransactionStatus == ScriptTransactionStatus.Initiated)
+                                                            .Select(st => st.Id)
+                                                            .FirstOrDefault(),
+                                                        TransactionCreatedAt = dbContext.ScriptTransactions
+                                                            .Where(st => st.ScriptId == s.Id && st.TransactionStatus == ScriptTransactionStatus.Initiated)
+                                                            .Select(st => st.CreatedAt)
                                                             .FirstOrDefault(),
                                                         Genre = s.Genres.Select(g => new GenreDTO
                                                         {
@@ -613,7 +635,6 @@ namespace Bara.API.Scripts.Repositories
         {
             try
             {
-                // 1. Verify script exists
                 var script = await dbContext.Scripts
                     .Include(s => s.Genres)
                     .FirstOrDefaultAsync(s => s.Id == scriptId);
@@ -623,19 +644,16 @@ namespace Bara.API.Scripts.Repositories
                     return ResponseDetail<ScriptDTO>.Failed($"Script with ID {scriptId} does not exist", 404, "Not Found");
                 }
 
-                // 2. Verify ownership
                 if (script.WriterId != writerId)
                 {
                     return ResponseDetail<ScriptDTO>.Failed("You do not have permission to update this script", 403, "Forbidden");
                 }
 
-                // 3. Check script status (cannot edit if Sold)
                 if (script.Status == ScriptStatus.Sold)
                 {
                     return ResponseDetail<ScriptDTO>.Failed("Cannot update script content after it has been sold", 400, "Bad Request");
                 }
 
-                // 4. Validate file
                 if (newFile == null || newFile.Length == 0)
                 {
                     return ResponseDetail<ScriptDTO>.Failed("No file provided", 400, "Bad Request");
@@ -647,7 +665,6 @@ namespace Bara.API.Scripts.Repositories
                     return ResponseDetail<ScriptDTO>.Failed("Only PDF files are allowed", 400, "Bad Request");
                 }
 
-                // 5. Get writer info for directory name
                 var writer = await dbContext.Writers
                     .Select(w => new { w.Id, w.FirstName, w.LastName })
                     .FirstOrDefaultAsync(w => w.Id == writerId);
@@ -657,15 +674,13 @@ namespace Bara.API.Scripts.Repositories
                     return ResponseDetail<ScriptDTO>.Failed("Writer not found", 404, "Not Found");
                 }
 
-                // 6. Delete old file from Cloudinary using Path (publicId)
                 var deleteResult = await cloudinary.DeleteAsync(script.Path);
                 if (!deleteResult)
                 {
                     logger.LogWarning($"Failed to delete old script file from Cloudinary - ScriptId: {scriptId}, Path: {script.Path}");
-                    // Continue anyway - we'll upload the new file
+
                 }
 
-                // 7. Upload new file
                 var userDirectoryName = $"Writer_{writer.FirstName.ToUpper()}-{writer.LastName.ToUpper()}_{writerId}";
                 var uploadResult = await cloudinary.UploadScriptAsync(userDirectoryName, newFile);
 
@@ -675,7 +690,6 @@ namespace Bara.API.Scripts.Repositories
                     return ResponseDetail<ScriptDTO>.Failed("Failed to upload new script content", 500, "Upload Error");
                 }
 
-                // 8. Update script Path and Url in database
                 script.Path = uploadResult.PublicId;
                 script.Url = uploadResult.Url;
                 script.ModifiedAt = DateTimeOffset.UtcNow;
@@ -683,14 +697,12 @@ namespace Bara.API.Scripts.Repositories
                 dbContext.Scripts.Update(script);
                 await dbContext.SaveChangesAsync();
 
-                // 9. Clear caches
                 memoryCache.Remove(ALL_SCRIPTS_CACHE_KEY);
                 memoryCache.Remove($"Writer_{writerId}_Scripts");
                 memoryCache.Remove($"Writer_{writerId}'s_Scripts");
 
                 logger.LogInformation($"Script content updated successfully - ScriptId: {scriptId}, WriterId: {writerId}");
 
-                // 10. Return updated script DTO
                 var scriptDTO = new ScriptDTO
                 {
                     Id = script.Id,
@@ -755,15 +767,15 @@ namespace Bara.API.Scripts.Repositories
                     return ResponseDetail<ScriptTransactionResponse>.Failed("Script is not available for purchase", 400);
                 }
 
-                var producer = await dbContext.Producers
+                // Fetch generic User (Producer or Writer acting as buyer)
+                var buyer = await dbContext.Users
+                    .Include(u => u.Wallet)
+                    .FirstOrDefaultAsync(u => u.Id == producerId);
 
-                    .Include(p => p.Wallet)
-                    .FirstOrDefaultAsync(p => p.Id == producerId);
-
-                if (producer?.Wallet == null)
+                if (buyer?.Wallet == null)
                 {
-                    logger.LogWarning("Producer not found - CorrelationId: {CorrelationId}, ProducerId: {ProducerId}", correlationId, producerId);
-                    return ResponseDetail<ScriptTransactionResponse>.Failed("Producer not found", 404);
+                    logger.LogWarning("Buyer/Wallet not found - CorrelationId: {CorrelationId}, BuyerId: {BuyerId}", correlationId, producerId);
+                    return ResponseDetail<ScriptTransactionResponse>.Failed("User wallet not found", 404);
                 }
 
                 var writer = await dbContext.Writers
@@ -783,13 +795,13 @@ namespace Bara.API.Scripts.Repositories
                     return ResponseDetail<ScriptTransactionResponse>.Failed("Writer does not own this script", 400);
                 }
 
-                var balanceInNaira = _exchangeRateService.ConvertToNaira(producer.Wallet.AvailableBalance, producer.Wallet.Currency);
+                var balanceInNaira = _exchangeRateService.ConvertToNaira(buyer.Wallet.AvailableBalance, buyer.Wallet.Currency);
                 var scriptPriceInNaira = _exchangeRateService.ConvertToNaira(script.Price, script.Currency);
 
                 if (balanceInNaira < scriptPriceInNaira)
                 {
                     logger.LogWarning("Insufficient balance - CorrelationId: {CorrelationId}, ProducerId: {ProducerId}, Available: {Available} {Curr}, Required: {Required} {ReqCurr}",
-                        correlationId, producerId, producer.Wallet.AvailableBalance, producer.Wallet.Currency, script.Price, script.Currency);
+                        correlationId, producerId, buyer.Wallet.AvailableBalance, buyer.Wallet.Currency, script.Price, script.Currency);
                     return ResponseDetail<ScriptTransactionResponse>.Failed("Insufficient wallet balance", 400);
                 }        
 
@@ -822,7 +834,7 @@ namespace Bara.API.Scripts.Repositories
                 {
                     Id = Guid.NewGuid(),
                     UserId = producerId,
-                    UserFullName = $"{producer.FirstName} {producer.LastName}",
+                    UserFullName = $"{buyer.FirstName} {buyer.LastName}",
                     Amount = script.Price,
                     Fee = fee,
                     Currency = script.Currency,
@@ -831,7 +843,7 @@ namespace Bara.API.Scripts.Repositories
                     ReferenceId = GenerateTransactionReference("SCR"),
                     Notes = $"Escrowed payment for script: {script.Title}",
                     PaymentMethod = "wallet",
-                    WalletID = producer.Wallet.Id
+                    WalletID = buyer.Wallet.Id
                 };
 
                 await dbContext.Transactions.AddAsync(paymentTransaction);
@@ -842,7 +854,7 @@ namespace Bara.API.Scripts.Repositories
                     ScriptId = request.ScriptId,
                     ScriptTitle = script.Title,
                     ProducerId = producerId,
-                    ProducerName = $"{producer.FirstName} {producer.LastName}",
+                    ProducerName = $"{buyer.FirstName} {buyer.LastName}",
                     WriterId = request.WriterId,
                     WriterName = $"{writer.FirstName} {writer.LastName}",
                     Amount = script.Price,
@@ -873,7 +885,7 @@ namespace Bara.API.Scripts.Repositories
                     ScriptId = request.ScriptId,
                     ScriptTitle = script.Title,
                     ProducerId = producerId,
-                    ProducerName = $"{producer.FirstName} {producer.LastName}",
+                    ProducerName = $"{buyer.FirstName} {buyer.LastName}",
                     WriterId = request.WriterId,
                     WriterName = $"{writer.FirstName} {writer.LastName}"
                 };
@@ -909,25 +921,27 @@ namespace Bara.API.Scripts.Repositories
             }
         }
 
-        public async Task<ResponseDetail<ScriptTransactionResponse>> CompleteScriptTransactionAsync(Guid producerId, Guid scriptId)
+        public async Task<ResponseDetail<ScriptTransactionResponse>> CompleteScriptTransactionAsync(Guid producerId, Guid scriptId, Guid scriptTransactionId)
         {
             var correlationId = Guid.NewGuid();
-            logger.LogInformation("Starting script transaction completion - CorrelationId: {CorrelationId}, ProducerId: {ProducerId}, ScriptId: {ScriptId}",
-                correlationId, producerId, scriptId);
+            logger.LogInformation("Starting script transaction completion - CorrelationId: {CorrelationId}, ProducerId: {ProducerId}, ScriptId: {ScriptId}, TransactionId: {TransactionId}",
+                correlationId, producerId, scriptId, scriptTransactionId);
 
             try
             {
                 using var transaction = await dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
 
                 var scriptTransaction = await dbContext.ScriptTransactions
-                    .FirstOrDefaultAsync(st => st.ProducerId == producerId && st.ScriptId == scriptId &&
+                    .FirstOrDefaultAsync(st => st.Id == scriptTransactionId && 
+                                             st.ProducerId == producerId && 
+                                             st.ScriptId == scriptId &&
                                              st.TransactionStatus == ScriptTransactionStatus.Initiated);
 
                 if (scriptTransaction == null)
                 {
-                    logger.LogWarning("Active script transaction not found - CorrelationId: {CorrelationId}, ProducerId: {ProducerId}, ScriptId: {ScriptId}",
-                        correlationId, producerId, scriptId);
-                    return ResponseDetail<ScriptTransactionResponse>.Failed("No active transaction found for this script", 404);
+                    logger.LogWarning("Active script transaction not found or mismatch - CorrelationId: {CorrelationId}, TransactionId: {TransactionId}",
+                        correlationId, scriptTransactionId);
+                    return ResponseDetail<ScriptTransactionResponse>.Failed("Transaction not found or invalid", 404);
                 }
 
                 if (scriptTransaction.ExpiresAt.HasValue && DateTimeOffset.UtcNow > scriptTransaction.ExpiresAt.Value)
@@ -1014,25 +1028,28 @@ namespace Bara.API.Scripts.Repositories
             }
         }
 
-        public async Task<ResponseDetail<ScriptTransactionResponse>> CancelScriptTransactionAsync(Guid producerId, Guid scriptId)
+        public async Task<ResponseDetail<ScriptTransactionResponse>> CancelScriptTransactionAsync(Guid producerId, Guid scriptId, Guid scriptTransactionId)
         {
             var correlationId = Guid.NewGuid();
-            logger.LogInformation("Starting script transaction cancellation - CorrelationId: {CorrelationId}, ProducerId: {ProducerId}, ScriptId: {ScriptId}",
-                correlationId, producerId, scriptId);
+            logger.LogInformation("Starting script transaction cancellation - CorrelationId: {CorrelationId}, ProducerId: {ProducerId}, ScriptId: {ScriptId}, TransactionId: {TransactionId}",
+                correlationId, producerId, scriptId, scriptTransactionId);
 
             try
             {
                 using var transaction = await dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
 
+                // Allow cancellation if user is the Producer (Buyer) OR the Writer (Seller)
                 var scriptTransaction = await dbContext.ScriptTransactions
-                    .FirstOrDefaultAsync(st => st.ProducerId == producerId && st.ScriptId == scriptId &&
+                    .FirstOrDefaultAsync(st => st.Id == scriptTransactionId &&
+                                             st.ScriptId == scriptId &&
+                                             (st.ProducerId == producerId || st.WriterId == producerId) && // producerId here is generic userId
                                              st.TransactionStatus == ScriptTransactionStatus.Initiated);
 
                 if (scriptTransaction == null)
                 {
-                    logger.LogWarning("Active script transaction not found - CorrelationId: {CorrelationId}, ProducerId: {ProducerId}, ScriptId: {ScriptId}",
-                        correlationId, producerId, scriptId);
-                    return ResponseDetail<ScriptTransactionResponse>.Failed("No active transaction found for this script", 404);
+                    logger.LogWarning("Active script transaction not found or mismatch - CorrelationId: {CorrelationId}, TransactionId: {TransactionId}",
+                        correlationId, scriptTransactionId);
+                    return ResponseDetail<ScriptTransactionResponse>.Failed("Transaction not found or invalid", 404);
                 }
 
                 if (scriptTransaction.ExpiresAt.HasValue && DateTimeOffset.UtcNow > scriptTransaction.ExpiresAt.Value)
@@ -1138,7 +1155,7 @@ namespace Bara.API.Scripts.Repositories
                         correlationId, scriptTransactionId, scriptTransaction.TransactionStatus);
                     return;
                 }
-                var result = await CompleteScriptTransactionAsync(scriptTransaction.ProducerId, scriptTransaction.ScriptId);
+                var result = await CompleteScriptTransactionAsync(scriptTransaction.ProducerId, scriptTransaction.ScriptId, scriptTransaction.Id);
 
                 if (result.IsSuccess)
                 {
@@ -1325,6 +1342,7 @@ namespace Bara.API.Scripts.Repositories
                     ActiveNegotiatorId = x.Transaction.ProducerId,
                     TransactionCreatedAt = x.Transaction.CreatedAt,
                     TransactionExpiresAt = x.Transaction.ExpiresAt,
+                    ActiveTransactionId = x.Transaction.Id,
                     HasActiveTransaction = x.Transaction.TransactionStatus == ScriptTransactionStatus.Initiated,
                     Genre = x.Script.Genres.Select(g => new GenreDTO
                     {

@@ -34,6 +34,7 @@ namespace Bara.API.Scripts.DTOs
         public DateTimeOffset? TransactionCreatedAt { get; set; }
         public DateTimeOffset? TransactionExpiresAt { get; set; }
         public bool HasActiveTransaction { get; set; }
+        public Guid? ActiveTransactionId { get; set; }
     }
 
     public class GenreDTO
