@@ -1,18 +1,23 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { api } from "@/utils/api";
 import { getUserSession, getAccessToken } from "@/utils/tokenManager";
 import toast from "react-hot-toast";
-import { Document, Page, pdfjs } from "react-pdf";
-import "react-pdf/dist/Page/AnnotationLayer.css";
-import "react-pdf/dist/Page/TextLayer.css";
+import dynamic from "next/dynamic";
 import DashboardNavbar from "@/components/DashboardNavbar";
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+const ScriptPDFViewer = dynamic(() => import("@/components/ScriptPDFViewer"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-96">
+      <p className="text-gray-500">Loading PDF Viewer...</p>
+    </div>
+  ),
+});
 
-export default function ViewScript() {
+function ViewScriptContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const scriptId = searchParams.get("scriptId");
@@ -243,7 +248,7 @@ export default function ViewScript() {
           )}
 
           {!canEdit && script?.status === "Sold" && (
-            <div className="flex items-center  text-gray-500 text-sm">
+            <div className="flex items-center text-gray-500 text-sm">
               <span className="bg-green-100 text-green-700 px-3 py-1 rounded-md">
                 Script Sold - Editing Disabled
               </span>
@@ -255,27 +260,15 @@ export default function ViewScript() {
         <div className="border border-gray-300 rounded-lg overflow-hidden bg-gray-50">
           {pdfUrl ? (
             <div className="flex flex-col items-center">
-              <Document
-                file={pdfUrl}
+              <ScriptPDFViewer
+                url={pdfUrl}
+                pageNumber={currentPage}
                 onLoadSuccess={onDocumentLoadSuccess}
-                className="max-w-full"
-              >
-                <Page
-                  pageNumber={currentPage}
-                  width={Math.min(
-                    typeof window !== "undefined"
-                      ? window.innerWidth - 100
-                      : 800,
-                    800
-                  )}
-                  renderTextLayer={true}
-                  renderAnnotationLayer={true}
-                />
-              </Document>
+              />
 
               {/* Page Navigation */}
               {numPages > 1 && (
-                <div className="flex items-center gap-4 p-4 bg-white border-t">
+                <div className="flex items-center gap-4 p-4 bg-white border-t w-full justify-center">
                   <button
                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
@@ -329,5 +322,22 @@ export default function ViewScript() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ViewScript() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-white">
+          <DashboardNavbar />
+          <div className="flex items-center justify-center h-screen">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#810306]"></div>
+          </div>
+        </div>
+      }
+    >
+      <ViewScriptContent />
+    </Suspense>
   );
 }
