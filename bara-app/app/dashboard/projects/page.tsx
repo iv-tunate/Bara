@@ -5,6 +5,7 @@ import Image from "next/image";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { useState, useEffect } from "react";
 import { getUserSession } from "@/utils/tokenManager";
+import { ConfirmModal } from "@/components/ConfirmModal";
 import { api } from "@/utils/api";
 import toast from "react-hot-toast";
 
@@ -31,13 +32,27 @@ interface Script {
 
 export default function ProjectsPage() {
   const router = useRouter();
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    danger?: boolean;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    danger: false,
+    onConfirm: () => {},
+  });
+
+   // const { walletData } = useWallet();
   const [userData, setUserData] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("");
   const [loading, setLoading] = useState(true);
   const [scripts, setScripts] = useState<Script[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
 
-  // Status Classes from original design
   const statusClasses: { [key: string]: string } = {
     available: "bg-[#CCCEEF] border-[#000AAF] text-[#000AAF]",
     caution: "bg-[#FFD9BF] border-[#BF4E00] text-[#BF4E00]",
@@ -246,49 +261,66 @@ export default function ProjectsPage() {
     }
   };
 
-  const handleConfirmScript = async (script: Script) => {
-    if (!userData || !script.activeTransactionId) {
-      toast.error("Invalid transaction state");
-      return;
-    }
-    try {
-      const response = await api.completeScriptTransaction(
-        userData.userId,
-        script.id,
-        script.activeTransactionId
-      );
-      if (response.data?.isSuccess) {
-        toast.success("Script confirmed successfully!");
-        fetchScripts(userData);
-      } else {
-        toast.error(response.data?.message || "Failed to confirm script");
-      }
-    } catch (error) {
-      toast.error("An error occurred");
-    }
+  const handleConfirmScript = (script: Script) => {
+    setModalConfig({
+      isOpen: true,
+      title: "Confirm Purchase",
+      message: `Are you sure you want to confirm receipt of "${script.title}"? This will release funds to the writer.`,
+      danger: false,
+      onConfirm: async () => {
+        setModalConfig((prev) => ({ ...prev, isOpen: false }));
+        if (!userData || !script.activeTransactionId) {
+          toast.error("Invalid transaction state");
+          return;
+        }
+        try {
+          const response = await api.completeScriptTransaction(
+            userData.userId,
+            script.id,
+            script.activeTransactionId
+          );
+          if (response.data?.isSuccess) {
+            toast.success("Script confirmed successfully!");
+            fetchScripts(userData);
+          } else {
+            toast.error(response.data?.message || "Failed to confirm script");
+          }
+        } catch (error) {
+          toast.error("An error occurred");
+        }
+      },
+    });
   };
 
-  const handleCancelTransaction = async (script: Script) => {
-    if (!confirm("Are you sure? Funds will be refunded.")) return;
-    if (!script.activeTransactionId) {
-      toast.error("Invalid transaction state");
-      return;
-    }
-    try {
-      const response = await api.cancelScriptTransaction(
-        userData.userId,
-        script.id,
-        script.activeTransactionId
-      );
-      if (response.data?.isSuccess) {
-        toast.success("Transaction cancelled");
-        fetchScripts(userData);
-      } else {
-        toast.error(response.data?.message || "Failed to cancel");
-      }
-    } catch (error) {
-      toast.error("An error occurred");
-    }
+  const handleCancelTransaction = (script: Script) => {
+    setModalConfig({
+      isOpen: true,
+      title: "Cancel Transaction",
+      message: `Are you sure you want to cancel the transaction for "${script.title}"? This action cannot be undone and funds will be refunded.`,
+      danger: true,
+      onConfirm: async () => {
+        setModalConfig((prev) => ({ ...prev, isOpen: false }));
+        if (!userData || !script.activeTransactionId) {
+          toast.error("Invalid transaction state");
+          return;
+        }
+        try {
+          const response = await api.cancelScriptTransaction(
+            userData.userId,
+            script.id,
+            script.activeTransactionId
+          );
+          if (response.data?.isSuccess) {
+            toast.success("Transaction cancelled");
+            fetchScripts(userData);
+          } else {
+            toast.error(response.data?.message || "Failed to cancel");
+          }
+        } catch (error) {
+          toast.error("An error occurred");
+        }
+      },
+    });
   };
 
   const getFilteredScripts = () => {
@@ -514,6 +546,15 @@ export default function ProjectsPage() {
           </div>
         </div>
       </div>
+      <ConfirmModal
+        isOpen={modalConfig.isOpen}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        onConfirm={modalConfig.onConfirm}
+        onCancel={() => setModalConfig((prev) => ({ ...prev, isOpen: false }))}
+        isDangerous={modalConfig.danger}
+        confirmText={modalConfig.danger ? "Yes, Cancel" : "Yes, Confirm"}
+      />
     </main>
   );
 }

@@ -182,6 +182,7 @@ const API_ENDPOINTS = {
     `/api/script-transaction/cancel/${scriptId}/${transactionId}`,
   UPDATE_SCRIPT_CONTENT: (scriptId: string, writerId: string) =>
     `/api/script/${scriptId}/content/${writerId}`,
+  NOTIFICATIONS: "/api/notification",
 };
 
 export const api = {
@@ -658,6 +659,16 @@ export const api = {
       {
         method: "PUT",
         body: formData,
+        requireAuth: true,
+      }
+    );
+  },
+
+  getNotifications: async (page = 1, pageSize = 20) => {
+    return apiRequest(
+      `${BASE_URL}${API_ENDPOINTS.NOTIFICATIONS}?page=${page}&pageSize=${pageSize}`,
+      {
+        method: "GET",
         requireAuth: true,
       }
     );

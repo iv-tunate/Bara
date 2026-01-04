@@ -14,8 +14,8 @@ export default function ChatSidebar({
 }) {
   return (
     <aside className="w-full md:w-[260px] border-r border-gray-200 p-4 overflow-y-auto">
+      <BackButton label="" className="p-0!" />
       <div className="flex items-center gap-2 mb-4">
-        <BackButton label="" className="!p-0" />
         <h2 className="text-[15px] font-semibold">Chats</h2>
       </div>
 

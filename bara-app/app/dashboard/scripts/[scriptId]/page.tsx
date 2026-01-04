@@ -278,7 +278,7 @@ export default function ScriptDetailPage() {
       <div className="max-w-6xl mx-auto px-4 py-4 grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* LEFT SIDE */}
         <div className="lg:col-span-3 space-y-4">
-          <h1 className="text-xl font-semibold text-[#22242A] break-words">
+          <h1 className="text-xl font-semibold text-[#22242A] wrap-break-word">
             {script.title}
           </h1>
 

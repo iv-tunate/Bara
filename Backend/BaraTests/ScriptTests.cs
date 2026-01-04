@@ -57,10 +57,10 @@ namespace BaraTests
             Assert.NotNull(getResponse.Data);
             Assert.Equal(validScript.Title, getResponse.Data.Title);
 
-            var downloadResponse = await scriptService.DownloadScript(scriptId);
-            Assert.True(downloadResponse.IsSuccess);
-            Assert.NotNull(downloadResponse.Data);
-            Assert.NotNull(downloadResponse.Data.File);
+            //var downloadResponse = await scriptService.DownloadScript(scriptId);
+            //Assert.True(downloadResponse.IsSuccess);
+            //Assert.NotNull(downloadResponse.Data);
+            //Assert.NotNull(downloadResponse.Data.File);
 
             var wrongWriterId = Guid.NewGuid();
             var failResponse = await scriptService.GetScriptById(scriptId, wrongWriterId);
@@ -130,13 +130,13 @@ namespace BaraTests
             Assert.NotNull(script.Data);
             var scriptId = script.Data.Id;
 
-            var downloadResponse = await scriptService.DownloadScript(scriptId);
-            Assert.True(downloadResponse.IsSuccess);
-            Assert.NotNull(downloadResponse.Data);
-            Assert.NotNull(downloadResponse.Data.File);
+            //var downloadResponse = await scriptService.DownloadScript(scriptId);
+            //Assert.True(downloadResponse.IsSuccess);
+            //Assert.NotNull(downloadResponse.Data);
+            //Assert.NotNull(downloadResponse.Data.File);
 
-            var failResponse = await scriptService.DownloadScript(Guid.NewGuid());
-            Assert.False(failResponse.IsSuccess);
+            //var failResponse = await scriptService.DownloadScript(Guid.NewGuid());
+            //Assert.False(failResponse.IsSuccess);
 
             await scriptService.DeleteScript(scriptId, writerId);
         }

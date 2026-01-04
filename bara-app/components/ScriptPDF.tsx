@@ -5,7 +5,11 @@ import SidebarThumbnails from "./SideBarThumbnail";
 import PDFCanvas from "./PDFCanva";
 import ScriptNavbar from "./ScriptNavbar";
 
-export default function ScriptPDFLayout() {
+interface ScriptPDFLayoutProps {
+  url?: string;
+}
+
+export default function ScriptPDFLayout({ url }: ScriptPDFLayoutProps) {
   const [currentPage, setCurrentPage] = useState(1); // track selected page
 
   return (
@@ -22,7 +26,7 @@ export default function ScriptPDFLayout() {
         />
 
         {/* PDF canvas */}
-        <PDFCanvas currentPage={currentPage} />
+        <PDFCanvas currentPage={currentPage} url={url} />
       </div>
     </div>
   );

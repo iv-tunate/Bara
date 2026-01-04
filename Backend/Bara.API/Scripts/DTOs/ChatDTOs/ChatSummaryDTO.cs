@@ -13,5 +13,6 @@ namespace Bara.API.Scripts.DTOs.ChatDTOs
         public DateTimeOffset LastMessageSentAt { get; set; }
         public int UnreadCount { get; set; }
         public bool IsClosed { get; set; }
+        public string OtherUserProfilePictureUrl { get; set; }
     }
 }

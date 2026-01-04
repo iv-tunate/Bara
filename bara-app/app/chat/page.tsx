@@ -14,11 +14,12 @@ import toast from "react-hot-toast";
 
 interface ChatSession {
   id: string; // this is the chat ID...
-  name: string; 
+  name: string;
   avatar: string;
   lastMessage: string;
   unreadCount: number;
   scriptTitle: string;
+  scriptId: string;
   otherUserId: string;
   isClosed: boolean;
 }
@@ -59,16 +60,19 @@ function ChatContent() {
         debugger;
         const response = await api.getChats(session.userId);
         if (response.success && response.data) {
-          const mappedChats: ChatSession[] = response.data.data.map((c: any) => ({
-            id: c.chatId,
-            name: c.otherUserName || "Unknown User",
-            avatar: "/default-avatar.png",
-            lastMessage: c.lastMessageContent,
-            unreadCount: c.unreadCount || 0,
-            scriptTitle: c.scriptTitle,
-            otherUserId: c.otherUserId,
-            isClosed: c.isClosed,
-          }));
+          const mappedChats: ChatSession[] = response.data.data.map(
+            (item: any) => ({
+              id: item.chatId,
+              name: item.otherUserName || "Unknown User",
+              avatar: "/default-avatar.png",
+              lastMessage: item.lastMessageContent,
+              unreadCount: item.unreadCount || 0,
+              scriptTitle: item.scriptTitle,
+              scriptId: item.scriptId,
+              otherUserId: item.otherUserId,
+              isClosed: item.isClosed,
+            })
+          );
 
           setChats(mappedChats);
 
@@ -97,15 +101,17 @@ function ChatContent() {
       try {
         const response = await api.getChatHistory(selectedChatId);
         if (response.success && response.data) {
-          const mappedMessages: UIMessage[] = response.data.data.map((m: any) => ({
-            id: m.messageId || m.id || Math.random(),
-            text: m.content,
-            time: new Date(m.sentAt).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-            sender: m.senderId === currentUserId ? "me" : "other",
-          }));
+          const mappedMessages: UIMessage[] = response.data.data.map(
+            (m: any) => ({
+              id: m.messageId || m.id || Math.random(),
+              text: m.content,
+              time: new Date(m.sentAt).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+              sender: m.senderId === currentUserId ? "me" : "other",
+            })
+          );
 
           setChats((prev) => {
             if (!prev.find((c) => c.id === selectedChatId)) {
@@ -118,6 +124,7 @@ function ChatContent() {
                   lastMessage: mappedMessages[0]?.text || "",
                   unreadCount: 0,
                   scriptTitle: "",
+                  scriptId: "",
                   otherUserId: "",
                   isClosed: false,
                 },
@@ -196,7 +203,6 @@ function ChatContent() {
     };
   }, [connection, selectedChatId]);
 
-  
   const handleSendMessage = async (text: string) => {
     if (!text.trim() || !selectedChatId) return;
 
@@ -248,7 +254,6 @@ function ChatContent() {
           <>
             <ChatHeader chat={selectedChat} />
 
- 
             <ChatMessages messages={messages as any[]} />
             <MessageInput onSend={handleSendMessage} />
           </>

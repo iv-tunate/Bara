@@ -7,7 +7,11 @@ export default function ChatHeader({ chat }: { chat: any }) {
   const router = useRouter();
 
   const openScript = () => {
-    router.push("/script");
+    if (chat?.scriptId) {
+      router.push(`/dashboard/scripts/ViewScript?scriptId=${chat.scriptId}`);
+    } else {
+      router.push("/dashboard");
+    }
   };
 
   return (

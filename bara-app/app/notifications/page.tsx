@@ -5,11 +5,17 @@ import Image from "next/image";
 import Link from "next/link";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import NotificationsDropdown from "@/components/NotificationsDropdown";
+import { api } from "@/utils/api";
+import { getUserSession } from "@/utils/tokenManager";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+
+dayjs.extend(relativeTime);
 
 type NotificationStatus = "read" | "unread";
 
 interface Notification {
-  id: number;
+  id: string;
   message: string;
   category: string;
   date: string;
@@ -17,47 +23,59 @@ interface Notification {
   status: NotificationStatus;
   pin: boolean;
   showWallet: boolean;
+  fullDate: Date;
 }
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
-  const [openNotificationId, setOpenNotificationId] = useState<number | null>(null);
+  const [openNotificationId, setOpenNotificationId] = useState<string | null>(
+    null
+  );
 
-  // Simulated fetch for demonstration
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
+
   useEffect(() => {
     const fetchNotifications = async () => {
-      await new Promise((res) => setTimeout(res, 800)); // simulate delay
+      try {
+        setLoading(true);
+        const session = getUserSession();
+        if (!session) {
+          setLoading(false);
+          return;
+        }
 
-      const fetchedNotifications: Notification[] = [
-        {
-          id: 1,
-          message: "₦250,000 from ‘Land of Mira’ released to your wallet.",
-          category: "Payment",
-          date: "24th October, 2025",
-          time: "12:22pm",
-          status: "unread",
-          pin: true,
-          showWallet: true,
-        },
-        {
-          id: 2,
-          message: "Producer approved ‘The Waiter’s Dream.’ Payment finalized.",
-          category: "Script Confirmation",
-          date: "24th October, 2025",
-          time: "12:22pm",
-          status: "unread",
-          pin: false,
-          showWallet: true,
-        },
-      ];
+        const res = await api.getNotifications(page, pageSize);
+        if (res.success && res.data && res.data.data) {
+          const rawList = res.data.data || res.data;
+          const list = Array.isArray(rawList) ? rawList : rawList.Data || [];
 
-      setNotifications(fetchedNotifications);
-      setLoading(false);
+          const mapped: Notification[] = list.map((n: any) => ({
+            id: n.id,
+            message: n.message,
+            category: n.title,
+            date: dayjs(n.date).format("Do MMMM, YYYY"),
+            time: dayjs(n.date).format("h:mm a"),
+            status: n.isRead ? "read" : "unread",
+            pin: false,
+            showWallet: n.type === "wallet",
+            fullDate: new Date(n.date),
+          }));
+          setNotifications(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to load notifications", err);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchNotifications();
-  }, []);
+  }, [page]);
+
+  const handleNext = () => setPage((p) => p + 1);
+  const handlePrev = () => setPage((p) => Math.max(1, p - 1));
 
   const statusClasses: { [key: string]: string } = {
     read: "bg-white",
@@ -70,37 +88,32 @@ export default function NotificationsPage() {
 
       <div className="py-3 w-full max-w-4xl mx-auto px-4">
         <div className="flex flex-row justify-between items-center mb-7 mt-5">
-          <h3 className="text-2xl">Notifications</h3>
+          <h3 className="text-2xl font-bold">Notifications</h3>
 
           {notifications.length > 0 && (
             <div className="flex gap-10 justify-end items-center">
-              <Link href="/notifications">
+              {/* <Link href="/notifications">
                 <p className="text-[#810306] font-semibold">Mark all as read</p>
-              </Link>
+              </Link> */}
               <div className="flex gap-3 items-center">
-                <p>Filter</p>
+                <p className="text-gray-600">Filter</p>
                 <div className="relative">
                   <select
                     name="categories"
                     id="categories"
-                    className="outline-none border border-[#ABADB2] rounded-sm appearance-none cursor-pointer pl-2"
+                    className="outline-none border border-[#ABADB2] rounded-sm appearance-none cursor-pointer pl-2 pr-8 py-1 bg-white"
                   >
                     <option value="All">All</option>
-                    <option value="Payment and Wallet">Payment and Wallet</option>
+                    <option value="Payment">Payments</option>
                     <option value="Messages">Messages</option>
-                    <option value="Comments">Comments</option>
-                    <option value="Script Activity">Script Activity</option>
-                    <option value="Refunds and Disputes">Refunds and Disputes</option>
-                    <option value="Accounts and Profile">Accounts and Profile</option>
-                    <option value="Reminders">Reminders</option>
-                    <option value="System Updates">System Updates</option>
+                    <option value="Script">Script Activity</option>
                   </select>
                   <Image
-                    className="pointer-events-none absolute top-1 left-36"
+                    className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2"
                     src="/dropdown.png"
                     alt="dropdown"
-                    width={20}
-                    height={20}
+                    width={10}
+                    height={10}
                   />
                 </div>
               </div>
@@ -109,12 +122,14 @@ export default function NotificationsPage() {
         </div>
 
         {loading ? (
-          <p>Loading...</p>
+          <div className="flex justify-center py-20">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#810306]"></div>
+          </div>
         ) : notifications.length === 0 ? (
           <div className="text-center py-20 text-gray-500">
-            <p className="text-lg font-medium">No notifications yet.</p>
+            <p className="text-lg font-medium">No details yet.</p>
             <p className="text-sm mt-2">
-              Real-time alerts will appear here while you are online.
+              Real-time alerts will appear here if you have any.
             </p>
           </div>
         ) : (
@@ -123,21 +138,20 @@ export default function NotificationsPage() {
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`px-4 py-3 flex flex-col gap-2 rounded-sm mb-2 ${
+                  className={`px-4 py-3 flex flex-col gap-2 rounded-sm mb-2 border border-gray-100 ${
                     statusClasses[notification.status] || "bg-[#F5F5F5]"
                   }`}
                 >
                   <div className="flex flex-row items-center justify-between">
-                    <p className="text-xs bg-[#FFD9BF] w-max px-1 rounded-sm border border-[#BF4E00] text-[#BF4E00]">
+                    <p className="text-xs bg-[#FFD9BF] w-max px-2 py-0.5 rounded-sm border border-[#BF4E00] text-[#BF4E00] font-medium">
                       {notification.category}
                     </p>
                     <div className="flex gap-3 items-center">
-                      {notification.pin && (
-                        <Image src="/Pin.svg" alt="pin" width={18} height={18} />
-                      )}
                       {notification.showWallet && (
                         <Link href="/wallet">
-                          <p className="text-[#BF0000] text-sm">View wallet</p>
+                          <p className="text-[#BF0000] text-sm hover:underline">
+                            View wallet
+                          </p>
                         </Link>
                       )}
                       <div className="relative">
@@ -149,9 +163,14 @@ export default function NotificationsPage() {
                                 : notification.id
                             )
                           }
-                          className="hover:text-[#800000] flex items-center gap-1 cursor-pointer"
+                          className="hover:text-[#800000] flex items-center gap-1 cursor-pointer p-1"
                         >
-                          <Image src="/others.svg" alt="options" width={3} height={3} />
+                          <Image
+                            src="/others.svg"
+                            alt="options"
+                            width={16}
+                            height={4}
+                          />
                         </button>
                         {openNotificationId === notification.id && (
                           <NotificationsDropdown
@@ -162,32 +181,49 @@ export default function NotificationsPage() {
                       </div>
                     </div>
                   </div>
-                  <p className="text-md max-w-md">{notification.message}</p>
-                  <p className="text-sm">
-                    {notification.date} || {notification.time}
+                  <p className="text-md font-medium text-[#22242A]">
+                    {notification.message}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {notification.date} • {notification.time}
                   </p>
                 </div>
               ))}
             </div>
 
-            {/* Pagination */}
-            <div className="flex flex-row items-center gap-1 mt-6">
-              <button className="flex gap-3 border border-[#ABADB2] px-2 py-1 rounded-sm items-center">
-                <Image src="/Arrow-left.svg" alt="prev" width={18} height={18} />
+            {/* Pagination Controls */}
+            <div className="flex flex-row items-center gap-1 mt-6 justify-center">
+              <button
+                onClick={handlePrev}
+                disabled={page === 1}
+                className="flex gap-3 border border-[#ABADB2] px-2 py-1 rounded-sm items-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                <Image
+                  src="/Arrow-left.svg"
+                  alt="prev"
+                  width={18}
+                  height={18}
+                />
                 <p>Prev</p>
               </button>
-              <div className="flex flex-row items-center gap-1 text-[#333740]">
+
+              <div className="flex flex-row items-center gap-1 text-[#333740] mx-2">
                 <button className="bg-[#810306] border border-[#810306] text-white px-3 py-1 rounded-sm">
-                  1
+                  {page}
                 </button>
-                <button className="border border-[#ABADB2] px-3 py-1 rounded-sm">2</button>
-                <button className="border border-[#ABADB2] px-3 py-1 rounded-sm">3</button>
-                <button className="border border-[#ABADB2] px-3 py-1 rounded-sm">4</button>
-                <button className="border border-[#ABADB2] px-3 py-1 rounded-sm">...</button>
               </div>
-              <button className="flex gap-3 border border-[#ABADB2] px-2 py-1 rounded-sm items-center">
+
+              <button
+                onClick={handleNext}
+                className="flex gap-3 border border-[#ABADB2] px-2 py-1 rounded-sm items-center hover:bg-gray-50"
+              >
                 <p>Next</p>
-                <Image src="/Arrow-right.svg" alt="next" width={18} height={18} />
+                <Image
+                  src="/Arrow-right.svg"
+                  alt="next"
+                  width={18}
+                  height={18}
+                />
               </button>
             </div>
           </>

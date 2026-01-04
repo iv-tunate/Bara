@@ -102,6 +102,13 @@ namespace Bara.API.Scripts.Repositories
             try
             {
                 await dbContext.ChatMessages.AddAsync(message);
+                
+                var chat = await dbContext.Chats.FindAsync(message.ChatId);
+                if (chat != null)
+                {
+                    chat.ModifiedAt = DateTimeOffset.UtcNow;
+                }
+
                 await dbContext.SaveChangesAsync();
                 return message;
             }
@@ -213,22 +220,36 @@ namespace Bara.API.Scripts.Repositories
         {
             try
             {
-                return await dbContext.Chats
+                var query = dbContext.Chats
                     .Where(c => c.ProducerId == userId || c.WriterId == userId)
-                    .OrderByDescending(c => c.CreatedAt)
-                    .Select(c => new ChatSummaryDTO
+                    .Select(c => new
                     {
-                        ChatId = c.Id,
-                        ScriptId = c.ScriptId,
-                        ScriptTitle = c.ScriptTitle,
-                        OtherUserId = c.ProducerId == userId ? c.WriterId : c.ProducerId,
-                        OtherUserName = c.ProducerId == userId ? c.WriterName : c.ProducerName,
-                        UnreadCount = c.Messages.Count(m => m.UserId != userId && !m.IsRead),
-                        IsClosed = c.IsClosed
-                    })
+                        Chat = c,
+                        LastMessage = c.Messages.OrderByDescending(m => m.SentAt).FirstOrDefault(),
+                        OtherUserImage = c.ProducerId == userId
+                            ? dbContext.Users.Where(u => u.Id == c.WriterId).Select(u => u.ProfileImageUrl).FirstOrDefault()
+                            : dbContext.Users.Where(u => u.Id == c.ProducerId).Select(u => u.ProfileImageUrl).FirstOrDefault()
+                    });
+
+                var result = await query
+                    .OrderByDescending(x => x.LastMessage != null ? x.LastMessage.SentAt : x.Chat.CreatedAt)
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
                     .ToListAsync();
+
+                return result.Select(x => new ChatSummaryDTO
+                {
+                    ChatId = x.Chat.Id,
+                    ScriptId = x.Chat.ScriptId,
+                    ScriptTitle = x.Chat.ScriptTitle,
+                    OtherUserId = x.Chat.ProducerId == userId ? x.Chat.WriterId : x.Chat.ProducerId,
+                    OtherUserName = x.Chat.ProducerId == userId ? x.Chat.WriterName : x.Chat.ProducerName,
+                    UnreadCount = x.Chat.Messages.Count(m => m.UserId != userId && !m.IsRead),
+                    IsClosed = x.Chat.IsClosed,
+                    OtherUserProfilePictureUrl = x.OtherUserImage,
+                    LastMessageContent = x.LastMessage?.Content,
+                    LastMessageSentAt = x.LastMessage?.SentAt ?? x.Chat.CreatedAt
+                }).ToList();
             }
             catch (Exception ex)
             {
