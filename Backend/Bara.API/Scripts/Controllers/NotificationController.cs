@@ -3,6 +3,7 @@ using Bara.API.Scripts.DTOs;
 using Bara.API.Scripts.Enums;
 using Bara.API.Scripts.Models;
 using Bara.API.Transactions.Enums;
+using Bara.API.Utilities.Models;
 using Bara.API.Utilities.ToolKit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -82,15 +83,27 @@ namespace Bara.API.Scripts.Controllers
 
                     foreach (var wx in walletTransactions)
                     {
+                        var symbol = wx.Currency == Currency.NAIRA ? "₦" : wx.CurrencySymbol;
+                        var amount = wx.Amount.ToString("N0");
+                        
+                        string msg = $"{symbol}{amount} {wx.TransactionType.ToString().ToLower()} - {wx.Status}";
+                        if (wx.TransactionType == TransactionType.WalletFunding && wx.Status == TransactionStatus.Completed)
+                            msg = $"{symbol}{amount} released to your wallet.";
+                        else if (wx.TransactionType == TransactionType.Withdrawal)
+                            msg = $"{symbol}{amount} withdrawal {wx.Status.ToString().ToLower()}.";
+                        else if (wx.TransactionType == TransactionType.Refund)
+                            msg = $"{symbol}{amount} has been refunded to your wallet {wx.Status.ToString().ToLower()}";
+                        else if (wx.TransactionType == TransactionType.WalletRelease)
+                            msg = $"{symbol}{amount} has been released to your wallet {wx.Status.ToString().ToLower()}";
                         notifications.Add(new NotificationDTO
-                        {
-                            Id = wx.Id.ToString(),
-                            Title = "Wallet Update",
-                            Message = $"{wx.CurrencySymbol}: {wx.Amount} {wx.Currency} - {wx.Status}",
-                            Date = wx.CreatedAt,
-                            IsRead = (DateTimeOffset.UtcNow - wx.CreatedAt).TotalHours > 24,
-                            Type = "wallet"
-                        });
+                            {
+                                Id = wx.Id.ToString(),
+                                Title = "Payment Update",
+                                Message = msg,
+                                Date = wx.CreatedAt,
+                                IsRead = (DateTimeOffset.UtcNow - wx.CreatedAt).TotalHours > 24,
+                                Type = "wallet"
+                            });
                     }
                 }
 
