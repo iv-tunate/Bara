@@ -46,8 +46,25 @@ export default function MyScriptDetailPage() {
         if (scriptResponse.success && scriptResponse.data) {
           const sData = scriptResponse.data.data || scriptResponse.data;
 
-          if (sData.writerId !== userId) {
-            router.push(`/dashboard/scripts/${scriptIdParam}`);
+          // console.group("Script Authorization Check");
+          // console.log("Script ID:", sData.id);
+          // console.log("Current User ID:", userId);
+          // console.log("Script Writer ID:", sData.writerId);
+          // console.log("Script Active Negotiator ID:", sData.activeNegotiatorId);
+          // console.groupEnd();
+
+          const isOwner =
+            sData.writerId &&
+            userId &&
+            sData.writerId.toLowerCase() === userId.toLowerCase();
+          const isBuyer =
+            sData.activeNegotiatorId &&
+            userId &&
+            sData.activeNegotiatorId.toLowerCase() === userId.toLowerCase();
+
+          if (!isOwner && !isBuyer) {
+            toast.error("You are not authorized to view this script");
+            router.push("/dashboard");
             return;
           }
 
@@ -72,6 +89,7 @@ export default function MyScriptDetailPage() {
             url: sData.url,
             path: sData.path || "",
             uploadedOn: sData.createdAt,
+            activeNegotiatorId: sData.activeNegotiatorId,
           };
 
           setScript(mappedScript);
@@ -102,6 +120,52 @@ export default function MyScriptDetailPage() {
     window.location.reload();
   };
 
+  const handleContactWriter = async () => {
+    if (!script) return;
+    const session = getUserSession();
+    if (!session) return;
+
+    try {
+      const toastId = toast.loading("Opening chat...");
+      const chatsRes = await api.getChats(session.userId);
+      let existingChatId = null;
+
+      if (chatsRes.success && chatsRes.data) {
+        const existingChat = chatsRes.data.find(
+          (c: any) =>
+            c.scriptId === script.id && c.otherUserId === script.writerId
+        );
+        if (existingChat) existingChatId = existingChat.chatId;
+      }
+
+      if (existingChatId) {
+        toast.dismiss(toastId);
+        router.push(`/chat?id=${existingChatId}`);
+      } else {
+        const createRes = await api.createChat({
+          scriptId: script.id,
+          producerId: session.userId,
+          writerId: script.writerId!,
+          scriptTitle: script.title,
+          producerName: session.name,
+          writerName: script.writerName || "Writer",
+        });
+        if (createRes.success && createRes.data) {
+          const chatId = createRes.data;
+          console.log("[Writer Contact] Created chat ID:", chatId);
+          toast.dismiss(toastId);
+          router.push(`/chat?id=${chatId}`);
+        } else {
+          console.error("[Writer Contact] Failed:", createRes);
+          toast.error("Failed to open chat", { id: toastId });
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to start chat");
+    }
+  };
+
   if (isLoading) {
     return (
       <main className="min-h-screen bg-white flex items-center justify-center">
@@ -120,15 +184,18 @@ export default function MyScriptDetailPage() {
           <div className="text-red-500 text-6xl">⚠️</div>
           <p className="text-gray-700 text-lg">{error || "Script not found"}</p>
           <button
-            onClick={() => router.push("/writer/profile")}
+            onClick={() => router.push("/dashboard")}
             className="text-[#800000] hover:underline font-medium"
           >
-            Go to Profile
+            Go to Dashboard
           </button>
         </div>
       </main>
     );
   }
+
+  const session = getUserSession();
+  const isOwner = session?.userId === script.writerId;
 
   const statusColors = {
     Available: "bg-green-100 text-green-700 border-green-300",
@@ -198,27 +265,29 @@ export default function MyScriptDetailPage() {
         </div>
 
         {/* Warning Message */}
-        <div className="mb-6 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl p-4 flex gap-3 shadow-sm">
-          <svg
-            className="w-6 h-6 text-yellow-600 flex-shrink-0"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <p className="text-sm text-gray-700">
-            <strong className="text-gray-900">Note:</strong> Editing the script
-            PDF itself is not allowed. If you need to upload a different
-            version, please delete this script and re-upload through the add
-            script page.
-          </p>
-        </div>
+        {isOwner && (
+          <div className="mb-6 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl p-4 flex gap-3 shadow-sm">
+            <svg
+              className="w-6 h-6 text-yellow-600 flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <p className="text-sm text-gray-700">
+              <strong className="text-gray-900">Note:</strong> Editing the
+              script PDF itself is not allowed. If you need to upload a
+              different version, please delete this script and re-upload through
+              the add script page.
+            </p>
+          </div>
+        )}
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Left Column - Cover Image & Actions */}
@@ -284,45 +353,69 @@ export default function MyScriptDetailPage() {
                 )}
               </button>
 
-              <button
-                onClick={() => setShowEditModal(true)}
-                className="w-full bg-white hover:bg-gray-50 text-gray-700 border-2 border-gray-300 py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                  />
-                </svg>
-                Edit Details
-              </button>
+              {isOwner ? (
+                <>
+                  <button
+                    onClick={() => setShowEditModal(true)}
+                    className="w-full bg-white hover:bg-gray-50 text-gray-700 border-2 border-gray-300 py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                      />
+                    </svg>
+                    Edit Details
+                  </button>
 
-              <button
-                onClick={() => setShowDeleteModal(true)}
-                className="w-full bg-white hover:bg-red-50 text-red-600 border-2 border-red-200 py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+                  <button
+                    onClick={() => setShowDeleteModal(true)}
+                    className="w-full bg-white hover:bg-red-50 text-red-600 border-2 border-red-200 py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                    Delete Script
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={handleContactWriter}
+                  className="w-full bg-white hover:bg-gray-50 text-[#800000] border-2 border-[#800000] py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-                Delete Script
-              </button>
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
+                  </svg>
+                  Message Writer
+                </button>
+              )}
             </div>
           </div>
 

@@ -33,7 +33,7 @@ namespace Bara.API.Scripts.Interfaces
         /// </summary>
         /// <param name="scriptId">The ID of the script to be retrieved</param>
         /// <returns>A script file</returns>
-        Task<ResponseDetail<GetScriptDTO>> DownloadScript(Guid scriptId);
+        Task<ResponseDetail<GetScriptDTO>> DownloadScript(Guid scriptId, Guid userId);
 
         /// <summary>
         /// Adds a new script.

@@ -1,6 +1,7 @@
 using Bara.API.Scripts.DTOs.ChatDTOs;
 using Bara.API.Scripts.Interfaces;
 using Bara.API.Utilities.ToolKit;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -153,6 +154,7 @@ namespace Bara.API.Scripts.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> GetChats(int Page = 1, int PageSize = 20)
         {
             try

@@ -102,6 +102,40 @@ namespace Bara.API.Scripts.Controllers
         }
 
         /// <summary>
+        /// Retrieves a paginated list of scripts associated with a producer's transactions.
+        /// </summary>
+        /// <param name="producerId">The unique identifier of the producer</param>
+        /// <param name="status">The transaction status filter ("initiated" or "completed")</param>
+        /// <param name="pageNumber">The page number for pagination</param>
+        /// <param name="pageSize">The number of items per page</param>
+        /// <returns>A paginated list of scripts with transaction details</returns>
+        [Authorize(Roles = "Producer, Admin")]
+        [HttpGet("scripts/producer/{producerId}/transactions/{status}/{pageNumber}/{pageSize}")]
+        public async Task<IActionResult> GetProducerScriptsByTransaction(Guid producerId, string status, int pageNumber, int pageSize)
+        {
+            try
+            {
+                var userId = GetAuthenticatedUserId();
+                if (userId != producerId && !User.IsInRole("Admin"))
+                {
+                    return Unauthorized(ResponseDetail<string>.Failed("You are not authorized to view these transactions", 401));
+                }
+
+                var response = await scriptService.GetProducerScriptsByTransaction(producerId, status, pageNumber, pageSize);
+                if (response.IsSuccess is false)
+                {
+                    return BadRequest(response);
+                }
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"An exception: {ex.GetType().Name} was thrown at {ex.Source} while fetching producer scripts...\nBase Exception: {ex.GetBaseException().GetType().Name}", $"Exception Code: {ex.HResult}");
+                return StatusCode(500, ResponseDetail<string>.Failed("Your request failed...", 500, "Error"));
+            }
+        }
+
+        /// <summary>
         /// Retrieves a paginated list of all available scripts on the platform.
         /// </summary>
         /// <param name="pageNumber">
@@ -185,13 +219,14 @@ namespace Bara.API.Scripts.Controllers
         /// or a 400/500 response if the script does not exist or an error occurs.
         /// </returns>
 
-        [Authorize(Roles = "Writer, Admin, Producer", Policy = "VerifiedOnly")]
+        [Authorize(Roles = "Writer, Admin, Producer")]
         [HttpGet("script/download/{scriptId}")]
         public async Task<IActionResult> Download(Guid scriptId)
         {
             try
             {
-                var result = await scriptService.DownloadScript(scriptId);
+                var userId = GetAuthenticatedUserId();
+                var result = await scriptService.DownloadScript(scriptId, userId);
 
                 if (!result.IsSuccess || result.Data == null)
                 {
@@ -282,19 +317,6 @@ namespace Bara.API.Scripts.Controllers
                 if (response.IsSuccess is false)
                 {
                     return BadRequest(response);
-                }
-
-                var userId = GetAuthenticatedUserId();
-                var script = response.Data;
-                
-                // Redact transaction details if user is not the owner or the active negotiator
-                if (script.WriterId != userId && script.ActiveNegotiatorId != userId)
-                {
-                    script.ActiveTransactionId = null;
-                    script.ActiveNegotiatorId = null;
-                    script.TransactionCreatedAt = null;
-                    script.TransactionExpiresAt = null;
-                    script.HasActiveTransaction = false; // Optional: Hide the flag too if desired, or keep it true but redacted
                 }
 
                 return Ok(response);

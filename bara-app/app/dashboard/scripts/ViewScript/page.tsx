@@ -7,6 +7,7 @@ import { getUserSession, getAccessToken } from "@/utils/tokenManager";
 import toast from "react-hot-toast";
 import dynamic from "next/dynamic";
 import DashboardNavbar from "@/components/DashboardNavbar";
+import BackButton from "@/components/BackButton";
 
 const ScriptPDFViewer = dynamic(() => import("@/components/ScriptPDFViewer"), {
   ssr: false,
@@ -72,6 +73,7 @@ function ViewScriptContent() {
   const loadPDF = async () => {
     if (!scriptId) return;
     try {
+      debugger;
       const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
       const token = getAccessToken();
       const response = await fetch(
@@ -213,6 +215,9 @@ function ViewScriptContent() {
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Header */}
         <div className="mb-6">
+          <div className="mb-4">
+            <BackButton />
+          </div>
           <h1 className="text-3xl font-bold text-[#22242A] mb-2">
             {script.title}
           </h1>
@@ -221,12 +226,14 @@ function ViewScriptContent() {
 
         {/* Action Buttons */}
         <div className="flex gap-4 mb-6">
-          <button
-            onClick={handleDownload}
-            className="bg-[#810306] text-white px-6 py-2.5 rounded-md hover:bg-red-800 transition-colors"
-          >
-            Download PDF
-          </button>
+          {(isOwner || script?.status === "Sold") && (
+            <button
+              onClick={handleDownload}
+              className="bg-[#810306] text-white px-6 py-2.5 rounded-md hover:bg-red-800 transition-colors"
+            >
+              Download PDF
+            </button>
+          )}
 
           {canEdit && (
             <>

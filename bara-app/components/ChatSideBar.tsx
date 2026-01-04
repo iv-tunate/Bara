@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import BackButton from "./BackButton";
 
 export default function ChatSidebar({
   chats,
@@ -13,7 +14,10 @@ export default function ChatSidebar({
 }) {
   return (
     <aside className="w-full md:w-[260px] border-r border-gray-200 p-4 overflow-y-auto">
-      <h2 className="text-[15px] font-semibold mb-4">Chats</h2>
+      <div className="flex items-center gap-2 mb-4">
+        <BackButton label="" className="!p-0" />
+        <h2 className="text-[15px] font-semibold">Chats</h2>
+      </div>
 
       <div className="flex flex-col gap-2">
         {chats.map((chat) => (

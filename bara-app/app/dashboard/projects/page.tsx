@@ -223,9 +223,12 @@ export default function ProjectsPage() {
         });
 
         if (createRes.success && createRes.data) {
+          const chatId = createRes.data;
+          console.log("[Projects Contact] Created chat ID:", chatId);
           toast.success("Chat opened", { id: toastId });
-          router.push(`/chat?id=${createRes.data.chatId}`);
+          router.push(`/chat?id=${chatId}`);
         } else {
+          console.error("[Projects Contact] Failed:", createRes);
           toast.error("Failed to open chat", { id: toastId });
         }
       }
@@ -244,7 +247,7 @@ export default function ProjectsPage() {
     }
     try {
       const response = await api.completeScriptTransaction(
-        userData.userId, // kept for compat if needed, but implementation ignores it or uses it? api.ts completeScriptTransaction signature is (producerId, scriptId, transactionId)
+        userData.userId,
         script.id,
         script.activeTransactionId
       );
@@ -359,7 +362,7 @@ export default function ProjectsPage() {
                   />
                 </div>
                 <h3 className="text-lg font-semibold text-[#22242A] mb-2">
-                  No scripts in {activeTab.toLowerCase()}
+                  No scripts {activeTab.toLowerCase()}
                 </h3>
               </div>
             ) : (
@@ -430,21 +433,21 @@ export default function ProjectsPage() {
                       {/* IN NEGOTIATION ACTIONS */}
                       {activeTab === "In Negotiation" && (
                         <>
-                          {userData?.userType === "Producer" ? (
+                          <button
+                            onClick={() =>
+                              router.push(`/writer/my-scripts/${script.id}`)
+                            }
+                            className="bg-[#810306] text-white px-8 py-2.5 rounded-sm hover:bg-red-800 text-base font-medium transition-colors whitespace-nowrap"
+                          >
+                            View Script
+                          </button>
+
+                          {userData?.userType === "Producer" && (
                             <button
                               onClick={() => handleConfirmScript(script)}
-                              className="bg-[#810306] text-white px-8 py-2.5 rounded-sm hover:bg-red-800 text-base font-medium transition-colors whitespace-nowrap"
+                              className="bg-green-600 text-white px-8 py-2.5 rounded-sm hover:bg-green-700 text-base font-medium transition-colors whitespace-nowrap"
                             >
                               Confirm script
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() =>
-                                router.push(`/writer/my-scripts/${script.id}`)
-                              }
-                              className="bg-[#810306] text-white px-8 py-2.5 rounded-sm hover:bg-red-800 text-base font-medium transition-colors whitespace-nowrap"
-                            >
-                              View Script
                             </button>
                           )}
 
@@ -470,11 +473,7 @@ export default function ProjectsPage() {
                         <>
                           <button
                             onClick={() =>
-                              router.push(
-                                userData?.userType === "Producer"
-                                  ? `/dashboard/scripts/${script.id}`
-                                  : `/writer/my-scripts/${script.id}`
-                              )
+                              router.push(`/writer/my-scripts/${script.id}`)
                             }
                             className="bg-[#810306] text-white px-8 py-2.5 rounded-sm hover:bg-red-800 text-base font-medium transition-colors whitespace-nowrap"
                           >

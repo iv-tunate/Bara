@@ -4,10 +4,12 @@ import Link from "next/link";
 
 interface PaymentSuccessModalProps {
   onClose: () => void;
+  scriptId: string;
 }
 
 export default function PaymentSuccessModal({
   onClose,
+  scriptId,
 }: PaymentSuccessModalProps) {
   return (
     <div className="fixed inset-0 z-50">
@@ -69,13 +71,13 @@ export default function PaymentSuccessModal({
           {/* buttons */}
           <div className="flex flex-col items-center gap-4">
             <Link
-              href="/dashboard/scripts/ViewSynopsis"
+              href={`/dashboard/scripts/ViewSynopsis?scriptId=${scriptId}`}
               className="bg-[#810306] hover:bg-[#1a0000] text-white py-3 px-28 rounded-md text-sm font-medium text-center"
             >
               View synopsis
             </Link>
             <Link
-              href="/dashboard/scripts/ViewScript"
+              href={`/dashboard/scripts/${scriptId}`}
               className="border border-[#810306] text-[#810306] py-3 px-30 rounded-md text-sm font-medium flex items-center justify-center gap-2 hover:bg-[#fff5f5]"
             >
               View script

@@ -2,8 +2,44 @@
 
 import DashboardNavbar from "@/components/DashboardNavbar";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
+import { api } from "@/utils/api";
 
-export default function ViewSynopsis() {
+import { Suspense } from "react";
+
+function ViewSynopsisContent() {
+  const searchParams = useSearchParams();
+  const scriptId = searchParams?.get("scriptId");
+  const [script, setScript] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadScript() {
+      if (scriptId) {
+        try {
+          const res = await api.getScriptById(scriptId);
+          if (res.success && res.data) {
+            setScript(res.data.data || res.data);
+          }
+        } catch (error) {
+          console.error(error);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+      }
+    }
+    loadScript();
+  }, [scriptId]);
+
+  if (loading) return <div className="p-10 text-center">Loading...</div>;
+  if (!script)
+    return (
+      <div className="p-10 text-center text-red-500">Script not found</div>
+    );
+
   return (
     <div className="h-screen flex flex-col bg-white text-[#22242A]">
       {/* Top Navigation */}
@@ -14,19 +50,19 @@ export default function ViewSynopsis() {
         {/* Title and Buttons */}
         <div className="flex justify-between items-start md:items-center flex-col md:flex-row">
           <h1 className="text-2xl font-semibold tracking-wide w-full md:w-auto">
-            Broken Promise
+            {script.title}
           </h1>
 
           <div className="flex gap-4 mt-4 md:mt-0">
             <Link
-              href="/dashboard/scripts/ViewScript"
+              href={`/dashboard/scripts/${scriptId}`}
               className="bg-[#810306] hover:bg-[#1a0000] text-white py-2 px-6 rounded-md text-sm font-medium"
             >
               View script
             </Link>
-            <button className="border border-[#810306] text-[#810306] py-2 px-4 rounded-md text-sm font-medium hover:bg-[#fff5f5]">
+            {/* <button className="border border-[#810306] text-[#810306] py-2 px-4 rounded-md text-sm font-medium hover:bg-[#fff5f5]">
               Message writer
-            </button>
+            </button> */}
           </div>
         </div>
 
@@ -34,44 +70,17 @@ export default function ViewSynopsis() {
         <div className="w-full max-w-[800px] mx-auto border border-[#ABADB2] rounded-md p-4 md:p-6 space-y-3 text-xs md:text-sm leading-relaxed">
           <h2 className="text-base font-semibold">Synopsis</h2>
 
-          <p>
-            In a bustling Nigerian city caught between tradition and modernity,
-            Amaka, a gifted but overlooked playwright, discovers a mysterious
-            journal buried beneath the floorboards of her late grandmother’s
-            home. Inside the worn pages lie vivid details of a secret resistance
-            movement that fought against colonial rule using underground theatre
-            performances to spread messages of freedom — and Amaka’s grandmother
-            was at the heart of it.
-          </p>
-
-          <p>
-            Haunted by her own creative struggles and a growing sense of
-            disconnection from her roots, Amaka becomes obsessed with finishing
-            the play her grandmother never completed. But as she stages scenes
-            inspired by the journal in her community theatre, strange things
-            begin to happen — actors black out mid-performance, forgotten
-            memories are triggered, and an anonymous sponsor demands the show go
-            on, no matter the cost.
-          </p>
-
-          <p>
-            Driven to uncover the full truth, Amaka’s investigation unravels a
-            generational cover-up that could change her family’s legacy and the
-            history of Nigerian arts forever. With the help of Obiora, a cynical
-            historian turned script editor, she must navigate betrayals,
-            spiritual awakenings, and the very real danger of uncovering secrets
-            powerful people want to keep buried.
-          </p>
-
-          <p>
-            “The Final Act” is a genre-blending script that fuses drama,
-            historical mystery, and a touch of the supernatural. It explores
-            identity, legacy, and the courage it takes to finish a story that
-            was never yours to begin with — and what it means when art is both
-            weapon and witness.
-          </p>
+          <div className="whitespace-pre-wrap">{script.synopsis}</div>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ViewSynopsisPage() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center">Loading...</div>}>
+      <ViewSynopsisContent />
+    </Suspense>
   );
 }

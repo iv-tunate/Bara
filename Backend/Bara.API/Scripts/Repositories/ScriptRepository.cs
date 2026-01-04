@@ -306,7 +306,9 @@ namespace Bara.API.Scripts.Repositories
                 }
 
                 var activeTransaction = await dbContext.ScriptTransactions
-                    .Where(t => t.ScriptId == script.Id && t.TransactionStatus == ScriptTransactionStatus.Initiated)
+                    .Where(t => t.ScriptId == script.Id && 
+                               (t.TransactionStatus == ScriptTransactionStatus.Initiated || 
+                                t.TransactionStatus == ScriptTransactionStatus.Completed))
                     .OrderByDescending(t => t.CreatedAt)
                     .FirstOrDefaultAsync();
 
@@ -459,7 +461,7 @@ namespace Bara.API.Scripts.Repositories
                                                     .ToListAsync();
 
                     var cacheOptions = new MemoryCacheEntryOptions()
-                       .SetAbsoluteExpiration(TimeSpan.FromMinutes(2)) // Reduced cache time for transaction accuracy
+                       .SetAbsoluteExpiration(TimeSpan.FromMinutes(2)) 
                        .SetSlidingExpiration(TimeSpan.FromMinutes(1));
                     memoryCache.Set(cacheKey, cachedScripts, cacheOptions);
                 }
@@ -490,17 +492,56 @@ namespace Bara.API.Scripts.Repositories
             }
         }
 
-        public async Task<ResponseDetail<GetScriptDTO>> DownloadScript(Guid scriptId)
+        public async Task<ResponseDetail<GetScriptDTO>> DownloadScript(Guid scriptId, Guid userId)
         {
             try
             {
+                logger.LogWarning($"[DownloadScript] Request for Script: {scriptId} by User with ID: {userId}");
+
                 var script = await dbContext.Scripts.FindAsync(scriptId);
                 if (script == null)
                 {
+                    logger.LogWarning("[DownloadScript] Script not found.");
                     return ResponseDetail<GetScriptDTO>.Failed($"Script with id {scriptId} doesn't exist", 404, "Not Found");
                 }
 
-                var (stream, contentType) = await cloudinary.DownloadAsync(script.Url);
+                var isOwner = script.WriterId == userId;
+                logger.LogWarning($"[DownloadScript] IsOwner: {isOwner} (Writer: {script.WriterId})");
+
+                var isAuthorizedBuyer = false;
+
+                if (!isOwner)
+                {
+                    var transaction = await dbContext.ScriptTransactions
+                        .Where(t => t.ScriptId == scriptId && 
+                                      t.ProducerId == userId && 
+                                      (t.TransactionStatus == ScriptTransactionStatus.Initiated || 
+                                       t.TransactionStatus == ScriptTransactionStatus.Completed))
+                        .FirstOrDefaultAsync();
+                    
+                    if (transaction != null) {
+                        isAuthorizedBuyer = true;
+                        logger.LogWarning($"[DownloadScript] Authorized via Transaction: {transaction.Id}, Status: {transaction.TransactionStatus}");
+                    } else {
+                        logger.LogWarning("[DownloadScript] No valid transaction found for this user.");
+                    }
+                }
+
+                if (!isOwner && !isAuthorizedBuyer)
+                {
+                    logger.LogWarning("[DownloadScript] Access DENIED.");
+                    return ResponseDetail<GetScriptDTO>.Failed("You are not authorized to download this script", 403, "Forbidden");
+                }
+
+                var downloadUrl = script.Url.Replace("http://", "https://");
+                var (stream, contentType) = await cloudinary.DownloadAsync(downloadUrl);
+                
+                if (stream == null)
+                {
+                    logger.LogError($"[DownloadScript] Cloudinary download failed for URL: {downloadUrl}");
+                    return ResponseDetail<GetScriptDTO>.Failed("Failed to download script file from storage", 500, "Storage Error");
+                }
+
                 var fileBytes = stream.ToArray();
 
                 return ResponseDetail<GetScriptDTO>.Successful(new GetScriptDTO
@@ -1241,7 +1282,7 @@ namespace Bara.API.Scripts.Repositories
                     return;
                 }
 
-                var scriptResult = await DownloadScript(scriptId);
+                var scriptResult = await DownloadScript(scriptId, producerId);
                 if (!scriptResult.IsSuccess || scriptResult.Data == null)
                 {
                     logger.LogError("Failed to download script for email delivery - CorrelationId: {CorrelationId}, ScriptId: {ScriptId}",

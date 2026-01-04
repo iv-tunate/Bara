@@ -265,7 +265,10 @@ export const api = {
 
   getAllScripts: async (pageNumber: number = 1, pageSize: number = 10) => {
     const response = await apiRequest(
-      `${BASE_URL}${API_ENDPOINTS.SCRIPTS(pageNumber, pageSize)}`,
+      `${BASE_URL}${API_ENDPOINTS.SCRIPTS(
+        pageNumber,
+        pageSize
+      )}?t=${Date.now()}`,
       {
         method: "GET",
         requireAuth: false,
@@ -369,7 +372,6 @@ export const api = {
   },
 
   addScript: async (formData: FormData, writerId: string) => {
-    debugger;
     return apiRequest(`${BASE_URL}${API_ENDPOINTS.ADD_SCRIPT(writerId)}`, {
       method: "POST",
       body: formData,
@@ -438,7 +440,6 @@ export const api = {
     scriptId: string,
     writerId: string
   ) {
-    debugger;
     return apiRequest(
       `${BASE_URL}${API_ENDPOINTS.INITIATE_SCRIPT_TRANSACTION()}`,
       {

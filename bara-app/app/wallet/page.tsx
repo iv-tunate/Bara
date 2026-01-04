@@ -12,6 +12,8 @@ import { Transaction } from "@/models/transaction";
 import PaymentLogo from "@/components/PaymentLogo";
 import { usePageGuard } from "@/app/hooks/usepageguard";
 
+import { useWallet } from "@/context/WalletContext";
+
 interface WalletData {
   availableBalance: number;
   totalBalance: number;
@@ -22,9 +24,11 @@ interface WalletData {
 export default function WalletPage() {
   const router = useRouter();
   const [isWithdrawModalOpen, setWithdrawModalOpen] = useState(false);
-  const [walletData, setWalletData] = useState<WalletData | null>(null);
+  // Use global wallet context
+  const { walletData, refreshWallet, isLoading: walletLoading } = useWallet();
+
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Keep for transactions
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -34,7 +38,11 @@ export default function WalletPage() {
   usePageGuard();
 
   useEffect(() => {
-    const fetchWalletData = async () => {
+    refreshWallet();
+  }, [refreshWallet]);
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
       if (!userSession?.userId) {
         setError("User session not found. Please log in.");
         setLoading(false);
@@ -44,14 +52,6 @@ export default function WalletPage() {
       try {
         setLoading(true);
 
-        const walletResponse = await api.getWalletBalance(userSession.userId);
-        if (walletResponse.success && walletResponse.data) {
-          setWalletData(walletResponse.data);
-        } else {
-          setError(walletResponse.message || "Failed to fetch wallet balance");
-        }
-
-        // debugger;
         const transactionsResponse = await api.getUserTransactions(
           userSession.userId,
           currentPage,
@@ -61,7 +61,6 @@ export default function WalletPage() {
         if (transactionsResponse.success && transactionsResponse.data) {
           const responseData = transactionsResponse.data;
 
-          // Handle nested paginated response (response.data.data) or direct array
           const transactionsList = Array.isArray(responseData)
             ? responseData
             : responseData.data && Array.isArray(responseData.data)
@@ -86,7 +85,7 @@ export default function WalletPage() {
       }
     };
 
-    fetchWalletData();
+    fetchTransactions();
   }, [userSession?.userId, currentPage]);
 
   const formatCurrency = (amount: number, symbol: string = "₦") => {

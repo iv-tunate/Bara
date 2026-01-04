@@ -30,6 +30,9 @@ export interface Script {
   url: string;
   path: string;
   uploadedOn: string;
+  activeNegotiatorId?: string;
+  hasActiveTransaction?: boolean;
+  transactionExpiresAt?: string;
 }
 
 export const ownershipLabels: Record<IPDealType, string> = {

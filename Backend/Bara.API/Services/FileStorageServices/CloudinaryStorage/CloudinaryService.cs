@@ -55,6 +55,7 @@ namespace Services.FileStorageServices.CloudinaryStorage
         {
             try
             {
+                logger.LogWarning($"[CloudinaryService] DownloadAsync called with: {urlOrPublicId}");
                 var cloudinary = new Cloudinary(new Account(secrets.CloudinaryName, secrets.CloudinaryAPIKEY, secrets.CloudinaryAPISecret));
 
                 string resourceUrl;
@@ -62,19 +63,22 @@ namespace Services.FileStorageServices.CloudinaryStorage
                 if (urlOrPublicId.StartsWith("http://") || urlOrPublicId.StartsWith("https://"))
                 {
                     resourceUrl = urlOrPublicId;
+                    logger.LogWarning("[CloudinaryService] Using provided full URL.");
                 }
                 else
                 {
                     resourceUrl = cloudinary.Api.Url
-                        .ResourceType("raw")
-                        .Action("upload")
-                        .BuildUrl(urlOrPublicId);
+                                .ResourceType("raw")
+                                .Action("upload")
+                                .Secure(true)
+                                .BuildUrl(urlOrPublicId);
+                    logger.LogWarning($"[CloudinaryService] Generated Signed URL: {resourceUrl}");
                 }
 
                 var response = await integrationService.GetRequest(resourceUrl);
                 if (!response.IsSuccessStatusCode)
                 {
-                    logger.LogWarning($"Cloudinary download failed with status {response.StatusCode} for {resourceUrl}");
+                    logger.LogWarning($"Cloudinary download failed with status {response.StatusCode} for {resourceUrl}. Content: {await response.Content.ReadAsStringAsync()}");
                     return default;
                 }
                 var stream = await response.Content.ReadAsStreamAsync();

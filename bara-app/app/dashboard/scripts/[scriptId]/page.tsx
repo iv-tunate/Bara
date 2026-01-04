@@ -13,6 +13,7 @@ import { usePageGuard } from "@/app/hooks/usepageguard";
 import { useScriptContext } from "@/context/ScriptContext";
 import { convertToNaira } from "@/app/hooks/priceconverter";
 import { toast } from "react-hot-toast";
+import { useWallet } from "@/context/WalletContext";
 
 export default function ScriptDetailPage() {
   const router = useRouter();
@@ -20,15 +21,16 @@ export default function ScriptDetailPage() {
   const scriptIdParam = params?.scriptId as string;
 
   const { getScript, cacheScript } = useScriptContext();
+  const { walletData, refreshWallet } = useWallet();
   const [script, setScript] = useState<Script | null>(null);
   const [writerProfile, setWriterProfile] = useState<any>(null);
   const [copied, setCopied] = useState(false);
   const [agreed, setAgreed] = useState(false);
-  const [walletBalance, setWalletBalance] = useState(0);
-  const [walletCurrency, setWalletCurrency] = useState("NAIRA");
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [showPaymentSuccessModal, setShowPaymentSuccessModal] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [chatLoading, setChatLoading] = useState(false);
   const [error, setError] = useState("");
 
   const session = getUserSession();
@@ -88,6 +90,9 @@ export default function ScriptDetailPage() {
             url: sData.url,
             path: sData.path || "",
             uploadedOn: sData.uploadedOn,
+            activeNegotiatorId: sData.activeNegotiatorId,
+            hasActiveTransaction: sData.hasActiveTransaction,
+            transactionExpiresAt: sData.transactionExpiresAt,
           };
 
           // console.log("Mapped Script:", mappedScript);
@@ -96,25 +101,14 @@ export default function ScriptDetailPage() {
 
           if (sData.writerId) {
             const writerResp = await api.getWriterProfile(sData.writerId);
-            // console.log("Writer API Response:", writerResp);
             if (writerResp.success && writerResp.data) {
-              // Backend returns ResponseDetail wrapper, so actual data is nested
               const writerData = writerResp.data.data || writerResp.data;
-              // console.log("Writer Data:", writerData);
               setWriterProfile(writerData);
             }
           }
         } else if (!cachedScript) {
           // console.log("Script not found or unsuccessful response");
           setError("Script not found");
-        }
-
-        if (session?.userId) {
-          const walletResponse = await api.getWalletBalance(session.userId);
-          if (walletResponse.success && walletResponse.data) {
-            setWalletBalance(walletResponse.data.availableBalance || 0);
-            setWalletCurrency(walletResponse.data.currency || "NAIRA");
-          }
         }
       } catch (error) {
         console.error("Error loading data:", error);
@@ -129,6 +123,9 @@ export default function ScriptDetailPage() {
     loadData();
   }, [scriptIdParam, session?.userId]);
 
+  const walletBalance = walletData?.availableBalance || 0;
+  const walletCurrency = walletData?.currencySymbol || "NAIRA";
+
   const balanceInNaira = convertToNaira(walletBalance, walletCurrency);
   const priceInNaira = script
     ? convertToNaira(script.price, script.currency)
@@ -139,6 +136,72 @@ export default function ScriptDetailPage() {
     await navigator.clipboard.writeText(scriptLink);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const isAuthorized =
+    session?.userId &&
+    script &&
+    (script.activeNegotiatorId === session.userId ||
+      script.writerId === session.userId);
+
+  const handleContact = async () => {
+    if (chatLoading || !session || !script) return;
+    setChatLoading(true);
+    const toastId = toast.loading("Opening chat...");
+
+    try {
+      const isWriter = session.userType === "Writer";
+      const writerId = isWriter ? session.userId : script.writerId;
+      const negotiatorId = isWriter
+        ? script.activeNegotiatorId
+        : session.userId;
+
+      if (!writerId || !negotiatorId) {
+        toast.error("Cannot start chat: Missing participants", { id: toastId });
+        return;
+      }
+
+      const chatsRes = await api.getChats(session.userId);
+      let existingChatId = null;
+
+      if (chatsRes.success && chatsRes.data) {
+        const targetOtherId = isWriter ? negotiatorId : writerId;
+        const existingChat = chatsRes.data.find(
+          (c: any) =>
+            c.scriptId === script.id && c.otherUserId === targetOtherId
+        );
+        if (existingChat) existingChatId = existingChat.chatId;
+      }
+
+      if (existingChatId) {
+        toast.success("Opening conversation", { id: toastId });
+        router.push(`/chat?id=${existingChatId}`);
+      } else {
+        const createRes = await api.createChat({
+          scriptId: script.id,
+          producerId: negotiatorId!,
+          writerId: writerId!,
+          scriptTitle: script.title,
+          producerName: session.name || "Producer",
+          writerName: script.writerName || "Writer",
+        });
+
+        if (createRes.success && createRes.data) {
+          const chatId = createRes.data;
+          console.log("[Contact] Created chat ID:", chatId);
+          toast.success("Chat opened", { id: toastId });
+          router.push(`/chat?id=${chatId}`);
+        } else {
+          console.error("[Contact] Failed to create chat:", createRes);
+          toast.error("Failed to open chat", { id: toastId });
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("An error occurred", { id: toastId });
+    } finally {
+      setChatLoading(false);
+    }
   };
 
   const handlePayment = async () => {
@@ -156,6 +219,7 @@ export default function ScriptDetailPage() {
         );
 
         if (response.success) {
+          await refreshWallet();
           setShowPaymentSuccessModal(true);
         } else {
           setError(response.message || "Failed to process payment");
@@ -223,12 +287,34 @@ export default function ScriptDetailPage() {
             {script.price?.toLocaleString() ?? "0"}
           </p>
 
-          <button className="w-full bg-[#FFEDEE] text-[#810306] text-sm font-semibold py-3 rounded-md">
-            <span className="flex items-center gap-2 justify-start pl-6">
-              <Image src="/heart.png" alt="Save" width={16} height={16} />
-              Save this script
-            </span>
-          </button>
+          {!isAuthorized ? (
+            <button className="w-full bg-[#FFEDEE] text-[#810306] text-sm font-semibold py-3 rounded-md">
+              <span className="flex items-center gap-2 justify-start pl-6">
+                <Image src="/heart.png" alt="Save" width={16} height={16} />
+                Save this script
+              </span>
+            </button>
+          ) : (
+            <div className="space-y-3">
+              <button
+                onClick={() =>
+                  router.push(
+                    `/dashboard/scripts/ViewScript?scriptId=${script.id}`
+                  )
+                }
+                className="w-full bg-[#810306] text-white py-3 rounded-md text-sm font-medium hover:bg-[#6e0305] transition"
+              >
+                View Content
+              </button>
+              <button
+                onClick={handleContact}
+                disabled={chatLoading}
+                className="w-full border border-[#810306] text-[#810306] py-3 rounded-md text-sm font-medium hover:bg-gray-50 transition"
+              >
+                {chatLoading ? "Opening..." : "Message Writer"}
+              </button>
+            </div>
+          )}
 
           <hr className="border-t border-[#ABADB2] my-2" />
 
@@ -293,71 +379,72 @@ export default function ScriptDetailPage() {
 
             <hr className="border-t border-[#E5E7EB]" />
 
-            {/* Payment methods */}
-            <div className="space-y-3">
-              <h3 className="font-semibold text-sm text-[#22242A]">
-                Payment method
-              </h3>
+            {!isAuthorized && (
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm text-[#22242A]">
+                  Payment method
+                </h3>
 
-              {/* Wallet Option - Now the only option and non-selectable */}
-              <div className="flex items-center justify-between rounded-md py-3 px-3 bg-[#F5F5F5] border border-[#E5E7EB]">
-                <div className="flex items-center gap-3">
-                  <Image
-                    src="/wallet.png"
-                    alt="Wallet"
-                    width={24}
-                    height={24}
-                  />
-                  <div className="flex flex-col leading-tight">
-                    <span className="text-sm font-medium text-[#333740]">
-                      ₦{walletBalance.toLocaleString()}
-                    </span>
-                    <span className="text-[11px] text-[#858990]">
-                      Available Balance
-                    </span>
+                {/* Wallet Option - Now the only option and non-selectable */}
+                <div className="flex items-center justify-between rounded-md py-3 px-3 bg-[#F5F5F5] border border-[#E5E7EB]">
+                  <div className="flex items-center gap-3">
+                    <Image
+                      src="/wallet.png"
+                      alt="Wallet"
+                      width={24}
+                      height={24}
+                    />
+                    <div className="flex flex-col leading-tight">
+                      <span className="text-sm font-medium text-[#333740]">
+                        ₦{walletBalance.toLocaleString()}
+                      </span>
+                      <span className="text-[11px] text-[#858990]">
+                        Available Balance
+                      </span>
+                    </div>
                   </div>
+                  {/* No radio button here as per requirements */}
                 </div>
-                {/* No radio button here as per requirements */}
-              </div>
 
-              {/* Error Display */}
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm">
-                  {error}
+                {/* Error Display */}
+                {error && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm">
+                    {error}
+                  </div>
+                )}
+
+                {/* NDA Agreement */}
+                <div className="flex items-start gap-2 mt-2">
+                  <input
+                    type="checkbox"
+                    className="mt-1 accent-[#800000]"
+                    checked={agreed}
+                    onChange={(e) => setAgreed(e.target.checked)}
+                  />
+                  <p className="text-[11px] leading-snug text-[#333740]">
+                    By checking this box, you agree to the Non‑Disclosure
+                    Agreement, committing not to share, misuse, or reproduce the
+                    information in this synopsis. Your payment will be securely
+                    held by Bara. You have 14 days from today to review the
+                    script, engage with the writer, and confirm the order.
+                  </p>
                 </div>
-              )}
 
-              {/* NDA Agreement */}
-              <div className="flex items-start gap-2 mt-2">
-                <input
-                  type="checkbox"
-                  className="mt-1 accent-[#800000]"
-                  checked={agreed}
-                  onChange={(e) => setAgreed(e.target.checked)}
-                />
-                <p className="text-[11px] leading-snug text-[#333740]">
-                  By checking this box, you agree to the Non‑Disclosure
-                  Agreement, committing not to share, misuse, or reproduce the
-                  information in this synopsis. Your payment will be securely
-                  held by Bara. You have 14 days from today to review the
-                  script, engage with the writer, and confirm the order.
-                </p>
+                {/* Payment Button */}
+                <button
+                  type="button"
+                  onClick={handlePayment}
+                  disabled={isProcessingPayment || !agreed}
+                  className="w-full bg-[#800000] text-white py-3 rounded-md text-sm font-medium hover:bg-[#4d0000] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isProcessingPayment
+                    ? "Processing..."
+                    : isInsufficient
+                    ? "Top Up Wallet"
+                    : "Make Payment"}
+                </button>
               </div>
-
-              {/* Payment Button */}
-              <button
-                type="button"
-                onClick={handlePayment}
-                disabled={isProcessingPayment || !agreed}
-                className="w-full bg-[#800000] text-white py-3 rounded-md text-sm font-medium hover:bg-[#4d0000] transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isProcessingPayment
-                  ? "Processing..."
-                  : isInsufficient
-                  ? "Top Up Wallet"
-                  : "Make Payment"}
-              </button>
-            </div>
+            )}
           </div>
         </div>
 
@@ -389,8 +476,9 @@ export default function ScriptDetailPage() {
       </div>
 
       {/* Payment success modal */}
-      {showPaymentSuccessModal && (
+      {showPaymentSuccessModal && script && (
         <PaymentSuccessModal
+          scriptId={script.id}
           onClose={() => setShowPaymentSuccessModal(false)}
         />
       )}
