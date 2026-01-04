@@ -60,12 +60,12 @@ function ViewScriptContent() {
         return;
       }
       setScript(response.data.data);
+      setLoading(false);
 
-      await loadPDF();
+      loadPDF();
     } catch (error) {
       console.error("Failed to fetch script:", error);
       toast.error("Failed to load script");
-    } finally {
       setLoading(false);
     }
   };
@@ -221,7 +221,7 @@ function ViewScriptContent() {
           <h1 className="text-3xl font-bold text-[#22242A] mb-2">
             {script.title}
           </h1>
-          <p className="text-gray-600">{script.logline || script.synopsis}</p>
+          <p className="text-gray-600">{script.synopsis}</p>
         </div>
 
         {/* Action Buttons */}

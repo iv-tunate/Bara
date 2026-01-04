@@ -533,12 +533,11 @@ namespace Bara.API.Scripts.Repositories
                     return ResponseDetail<GetScriptDTO>.Failed("You are not authorized to download this script", 403, "Forbidden");
                 }
 
-                var downloadUrl = script.Url.Replace("http://", "https://");
-                var (stream, contentType) = await cloudinary.DownloadAsync(downloadUrl);
+                var (stream, contentType) = await cloudinary.DownloadAsync(script.Path);
                 
                 if (stream == null)
                 {
-                    logger.LogError($"[DownloadScript] Cloudinary download failed for URL: {downloadUrl}");
+                    logger.LogError($"[DownloadScript] Cloudinary download failed for PublicId: {script.Path}");
                     return ResponseDetail<GetScriptDTO>.Failed("Failed to download script file from storage", 500, "Storage Error");
                 }
 

@@ -68,10 +68,13 @@ namespace Services.FileStorageServices.CloudinaryStorage
                 else
                 {
                     resourceUrl = cloudinary.Api.Url
-                                .ResourceType("raw")
-                                .Action("upload")
-                                .Secure(true)
-                                .BuildUrl(urlOrPublicId);
+                        .ResourceType("raw")
+                        .Action("upload")
+                        //These two things no dey necessary tbf but woo... i sha leave am there
+                        .Transform(new Transformation().Flags("attachment"))
+                        .Signed(true)
+                        .Secure(true)
+                        .BuildUrl(urlOrPublicId);
                     logger.LogWarning($"[CloudinaryService] Generated Signed URL: {resourceUrl}");
                 }
 
@@ -138,7 +141,7 @@ namespace Services.FileStorageServices.CloudinaryStorage
                 var uploadParams = new RawUploadParams
                 {
                     File = new FileDescription(file.FileName, file.OpenReadStream()),
-                    Folder = scriptFolder
+                    Folder = scriptFolder,
                 };
 
                 var uploadResult = await cloudinary.UploadAsync(uploadParams);
