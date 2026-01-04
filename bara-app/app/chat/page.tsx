@@ -13,8 +13,8 @@ import { useSignalR } from "@/context/SignalRContext";
 import toast from "react-hot-toast";
 
 interface ChatSession {
-  id: string; // ChatId
-  name: string; // OtherUserName
+  id: string; // this is the chat ID...
+  name: string; 
   avatar: string;
   lastMessage: string;
   unreadCount: number;
@@ -56,9 +56,10 @@ function ChatContent() {
 
     const loadChats = async () => {
       try {
+        debugger;
         const response = await api.getChats(session.userId);
         if (response.success && response.data) {
-          const mappedChats: ChatSession[] = response.data.map((c: any) => ({
+          const mappedChats: ChatSession[] = response.data.data.map((c: any) => ({
             id: c.chatId,
             name: c.otherUserName || "Unknown User",
             avatar: "/default-avatar.png",
@@ -91,11 +92,12 @@ function ChatContent() {
   useEffect(() => {
     if (!selectedChatId || !currentUserId) return;
 
+    debugger;
     const fetchMessages = async () => {
       try {
         const response = await api.getChatHistory(selectedChatId);
         if (response.success && response.data) {
-          const mappedMessages: UIMessage[] = response.data.map((m: any) => ({
+          const mappedMessages: UIMessage[] = response.data.data.map((m: any) => ({
             id: m.messageId || m.id || Math.random(),
             text: m.content,
             time: new Date(m.sentAt).toLocaleTimeString([], {
@@ -194,6 +196,7 @@ function ChatContent() {
     };
   }, [connection, selectedChatId]);
 
+  
   const handleSendMessage = async (text: string) => {
     if (!text.trim() || !selectedChatId) return;
 
@@ -209,6 +212,7 @@ function ChatContent() {
     };
     setMessages((prev) => [...prev, optimisticAuth]);
 
+    debugger;
     try {
       const response = await api.sendMessage(selectedChatId, text);
       if (!response.success) {

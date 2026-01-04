@@ -46,12 +46,7 @@ export default function MyScriptDetailPage() {
         if (scriptResponse.success && scriptResponse.data) {
           const sData = scriptResponse.data.data || scriptResponse.data;
 
-          // console.group("Script Authorization Check");
-          // console.log("Script ID:", sData.id);
-          // console.log("Current User ID:", userId);
-          // console.log("Script Writer ID:", sData.writerId);
-          // console.log("Script Active Negotiator ID:", sData.activeNegotiatorId);
-          // console.groupEnd();
+       
 
           const isOwner =
             sData.writerId &&
@@ -131,9 +126,13 @@ export default function MyScriptDetailPage() {
       let existingChatId = null;
 
       if (chatsRes.success && chatsRes.data) {
-        const existingChat = chatsRes.data.find(
+        const chatsList = Array.isArray(chatsRes.data)
+          ? chatsRes.data
+          : chatsRes.data.data || [];
+        const targetOtherId = script.writerId; // In this context, we are contacting the writer
+        const existingChat = chatsList.find(
           (c: any) =>
-            c.scriptId === script.id && c.otherUserId === script.writerId
+            c.scriptId === script.id && c.otherUserId === targetOtherId
         );
         if (existingChat) existingChatId = existingChat.chatId;
       }
@@ -151,10 +150,13 @@ export default function MyScriptDetailPage() {
           writerName: script.writerName || "Writer",
         });
         if (createRes.success && createRes.data) {
-          const chatId = createRes.data;
-          console.log("[Writer Contact] Created chat ID:", chatId);
+          const chatId =
+            createRes.data.data || createRes.data.chatId || createRes.data;
+          const finalChatId = typeof chatId === "object" ? chatId.data : chatId;
+
+          console.log("[Writer Contact] Created chat ID:", finalChatId);
           toast.dismiss(toastId);
-          router.push(`/chat?id=${chatId}`);
+          router.push(`/chat?id=${finalChatId}`);
         } else {
           console.error("[Writer Contact] Failed:", createRes);
           toast.error("Failed to open chat", { id: toastId });
@@ -205,7 +207,7 @@ export default function MyScriptDetailPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-white to-gray-50">
+    <main className="min-h-screen bg-linear-to-br from-white to-gray-50">
       <DashboardNavbar />
 
       <div className="max-w-6xl mx-auto px-4 py-8">
@@ -266,9 +268,9 @@ export default function MyScriptDetailPage() {
 
         {/* Warning Message */}
         {isOwner && (
-          <div className="mb-6 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl p-4 flex gap-3 shadow-sm">
+          <div className="mb-6 bg-linear-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl p-4 flex gap-3 shadow-sm">
             <svg
-              className="w-6 h-6 text-yellow-600 flex-shrink-0"
+              className="w-6 h-6 text-yellow-600 shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -305,7 +307,7 @@ export default function MyScriptDetailPage() {
               <button
                 onClick={handleViewContent}
                 disabled={downloading}
-                className="w-full bg-gradient-to-r from-[#800000] to-[#660000] hover:from-[#660000] hover:to-[#4d0000] text-white py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-linear-to-r from-[#800000] to-[#660000] hover:from-[#660000] hover:to-[#4d0000] text-white py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {downloading ? (
                   <>
@@ -488,7 +490,7 @@ export default function MyScriptDetailPage() {
                   {script.genre.map((g) => (
                     <span
                       key={g.id}
-                      className="px-4 py-2 bg-gradient-to-r from-red-50 to-pink-50 text-[#800000] rounded-full text-sm font-medium border border-red-200"
+                      className="px-4 py-2 bg-linear-to-r from-red-50 to-pink-50 text-[#800000] rounded-full text-sm font-medium border border-red-200"
                     >
                       {g.name}
                     </span>

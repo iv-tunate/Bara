@@ -12,7 +12,7 @@ namespace Bara.API.Scripts.Controllers
     /// </summary>
     [ApiController]
     [Route("api/chat")]
-    // [Authorize(Policy = "VerifiedOnly")]
+    [Authorize(Policy = "VerifiedOnly", Roles ="Writer, Producer, Admin")]
     public class ChatsController : ControllerBase
     {
         private readonly IChatService chatService;
@@ -184,10 +184,19 @@ namespace Bara.API.Scripts.Controllers
         private Guid GetAuthenticatedUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim))
+            {
+                userIdClaim = User.FindFirst("UserId")?.Value;
+            }
+
             if (Guid.TryParse(userIdClaim, out var userId))
             {
                 return userId;
             }
+            
+            var claims = string.Join(", ", User.Claims.Select(c => $"{c.Type}={c.Value}"));
+            logger.LogError($"[AuthError] IsAuthenticated: {User.Identity?.IsAuthenticated}. Claims: {claims}");
+
             throw new UnauthorizedAccessException("Invalid user ID in token");
         }
     }

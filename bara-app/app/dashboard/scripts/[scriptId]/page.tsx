@@ -165,8 +165,11 @@ export default function ScriptDetailPage() {
       let existingChatId = null;
 
       if (chatsRes.success && chatsRes.data) {
+        const chatsList = Array.isArray(chatsRes.data)
+          ? chatsRes.data
+          : chatsRes.data.data || [];
         const targetOtherId = isWriter ? negotiatorId : writerId;
-        const existingChat = chatsRes.data.find(
+        const existingChat = chatsList.find(
           (c: any) =>
             c.scriptId === script.id && c.otherUserId === targetOtherId
         );
@@ -187,10 +190,15 @@ export default function ScriptDetailPage() {
         });
 
         if (createRes.success && createRes.data) {
-          const chatId = createRes.data;
-          console.log("[Contact] Created chat ID:", chatId);
+          // The API returns ResponseDetail nested in data
+          const chatId =
+            createRes.data.data || createRes.data.chatId || createRes.data.data;
+          // Ensure it's a string, not object
+          const finalChatId = typeof chatId === "object" ? chatId.data : chatId;
+
+          console.log("[Contact] Created chat ID:", finalChatId);
           toast.success("Chat opened", { id: toastId });
-          router.push(`/chat?id=${chatId}`);
+          router.push(`/chat?id=${finalChatId}`);
         } else {
           console.error("[Contact] Failed to create chat:", createRes);
           toast.error("Failed to open chat", { id: toastId });

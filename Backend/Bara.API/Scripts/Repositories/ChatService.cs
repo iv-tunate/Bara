@@ -114,7 +114,7 @@ namespace Bara.API.Scripts.Repositories
                     UserId = userId,
                     SenderName = $"{sender.FirstName} {sender.LastName}",
                     Content = sanitizedContent,
-                    AttachmentUrl = sanitizedUrl,
+                    AttachmentUrl = sanitizedUrl ?? " ",
                     SentAt = DateTimeOffset.UtcNow,
                     IsRead = false
                 };

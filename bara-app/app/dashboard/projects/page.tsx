@@ -185,8 +185,11 @@ export default function ProjectsPage() {
       let existingChatId = null;
 
       if (chatsRes.success && chatsRes.data) {
+        const chatsList = Array.isArray(chatsRes.data)
+          ? chatsRes.data
+          : chatsRes.data.data || [];
         const targetOtherId = isWriter ? negotiatorId : writerId;
-        const existingChat = chatsRes.data.find(
+        const existingChat = chatsList.find(
           (c: any) =>
             c.scriptId === script.id && c.otherUserId === targetOtherId
         );
@@ -223,10 +226,13 @@ export default function ProjectsPage() {
         });
 
         if (createRes.success && createRes.data) {
-          const chatId = createRes.data;
-          console.log("[Projects Contact] Created chat ID:", chatId);
+          const chatId =
+            createRes.data.data || createRes.data.chatId || createRes.data;
+          const finalChatId = typeof chatId === "object" ? chatId.data : chatId;
+
+          console.log("[Projects Contact] Created chat ID:", finalChatId);
           toast.success("Chat opened", { id: toastId });
-          router.push(`/chat?id=${chatId}`);
+          router.push(`/chat?id=${finalChatId}`);
         } else {
           console.error("[Projects Contact] Failed:", createRes);
           toast.error("Failed to open chat", { id: toastId });
@@ -373,7 +379,7 @@ export default function ProjectsPage() {
                     className="border bg-[#F5F5F5] border-[#ABADB2] rounded-md py-4 px-3 md:p-5 flex flex-col md:flex-row md:gap-6 items-start md:items-stretch justify-between mb-6"
                   >
                     {/* Image */}
-                    <div className="relative w-full md:w-72 h-56 md:h-64 rounded-md overflow-hidden flex-shrink-0">
+                    <div className="relative w-full md:w-72 h-56 md:h-64 rounded-md overflow-hidden shrink-0">
                       <Image
                         src={script.imageUrl || "/projectimg.png"}
                         alt="script image"
@@ -387,16 +393,16 @@ export default function ProjectsPage() {
 
                     {/* Content */}
                     <div className="flex-1 space-y-3">
-                      <h2 className="text-xl font-semibold text-[#22242A]">
+                      <p className="text-sm font-medium text-red-800 line-clamp-2">
                         {script.title}
-                      </h2>
+                      </p>
 
                       <p className="text-[#333740] leading-relaxed text-sm">
                         {script.description}
                       </p>
 
                       <div className="pt-5 border-t border-gray-300">
-                        <p className="text-gray-800 text-lg font-bold">
+                        <p className="text-sm font-medium text-red-800 line-clamp-2">
                           {script.price}
                         </p>
                       </div>
@@ -429,7 +435,7 @@ export default function ProjectsPage() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex flex-col gap-2 w-full md:w-auto flex-shrink-0 mt-4 md:mt-0 ">
+                    <div className="flex flex-col gap-2 w-full md:w-auto shrink-0 mt-4 md:mt-0 ">
                       {/* IN NEGOTIATION ACTIONS */}
                       {activeTab === "In Negotiation" && (
                         <>
@@ -461,7 +467,7 @@ export default function ProjectsPage() {
 
                           <button
                             onClick={() => handleCancelTransaction(script)}
-                            className="text-gray-500 hover:text-red-600 text-base text-center border border-[#810306] px-8 py-2.5 rounded-sm bg-red-50 hover:bg-white hover:border-gray-500 text-red-800 font-medium transition-colors disabled:opacity-50 whitespace-nowrap"
+                            className="text-gray-500 hover:text-red-600 text-base text-center border border-[#810306] px-8 py-2.5 rounded-sm bg-red-50 hover:bg-white hover:border-gray-500 font-medium transition-colors disabled:opacity-50 whitespace-nowrap"
                           >
                             Cancel
                           </button>
