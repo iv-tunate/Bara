@@ -46,7 +46,7 @@ export default function ProjectsPage() {
     onConfirm: () => {},
   });
 
-   // const { walletData } = useWallet();
+  // const { walletData } = useWallet();
   const [userData, setUserData] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("");
   const [loading, setLoading] = useState(true);
@@ -516,13 +516,6 @@ export default function ProjectsPage() {
                             className="bg-[#810306] text-white px-8 py-2.5 rounded-sm hover:bg-red-800 text-base font-medium transition-colors whitespace-nowrap"
                           >
                             View Script
-                          </button>
-                          <button
-                            onClick={() => handleContact(script)}
-                            disabled={chatLoading}
-                            className="bg-white border border-[#810306] text-[#810306] px-8 py-2.5 rounded-sm hover:bg-red-50 text-base font-medium transition-colors disabled:opacity-50 whitespace-nowrap"
-                          >
-                            Contact
                           </button>
                         </>
                       )}

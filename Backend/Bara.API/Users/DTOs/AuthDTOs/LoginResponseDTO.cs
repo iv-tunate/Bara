@@ -35,6 +35,7 @@
         public bool IsVerified { get; set; }
         public string VerificationStatus { get; set; }
         public string Role { get; set; }
+        public string ProfileImage { get; set; }
     }
 
 }

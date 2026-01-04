@@ -7,8 +7,9 @@ import { Suspense } from "react";
 function ScriptReaderContent() {
   const searchParams = useSearchParams();
   const url = searchParams.get("url") || undefined;
+  const title = searchParams.get("title") || undefined;
 
-  return <ScriptPDFLayout url={url} />;
+  return <ScriptPDFLayout url={url} title={title} />;
 }
 
 export default function Page() {

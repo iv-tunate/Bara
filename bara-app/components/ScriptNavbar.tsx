@@ -10,13 +10,13 @@ const Divider = ({ className = "" }: DividerProps) => (
   />
 );
 
-export default function ScriptNavbar() {
+export default function ScriptNavbar({ title }: { title?: string }) {
   const [tool, setTool] = useState<
     "highlight" | "underline" | "comment" | null
   >(null);
 
   const [page, setPage] = useState(1);
-  const [pageInput, setPageInput] = useState("1"); 
+  const [pageInput, setPageInput] = useState("1");
   const totalPages = 50;
   const [zoom, setZoom] = useState(60);
 
@@ -29,7 +29,7 @@ export default function ScriptNavbar() {
     if (isNaN(v) || v < 1) v = 1;
     if (v > totalPages) v = totalPages;
     setPage(v);
-    setPageInput(String(v)); // reset to valid value
+    setPageInput(String(v));
   };
 
   const toolButtonClasses = (active: boolean) =>
@@ -45,7 +45,7 @@ export default function ScriptNavbar() {
       <div className="h-15 px-4 flex items-center">
         {/* Filename */}
         <div className="text-xl font-medium text-[#22242A] ml-10">
-          Broken Promise.pdf
+          {title || "Untitled.pdf"}
         </div>
 
         <Divider className="ml-30" />
@@ -131,8 +131,8 @@ export default function ScriptNavbar() {
           <input
             type="number"
             value={pageInput}
-            onChange={(e) => setPageInput(e.target.value)} // allow free typing
-            onBlur={handlePageBlur} // validate only when leaving input
+            onChange={(e) => setPageInput(e.target.value)}
+            onBlur={handlePageBlur}
             onFocus={(e) => e.target.select()}
             min={1}
             max={totalPages}

@@ -50,7 +50,7 @@ namespace Bara.API.Users.Repositories
                 var validationErrors = new List<string>();
                 var userProfile = await dbContext.Users
                                                 .Where(u => u.Email == email)
-                                                .Select(x => new { x.AuthProfile, x.VerificationStatus, x.Email })
+                                                .Select(x => new { x.AuthProfile, x.VerificationStatus, x.Email, x.ProfileImageUrl })
                                                 .FirstOrDefaultAsync();
                 if (userProfile == null)
                 {
@@ -65,7 +65,8 @@ namespace Bara.API.Users.Repositories
                     IsProfileSetupComplete = user.IsProfileSetupComplete,
                     Role = user.Role,
                     IsVerified = user.IsVerified,
-                    VerificationStatus = userProfile.VerificationStatus.ToString()
+                    VerificationStatus = userProfile.VerificationStatus.ToString(),
+                    ProfileImage = userProfile.ProfileImageUrl
                 };
                 var confirmPassword = BCrypt.Net.BCrypt.Verify(authReqBody.Password, user.Password);
                 if (!confirmPassword)
@@ -245,7 +246,8 @@ namespace Bara.API.Users.Repositories
                     {
                         u.AuthProfile,
                         u.VerificationStatus,
-                        u.Email
+                        u.Email,
+                        u.ProfileImageUrl
                     })
                     .FirstOrDefaultAsync();
 
@@ -263,7 +265,8 @@ namespace Bara.API.Users.Repositories
                     IsProfileSetupComplete = user.IsProfileSetupComplete,
                     Role = user.Role,
                     IsVerified = user.IsVerified,
-                    VerificationStatus = userProfile.VerificationStatus.ToString()
+                    VerificationStatus = userProfile.VerificationStatus.ToString(),
+                    ProfileImage = userProfile.ProfileImageUrl
                 };
                 if (user.IsEmailVerified)
                 {
@@ -310,7 +313,7 @@ namespace Bara.API.Users.Repositories
             try
             {
                 var email = loginDetails.Email.ToLowerInvariant();
-                var userProfile = await dbContext.Users.Where(u => u.Email == email).Select(x => new { x.AuthProfile, x.VerificationStatus, x.Email }).FirstOrDefaultAsync();
+                var userProfile = await dbContext.Users.Where(u => u.Email == email).Select(x => new { x.AuthProfile, x.ProfileImageUrl,x.VerificationStatus, x.Email }).FirstOrDefaultAsync();
                 if (userProfile == null)
                 {
                     return ResponseDetail<LoginResponseDTO>.Failed("Login unsuccessful...Email or password is invalid");
@@ -326,7 +329,8 @@ namespace Bara.API.Users.Repositories
                     IsProfileSetupComplete = user.IsProfileSetupComplete,
                     Role = user.Role,
                     IsVerified = user.IsVerified,
-                    VerificationStatus = userProfile.VerificationStatus.ToString()
+                    VerificationStatus = userProfile.VerificationStatus.ToString(),
+                    ProfileImage = userProfile.ProfileImageUrl
                 };
 
                 var cacheKey = $"User_Login_Token_{user.UserId}";

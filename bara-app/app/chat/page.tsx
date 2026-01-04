@@ -64,7 +64,7 @@ function ChatContent() {
             (item: any) => ({
               id: item.chatId,
               name: item.otherUserName || "Unknown User",
-              avatar: "/default-avatar.png",
+              avatar: item.otherUserProfilePictureUrl || "/default-avatar.png",
               lastMessage: item.lastMessageContent,
               unreadCount: item.unreadCount || 0,
               scriptTitle: item.scriptTitle,
@@ -75,6 +75,7 @@ function ChatContent() {
           );
 
           setChats(mappedChats);
+          // ...
 
           if (initialChatId) {
             setSelectedChatId(initialChatId);
@@ -133,13 +134,18 @@ function ChatContent() {
             return prev;
           });
 
-          setMessages(mappedMessages.reverse());
+          setMessages(mappedMessages); // Don't reverse, server returns Oldest -> Newest
 
-          await api.markMessagesRead(selectedChatId);
-
+          // Update chat with real avatar if available
           setChats((prev) =>
             prev.map((c) =>
-              c.id === selectedChatId ? { ...c, unreadCount: 0 } : c
+              c.id === selectedChatId
+                ? {
+                    ...c,
+                    unreadCount: 0,
+                    avatar: selectedChat?.avatar || c.avatar,
+                  }
+                : c
             )
           );
         }
@@ -255,7 +261,15 @@ function ChatContent() {
             <ChatHeader chat={selectedChat} />
 
             <ChatMessages messages={messages as any[]} />
-            <MessageInput onSend={handleSendMessage} />
+            {selectedChat.isClosed && (
+              <div className="bg-red-50 text-red-600 text-sm text-center py-2 border-t border-red-100">
+                This chat is closed
+              </div>
+            )}
+            <MessageInput
+              onSend={handleSendMessage}
+              disabled={selectedChat.isClosed}
+            />
           </>
         ) : (
           <div className="flex items-center justify-center h-full text-gray-500">

@@ -236,7 +236,29 @@ function ViewScriptContent() {
 
         {/* PDF Viewer Section */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-12 p-6">
-          <h2 className="text-xl font-bold text-[#22242A] mb-4 pl-8">Content</h2>
+          <div className="flex justify-between items-center mb-4 pl-8 pr-8">
+            <h2 className="text-xl font-bold text-[#22242A]">Content</h2>
+            <button
+              onClick={() => {
+                if (pdfUrl) {
+                  const encodedUrl = encodeURIComponent(pdfUrl);
+                  const encodedTitle = encodeURIComponent(
+                    script?.title || "Script.pdf"
+                  );
+                  window.open(
+                    `/script?url=${encodedUrl}&title=${encodedTitle}`,
+                    "_blank"
+                  );
+                } else {
+                  toast.error("PDF not loaded yet");
+                }
+              }}
+              className="text-[#810306] font-medium hover:underline flex items-center gap-2"
+            >
+              <Eye size={18} />
+              Open Reader
+            </button>
+          </div>
           {pdfUrl ? (
             <div className="flex flex-col items-center">
               <ScriptPDFViewer

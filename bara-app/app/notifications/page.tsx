@@ -138,20 +138,26 @@ export default function NotificationsPage() {
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`px-4 py-3 flex flex-col gap-2 rounded-sm mb-2 border border-gray-100 ${
+                  className={`px-4 py-3 flex flex-col gap-2 rounded-sm mb-2 ${
                     statusClasses[notification.status] || "bg-[#F5F5F5]"
                   }`}
                 >
                   <div className="flex flex-row items-center justify-between">
-                    <p className="text-xs bg-[#FFD9BF] w-max px-2 py-0.5 rounded-sm border border-[#BF4E00] text-[#BF4E00] font-medium">
+                    <p className="text-xs bg-[#FFD9BF] w-max px-1 rounded-sm border border-[#BF4E00] text-[#BF4E00]">
                       {notification.category}
                     </p>
                     <div className="flex gap-3 items-center">
+                      {notification.pin && (
+                        <Image
+                          src="/Pin.svg"
+                          alt="pin"
+                          width={18}
+                          height={18}
+                        />
+                      )}
                       {notification.showWallet && (
                         <Link href="/wallet">
-                          <p className="text-[#BF0000] text-sm hover:underline">
-                            View wallet
-                          </p>
+                          <p className="text-[#BF0000] text-sm">View wallet</p>
                         </Link>
                       )}
                       <div className="relative">
@@ -163,13 +169,13 @@ export default function NotificationsPage() {
                                 : notification.id
                             )
                           }
-                          className="hover:text-[#800000] flex items-center gap-1 cursor-pointer p-1"
+                          className="hover:text-[#800000] flex items-center gap-1 cursor-pointer"
                         >
                           <Image
                             src="/others.svg"
                             alt="options"
-                            width={16}
-                            height={4}
+                            width={3}
+                            height={3}
                           />
                         </button>
                         {openNotificationId === notification.id && (
@@ -181,11 +187,9 @@ export default function NotificationsPage() {
                       </div>
                     </div>
                   </div>
-                  <p className="text-md font-medium text-[#22242A]">
-                    {notification.message}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {notification.date} • {notification.time}
+                  <p className="text-md max-w-md">{notification.message}</p>
+                  <p className="text-sm">
+                    {notification.date} || {notification.time}
                   </p>
                 </div>
               ))}
