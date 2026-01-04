@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import dynamic from "next/dynamic";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import BackButton from "@/components/BackButton";
+import { Eye, Lock, Download } from "lucide-react";
 
 const ScriptPDFViewer = dynamic(() => import("@/components/ScriptPDFViewer"), {
   ssr: false,
@@ -209,62 +210,33 @@ function ViewScriptContent() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50">
       <DashboardNavbar />
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Header */}
+      <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Back Button */}
         <div className="mb-6">
-          <div className="mb-4">
-            <BackButton />
-          </div>
-          <h1 className="text-3xl font-bold text-[#22242A] mb-2">
+          <BackButton />
+        </div>
+
+        {/* Title Section */}
+        <div className="mb-8">
+          <h1 className="text-4xl sm:text-3xl font-bold text-[#22242A] mb-3">
             {script.title}
           </h1>
-          <p className="text-gray-600">{script.synopsis}</p>
+
+          {/* Synopsis Card */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sm:p-8">
+            <h2 className="text-xl font-bold text-[#22242A] mb-4">Synopsis</h2>
+            <p className="text-gray-700 text-base sm:text-md leading-relaxed">
+              {script.synopsis}
+            </p>
+          </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-4 mb-6">
-          {(isOwner || script?.status === "Sold") && (
-            <button
-              onClick={handleDownload}
-              className="bg-[#810306] text-white px-6 py-2.5 rounded-md hover:bg-red-800 transition-colors"
-            >
-              Download PDF
-            </button>
-          )}
-
-          {canEdit && (
-            <>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className="bg-white border-2 border-[#810306] text-[#810306] px-6 py-2.5 rounded-md hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {uploading ? "Uploading..." : "Upload New Version"}
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="application/pdf"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-            </>
-          )}
-
-          {!canEdit && script?.status === "Sold" && (
-            <div className="flex items-center text-gray-500 text-sm">
-              <span className="bg-green-100 text-green-700 px-3 py-1 rounded-md">
-                Script Sold - Editing Disabled
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* PDF Viewer */}
-        <div className="border border-gray-300 rounded-lg overflow-hidden bg-gray-50">
+        {/* PDF Viewer Section */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-12 p-6">
+          <h2 className="text-xl font-bold text-[#22242A] mb-4 pl-8">Content</h2>
           {pdfUrl ? (
             <div className="flex flex-col items-center">
               <ScriptPDFViewer
@@ -275,15 +247,15 @@ function ViewScriptContent() {
 
               {/* Page Navigation */}
               {numPages > 1 && (
-                <div className="flex items-center gap-4 p-4 bg-white border-t w-full justify-center">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 p-4 bg-gray-50 border-t w-full">
                   <button
                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
-                    className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300"
+                    className="px-4 py-2 bg-[#810306] text-white rounded-md disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-red-800 transition-colors text-sm font-medium"
                   >
                     Previous
                   </button>
-                  <span className="text-sm text-gray-700">
+                  <span className="text-sm text-gray-700 font-medium">
                     Page {currentPage} of {numPages}
                   </span>
                   <button
@@ -291,7 +263,7 @@ function ViewScriptContent() {
                       setCurrentPage(Math.min(numPages, currentPage + 1))
                     }
                     disabled={currentPage === numPages}
-                    className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300"
+                    className="px-4 py-2 bg-[#810306] text-white rounded-md disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-red-800 transition-colors text-sm font-medium"
                   >
                     Next
                   </button>
@@ -305,28 +277,119 @@ function ViewScriptContent() {
           )}
         </div>
 
-        {/* Instructions for editing */}
-        {canEdit && (
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h3 className="font-semibold text-[#22242A] mb-2">
-              How to Edit Your Script
-            </h3>
-            <ol className="list-decimal list-inside text-sm text-gray-700 space-y-1">
-              <li>Click "Download PDF" to get the current version</li>
-              <li>
-                Edit the PDF using your preferred software (Adobe Acrobat,
-                Preview, etc.)
-              </li>
-              <li>Click "Upload New Version" and select your edited PDF</li>
-              <li>The new version will replace the current one</li>
-            </ol>
-            <p className="text-xs text-gray-600 mt-3">
-              Note: You can upload new versions during negotiation period
-              (status: Available or In Negotiation). Once sold, editing is
-              disabled.
-            </p>
+        {/* Action Buttons and Messages Section */}
+        <div className="space-y-4">
+          {/* Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            {(isOwner || script?.status === "Sold") && (
+              <button
+                onClick={handleDownload}
+                className="flex items-center justify-center gap-2 bg-[#810306] text-white px-6 py-3 rounded-md hover:bg-red-800 transition-colors font-medium text-sm sm:text-base"
+              >
+                <Download size={18} />
+                Download PDF
+              </button>
+            )}
+
+            {canEdit && (
+              <>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="flex items-center justify-center gap-2 bg-white border-2 border-[#810306] text-[#810306] px-6 py-3 rounded-md hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm sm:text-base"
+                >
+                  {uploading ? "Uploading..." : "Upload New Version"}
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="application/pdf"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+              </>
+            )}
           </div>
-        )}
+
+          {/* Informational Messages */}
+          {!isOwner && script?.status !== "Sold" && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 sm:p-5 flex gap-3">
+              <div className="shrink-0 mt-0.5">
+                <Eye className="text-blue-600" size={20} />
+              </div>
+              <div>
+                <h3 className="font-semibold text-blue-900 text-sm sm:text-base mb-1">
+                  Preview Mode
+                </h3>
+                <p className="text-blue-700 text-sm">
+                  You can view this script until the transaction is complete.
+                  Once the purchase is finalized, you'll be able to download it.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {!canEdit && script?.status === "Sold" && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 sm:p-5 flex gap-3">
+              <div className="shrink-0 mt-0.5">
+                <Lock className="text-green-600" size={20} />
+              </div>
+              <div>
+                <h3 className="font-semibold text-green-900 text-sm sm:text-base mb-1">
+                  Script Sold
+                </h3>
+                <p className="text-green-700 text-sm">
+                  This script has been sold. Editing is now disabled.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Edit Instructions */}
+          {canEdit && (
+            <div className="bg-slate-100 border border-slate-200 rounded-lg p-5 sm:p-6">
+              <h3 className="font-semibold text-[#22242A] mb-3 text-sm sm:text-base">
+                How to Edit Your Script
+              </h3>
+              <ol className="space-y-2 text-sm sm:text-base text-gray-700">
+                <li className="flex gap-3">
+                  <span className="font-semibold text-[#810306] shrink-0">
+                    1.
+                  </span>
+                  <span>Click "Download PDF" to get the current version</span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="font-semibold text-[#810306] shrink-0">
+                    2.
+                  </span>
+                  <span>
+                    Edit the PDF using your preferred software (Adobe Acrobat,
+                    Preview, etc.)
+                  </span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="font-semibold text-[#810306] shrink-0">
+                    3.
+                  </span>
+                  <span>
+                    Click "Upload New Version" and select your edited PDF
+                  </span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="font-semibold text-[#810306] shrink-0">
+                    4.
+                  </span>
+                  <span>The new version will replace the current one</span>
+                </li>
+              </ol>
+              <p className="text-xs sm:text-sm text-gray-600 mt-4 pt-4 border-t border-slate-200">
+                You can upload new versions during the negotiation period
+                (Available or In Negotiation status). Once sold, editing is
+                disabled.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
