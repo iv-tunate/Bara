@@ -84,7 +84,7 @@ export default function AccountDropdown({
       className="w-80 bg-white shadow-2xl rounded-xl border border-gray-100 z-50 overflow-hidden"
     >
       {/* Header with gradient */}
-      <div className="p-5 bg-gradient-to-br from-[#800000] to-[#a00000] text-white">
+      <div className="p-5 bg-linear-gradient-to-br from-[#800000] to-[#a00000] text-white">
         <div className="flex items-center justify-between">
           <div className="flex-1">
             <h3 className="font-bold text-base mb-1">
@@ -113,7 +113,7 @@ export default function AccountDropdown({
       </div>
 
       {walletData && (
-        <div className="p-4 bg-gradient-to-br from-gray-50 to-white border-b border-gray-100">
+        <div className="p-4 bg-linear-gradient-to-br from-gray-50 to-white border-b border-gray-100">
           <h4 className="font-semibold text-[#22242A] text-sm mb-3 flex items-center gap-2">
             <svg
               className="w-4 h-4 text-[#800000]"
@@ -167,7 +167,7 @@ export default function AccountDropdown({
           <Link
             href={`/writer/profile`}
             onClick={onClose}
-            className="flex items-center px-4 py-3 text-sm text-[#333740] hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 transition-all duration-200 group"
+            className="flex items-center px-4 py-3 text-sm text-[#333740] hover:bg-linear-gradient-to-r hover:from-gray-50 hover:to-gray-100 transition-all duration-200 group"
           >
             <svg
               className="w-5 h-5 mr-3 text-gray-600 group-hover:text-[#800000] transition-colors"
@@ -210,7 +210,7 @@ export default function AccountDropdown({
         <Link
           href="/wallet"
           onClick={onClose}
-          className="flex items-center px-4 py-3 text-sm text-[#333740] hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 transition-all duration-200 group"
+          className="flex items-center px-4 py-3 text-sm text-[#333740] hover:bg-linear-gradient-to-r hover:from-gray-50 hover:to-gray-100 transition-all duration-200 group"
         >
           <svg
             className="w-5 h-5 mr-3 text-gray-600 group-hover:text-[#800000] transition-colors"
@@ -237,7 +237,7 @@ export default function AccountDropdown({
         <Link
           href="/help"
           onClick={onClose}
-          className="flex items-center px-4 py-3 text-sm text-[#333740] hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 transition-all duration-200 group"
+          className="flex items-center px-4 py-3 text-sm text-[#333740] hover:bg-linear-gradient-to-r hover:from-gray-50 hover:to-gray-100 transition-all duration-200 group"
         >
           <svg
             className="w-5 h-5 mr-3 text-gray-600 group-hover:text-[#800000] transition-colors"

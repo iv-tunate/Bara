@@ -71,7 +71,7 @@ export default function WriterProfileCard({
           </a>
 
           {/* Copy Button */}
-          <div className="relative flex-shrink-0">
+          <div className="relative shrink-0">
             <button
               onClick={handleCopy}
               className="border border-[#ABADB2] p-3 rounded-md flex items-center justify-center hover:bg-gray-50"

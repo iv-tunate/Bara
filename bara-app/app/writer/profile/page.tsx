@@ -243,7 +243,7 @@ export default function WriterProfile() {
                       href={profileData?.portfolioUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-[#1A0DAB] underline break-words"
+                      className="text-sm text-[#1A0DAB] underline wrap-break-words"
                     >
                       {profileData?.portfolioUrl?.replace(/^https?:\/\//, "")}
                     </a>
@@ -298,12 +298,12 @@ export default function WriterProfile() {
               {profileData.experiences.map((exp: any) => (
                 <div
                   key={exp.id}
-                  className="bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-xl p-5 hover:shadow-md transition-all duration-200"
+                  className="bg-linear-to-r from-red-50 to-pink-50 border border-red-200 rounded-xl p-5 hover:shadow-md transition-all duration-200"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-[#800000] to-[#660000] rounded-full flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 bg-linear-to-br from-[#800000] to-[#660000] rounded-full flex items-center justify-center shrink-0">
                           <svg
                             className="w-5 h-5 text-white"
                             fill="none"

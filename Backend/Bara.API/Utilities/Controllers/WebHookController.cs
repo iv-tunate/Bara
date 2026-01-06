@@ -74,7 +74,7 @@ namespace Bara.API.Utilities.Controllers
                 string rawBody = await reader.ReadToEndAsync();
                 Request.Body.Position = 0;
 
-                // logger.LogInformation("Received YouVerify webhook event {Payload}", rawBody);
+                logger.LogInformation("YouVerify sent a webhook event {Payload}", rawBody);
                 var isValid = YouVerifyWebhookVerifier.IsValidYouVerifySignature(rawBody, Request.Headers["x-youverify-signature"], secrets.YouVerifyWebhookSigningSecret);
                 if (!isValid)
                 {

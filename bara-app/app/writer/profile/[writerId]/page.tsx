@@ -216,7 +216,7 @@ export default function PublicWriterProfile() {
                         href={profileData.portfolioUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-[#1A0DAB] underline break-words"
+                        className="text-sm text-[#1A0DAB] underline wrap-break-words"
                       >
                         {profileData.portfolioUrl.replace(/^https?:\/\//, "")}
                       </a>

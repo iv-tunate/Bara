@@ -14,7 +14,7 @@ export default function ImageCatalogModal({
 }: ImageCatalogModalProps) {
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10000] p-4"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10000 p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
@@ -22,7 +22,7 @@ export default function ImageCatalogModal({
       }}
     >
       <div className="bg-white rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden flex flex-col">
-        <div className="bg-white border-b border-gray-200 p-4 flex justify-between items-center flex-shrink-0">
+        <div className="bg-white border-b border-gray-200 p-4 flex justify-between items-center shrink-0">
           <h2 className="text-xl font-semibold text-[#22242A]">
             Select from Catalog
           </h2>

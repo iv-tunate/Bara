@@ -144,7 +144,7 @@ export default function ScriptEditModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm overflow-y-auto p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl my-8 max-h-[90vh] flex flex-col animate-slideUp">
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#800000] to-[#660000] px-6 py-5 flex items-center justify-between rounded-t-2xl flex-shrink-0">
+        <div className="bg-linear-gradient-to-r from-[#800000] to-[#660000] px-6 py-5 flex items-center justify-between rounded-t-2xl shrink-0">
           <div className="flex items-center gap-3">
             <div className="bg-white/20 p-2 rounded-full">
               <svg
@@ -189,7 +189,7 @@ export default function ScriptEditModal({
         {/* Warning Banner */}
         <div className="mx-6 mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex gap-3">
           <svg
-            className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5"
+            className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -489,7 +489,7 @@ export default function ScriptEditModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-gray-50 rounded-b-2xl flex gap-3 flex-shrink-0">
+        <div className="px-6 py-4 bg-gray-50 rounded-b-2xl flex gap-3 shrink-0">
           <button
             onClick={onClose}
             disabled={isSubmitting}

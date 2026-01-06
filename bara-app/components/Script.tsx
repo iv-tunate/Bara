@@ -26,7 +26,7 @@ export const ScriptCard = ({ script }: { script: Script }) => {
 
   return (
     <div className="group relative border rounded-md shadow-sm overflow-hidden transition-all duration-700 ease-in-out bg-white hover:shadow-md h-[460px] md:h-[460px] md:hover:h-[520px] flex flex-col">
-      <div className="relative w-full h-48 flex-shrink-0 bg-gray-100">
+      <div className="relative w-full h-48 shrink-0 bg-gray-100">
         {imgLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#800000]" />
@@ -61,7 +61,7 @@ export const ScriptCard = ({ script }: { script: Script }) => {
             {script.logline}
           </p>
 
-          <div className="pointer-events-none absolute bottom-0 left-0 w-full h-6 bg-gradient-to-t from-white to-transparent opacity-100 md:group-hover:opacity-0 transition-opacity duration-700" />
+          <div className="pointer-events-none absolute bottom-0 left-0 w-full h-6 bg-linear-gradient-to-t from-white to-transparent opacity-100 md:group-hover:opacity-0 transition-opacity duration-700" />
         </div>
 
         <p className="text-base font-semibold text-[#333740] mb-2">
