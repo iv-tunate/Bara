@@ -1,6 +1,15 @@
 "use client";
 
-import ScriptPDFViewer from "./ScriptPDFViewer";
+import dynamic from "next/dynamic";
+
+const ScriptPDFViewer = dynamic(() => import("./ScriptPDFViewer"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center p-10">
+      <p className="text-gray-500">Loading PDF Viewer...</p>
+    </div>
+  ),
+});
 
 interface PDFCanvasProps {
   currentPage: number;
@@ -24,7 +33,7 @@ export default function PDFCanvas({ currentPage, url }: PDFCanvasProps) {
         <ScriptPDFViewer
           url={url}
           pageNumber={currentPage}
-          onLoadSuccess={({ numPages }) => {
+          onLoadSuccess={({ numPages }: { numPages: number }) => {
             console.log(`Loaded ${numPages} pages`);
           }}
         />
