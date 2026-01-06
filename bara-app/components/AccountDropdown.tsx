@@ -63,6 +63,28 @@ export default function AccountDropdown({
   const formatCurrency = (amount: number, symbol = "₦") =>
     `${symbol}${Number(amount).toLocaleString()}`;
 
+  const verificationStatusConfig: Record<
+    string,
+    { label: string; className: string }
+  > = {
+    Pending: {
+      label: "Pending",
+      className: "bg-yellow-100 text-yellow-800 border-yellow-200",
+    },
+    Approved: {
+      label: "Approved",
+      className: "bg-green-100 text-green-800 border-green-200",
+    },
+    Rejected: {
+      label: "Rejected",
+      className: "bg-red-100 text-red-800 border-red-200",
+    },
+    Failed: {
+      label: "Failed",
+      className: "bg-orange-100 text-orange-800 border-orange-200",
+    },
+  };
+
   if (isLoading) {
     return (
       <div
@@ -84,13 +106,35 @@ export default function AccountDropdown({
       className="w-80 bg-white shadow-2xl rounded-xl border border-gray-100 z-50 overflow-hidden"
     >
       {/* Header with gradient */}
-      <div className="p-5 bg-linear-gradient-to-br from-[#800000] to-[#a00000] text-white">
+      <div className="p-5 bg-linear-to-br from-[#800000] to-[#a00000] text-white">
         <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <h3 className="font-bold text-base mb-1">
-              {userData?.name ?? "Anonymous"}
-            </h3>
-            <p className="text-xs text-white/90 truncate">{userData?.email}</p>
+          <div className="flex-1 flex flex-col gap-4">
+            <div>
+              <h3 className="font-bold text-base mb-1">
+                {userData?.name ?? "Anonymous"}
+              </h3>
+              <p className="text-xs text-white/90 truncate">
+                {userData?.email}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-white/90">Verification:</span>
+
+              <span
+                className={`
+        px-2 py-0.5 rounded-full text-xs font-semibold border
+        ${
+          verificationStatusConfig[userData?.verificationStatus as string]
+            ?.className ?? "bg-gray-100 text-gray-700 border-gray-200"
+        }
+      `}
+              >
+                {verificationStatusConfig[
+                  userData?.verificationStatus as string
+                ]?.label ?? "Unknown"}
+              </span>
+            </div>
           </div>
           <div className="ml-3">
             <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
@@ -113,7 +157,7 @@ export default function AccountDropdown({
       </div>
 
       {walletData && (
-        <div className="p-4 bg-linear-gradient-to-br from-gray-50 to-white border-b border-gray-100">
+        <div className="p-4 bg-linear-to-br from-gray-50 to-white border-b border-gray-100">
           <h4 className="font-semibold text-[#22242A] text-sm mb-3 flex items-center gap-2">
             <svg
               className="w-4 h-4 text-[#800000]"

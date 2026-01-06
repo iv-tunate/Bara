@@ -18,51 +18,18 @@ export default function DashboardNavbar() {
   const { walletData, isLoading: walletLoading } = useWallet();
 
   useEffect(() => {
-    const loadUserData = async () => {
-      setIsLoading(true);
-      try {
-        const session = getUserSession();
-        if (!session) {
-          setIsLoading(false);
-          return;
-        }
-
-        let profileResponse: any = null;
-        if (session.userType === "Writer") {
-          profileResponse = await api.getWriterProfile(session.userId);
-        } else if (session.userType === "Producer") {
-          profileResponse = await api.getProducerProfile(session.userId);
-        }
-
-        if (
-          !profileResponse?.success &&
-          (profileResponse?.statusCode === 404 ||
-            profileResponse?.statusCode === 401)
-        ) {
-          clearUserSession();
-          window.location.href = "/auth/login";
-          return;
-        }
-
-        if (profileResponse?.success && profileResponse.data) {
-          setUserData({
-            userId: session.userId,
-            name: session.name,
-            email: session.email,
-            userType: session.userType,
-            verificationStatus:
-              profileResponse.data.verificationStatus || "Pending",
-            isVerified: !!profileResponse.data.isVerified,
-          });
-        }
-      } catch (error) {
-        console.error("Error loading user data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadUserData();
+    const session = getUserSession();
+    if (session) {
+      setUserData({
+        userId: session.userId,
+        name: session.name,
+        email: session.email,
+        userType: session.userType,
+        verificationStatus: session.VerificationStatus,
+        isVerified: session.isVerified,
+      });
+    }
+    setIsLoading(false);
   }, []);
 
   return (
