@@ -361,6 +361,31 @@ export default function ProducerProfilePage() {
                 />
               </div>
             </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-1 mb-4 flex items-start gap-3">
+              <div className="text-amber-600 mt-0.5">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="16" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+              </div>
+              <p className="text-xs text-amber-800 font-medium leading-relaxed">
+                Please ensure your names match exactly as they appear on your
+                identification document for verification purposes.
+              </p>
+            </div>
+
             <div>
               <label className="block mb-1 text-sm font-semibold text-[#22242A]">
                 Upload your profile picture

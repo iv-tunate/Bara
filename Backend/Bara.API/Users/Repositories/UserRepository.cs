@@ -283,13 +283,13 @@ namespace Bara.API.Users.Repositories
 
                 name = $"{user.FirstName} {user.LastName}";
                 var dateOfBirthTallies = user.DateOfBirth.ToString("yyyy-MM-dd") == dateOfBirth;
-                var nameTallies = (user.FirstName?.Equals(firstName, StringComparison.OrdinalIgnoreCase) ?? false) && 
-                                  (user.LastName?.Equals(lastName, StringComparison.OrdinalIgnoreCase) ?? false);
+                //var nameTallies = (user.FirstName?.Equals(firstName, StringComparison.OrdinalIgnoreCase) ?? false) && 
+                //                  (user.LastName?.Equals(lastName, StringComparison.OrdinalIgnoreCase) ?? false);
 
                 var errors = new List<string>();
 
                 if (!dateOfBirthTallies) errors.Add($"The date of birth on your {type.ToUpper()} does not match the provided date of birth at the time of registration.");
-                if (!nameTallies) errors.Add(name + $"The name on your {type.ToUpper()}does not match the provided firstname and/or lastname at the time of registration.");
+                //if (!nameTallies) errors.Add(name + $"The name on your {type.ToUpper()}does not match the provided firstname and/or lastname at the time of registration.");
                 if (errors.Count > 0)
                 {
                     user.VerificationStatus = VerificationStatus.Failed;
