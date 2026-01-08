@@ -32,7 +32,8 @@ namespace Bara.API.Users.Repositories
         private readonly IMemoryCache cache;
         private readonly IPaystackService paystack;
         private readonly IAuthService authService;
-        public UserRepository(BaraContext baraContext, LogHelper<UserRepository> logHelper, HangfireJobs hangfire,
+        private readonly IMailService mailer;
+        public UserRepository(BaraContext baraContext,  IMailService mailer, LogHelper<UserRepository> logHelper, HangfireJobs hangfire,
         ILogger<UserRepository> logger, IHubContext<NotificationHub> hubContext, IMemoryCache cache, IPaystackService paystackService, IAuthService authService)
         {
             dbContext = baraContext;
@@ -43,6 +44,7 @@ namespace Bara.API.Users.Repositories
             this.cache = cache;
             paystack = paystackService;
             this.authService = authService;
+            this.mailer = mailer;
         }
 
         public async Task<ResponseDetail<RegisterResponseDTO>> BeginRegistration(RegisterDTO detail)
