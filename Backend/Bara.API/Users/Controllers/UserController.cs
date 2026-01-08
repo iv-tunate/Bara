@@ -270,5 +270,41 @@ namespace Bara.API.Users.Controllers
             var response = await userService.GetTotalEarnings(userId);
             return StatusCode(response.StatusCode, response);
         }
+        /// <summary>
+        /// Blacklists a user and sends a notification email. Admin-only endpoint.
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpPost("blacklist/{userId}")]
+        public async Task<IActionResult> BlackListUser(Guid userId, [FromQuery] string reason)
+        {
+            if (string.IsNullOrWhiteSpace(reason))
+            {
+                return BadRequest(ResponseDetail<bool>.Failed(false, "Reason is mandatory for blacklisting a user"));
+            }
+            var response = await userService.BlackListUser(userId, reason);
+            return StatusCode(response.StatusCode, response);
+        }
+
+        /// <summary>
+        /// Removes a user from the blacklist. Admin-only endpoint.
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpPost("remove-blacklist/{userId}")]
+        public async Task<IActionResult> RemoveUserFromBlackList(Guid userId)
+        {
+            var response = await userService.RemoveUserFromBlackList(userId);
+            return StatusCode(response.StatusCode, response);
+        }
+
+        /// <summary>
+        /// Retrieves all blacklisted users. Admin-only endpoint.
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpGet("blacklisted")]
+        public async Task<IActionResult> GetBlackListedUsers([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 50)
+        {
+            var response = await userService.GetBlackListedUsers(pageNumber, pageSize);
+            return StatusCode(response.StatusCode, response);
+        }
     }
 }

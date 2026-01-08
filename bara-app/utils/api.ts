@@ -732,6 +732,35 @@ export const api = {
       requireAuth: true,
     });
   },
+  blacklistUser: async (userId: string, reason: string) => {
+    return apiRequest(
+      `${BASE_URL}/api/user/blacklist/${userId}?reason=${encodeURIComponent(
+        reason
+      )}`,
+      {
+        method: "POST",
+        requireAuth: true,
+      }
+    );
+  },
+  removeBlacklist: async (userId: string) => {
+    return apiRequest(`${BASE_URL}/api/user/remove-blacklist/${userId}`, {
+      method: "POST",
+      requireAuth: true,
+    });
+  },
+  getBlacklistedUsers: async (
+    pageNumber: number = 1,
+    pageSize: number = 50
+  ) => {
+    return apiRequest(
+      `${BASE_URL}/api/user/blacklisted?pageNumber=${pageNumber}&pageSize=${pageSize}`,
+      {
+        method: "GET",
+        requireAuth: true,
+      }
+    );
+  },
 };
 
 export const API_ERROR_MESSAGES = {

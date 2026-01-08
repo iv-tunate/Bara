@@ -158,9 +158,46 @@ namespace Bara.API.Users.Repositories
                 return ResponseDetail<RegisterResponseDTO>.Failed("Your request cannot be completed at this time... Please try again later", 500, "Unexpected error");
             }
         }
-        public Task<ResponseDetail<bool>> BlackListUser(Guid userId, string? reason)
+        public async Task<ResponseDetail<bool>> BlackListUser(Guid userId, string? reason)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var user = await dbContext.Users.FirstOrDefaultAsync(x => x.Id == userId);
+                if (user == null)
+                {
+                    return ResponseDetail<bool>.Failed(false, "User not found", 404);
+                }
+
+                if (user.IsBlacklisted)
+                {
+                    return ResponseDetail<bool>.Failed(false, "User is already blacklisted", 409);
+                }
+
+                user.IsBlacklisted = true;
+                user.ModifiedAt = DateTimeOffset.UtcNow;
+
+                var blackListedUser = new BlackListedUser
+                {
+                    UserId = userId,
+                    Name = $"{user.FirstName} {user.LastName}".Trim(),
+                    Reason = reason ?? "No reason provided",
+                    BlackListedAt = DateTimeOffset.UtcNow
+                };
+
+                dbContext.BlackListedUsers.Add(blackListedUser);
+                await dbContext.SaveChangesAsync();
+
+                var mailRequest = MailNotifications.BlacklistNotification(user.Email, user.FirstName, reason ?? "Violation of platform policies");
+                await mailer.SendMail(mailRequest);
+
+                logger.LogInformation("User {UserId} has been blacklisted. Reason: {Reason}", userId, reason);
+                return ResponseDetail<bool>.Successful(true, "User blacklisted successfully");
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"blacklisting user {userId}");
+                return ResponseDetail<bool>.Failed(false, "An error occurred while blacklisting the user", 500);
+            }
         }
         public async Task<ResponseDetail<BankDetail>> AddBankDetail(PostBankDetailDTO bankDetailData, Guid userId)
         {
@@ -243,19 +280,77 @@ namespace Bara.API.Users.Repositories
             }
         }
 
-        public Task<ResponseDetail<BlackListedUser>> GetBlackListedUser(Guid userId)
+        public async Task<ResponseDetail<BlackListedUser>> GetBlackListedUser(Guid userId)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var blackListedUser = await dbContext.BlackListedUsers
+                    .Include(x => x.User)
+                    .FirstOrDefaultAsync(x => x.UserId == userId);
+
+                if (blackListedUser == null)
+                {
+                    return ResponseDetail<BlackListedUser>.Failed(null, "Blacklist record not found", 404);
+                }
+
+                return ResponseDetail<BlackListedUser>.Successful(blackListedUser, "Blacklisted user retrieved successfully");
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"getting blacklisted user {userId}");
+                return ResponseDetail<BlackListedUser>.Failed(null, "An error occurred while retrieving the blacklisted user", 500);
+            }
         }
 
-        public Task<ResponseDetail<List<BlackListedUser>>> GetBlackListedUsers(int pageNumber, int pageSize)
+        public async Task<ResponseDetail<List<BlackListedUser>>> GetBlackListedUsers(int pageNumber, int pageSize)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var blackListedUsers = await dbContext.BlackListedUsers
+                    .Include(x => x.User)
+                    .OrderByDescending(x => x.BlackListedAt)
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                return ResponseDetail<List<BlackListedUser>>.Successful(blackListedUsers, "Blacklisted users retrieved successfully");
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, "getting blacklisted users");
+                return ResponseDetail<List<BlackListedUser>>.Failed(new List<BlackListedUser>(), "An error occurred while retrieving blacklisted users", 500);
+            }
         }
 
-        public Task<ResponseDetail<bool>> RemoveUserFromBlackList(Guid userId)
+        public async Task<ResponseDetail<bool>> RemoveUserFromBlackList(Guid userId)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var user = await dbContext.Users.FirstOrDefaultAsync(x => x.Id == userId);
+                if (user == null)
+                {
+                    return ResponseDetail<bool>.Failed(false, "User not found", 404);
+                }
+
+                var blackListedUserArea = await dbContext.BlackListedUsers.FirstOrDefaultAsync(x => x.UserId == userId);
+                if (blackListedUserArea != null)
+                {
+                    dbContext.BlackListedUsers.Remove(blackListedUserArea);
+                }
+
+                user.IsBlacklisted = false;
+                user.ModifiedAt = DateTimeOffset.UtcNow;
+
+                await dbContext.SaveChangesAsync();
+
+                logger.LogInformation("User {UserId} has been removed from the blacklist", userId);
+                return ResponseDetail<bool>.Successful(true, "User removed from blacklist successfully");
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"removing user {userId} from blacklist");
+                return ResponseDetail<bool>.Failed(false, "An error occurred while removing the user from the blacklist", 500);
+            }
         }
 
         public async Task<ResponseDetail<bool>> UpdateUserVerificationStatus(string verificationIdNumber, string dateOfBirth, string firstName, string lastName, string type)
@@ -441,6 +536,7 @@ namespace Bara.API.Users.Repositories
                     TotalBalance = user.Wallet?.TotalBalance ?? 0,
                     LockedBalance = user.Wallet?.LockedBalance ?? 0,
                     TotalEarnings = totalEarnings,
+                    IsBlacklisted = user.IsBlacklisted,
                     Name = (string.IsNullOrEmpty(user.FirstName) && string.IsNullOrEmpty(user.LastName)) ? string.Empty : user.FirstName + " " + user.LastName,
                     Scripts = await dbContext.Scripts
                         .AsNoTracking()

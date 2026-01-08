@@ -416,5 +416,34 @@
                 Body = BaseEmailTemplate(name, body)
             };
         }
+
+        /// <summary>
+        /// Constructs a notification email for a blacklisted user.
+        /// </summary>
+        /// <param name="receiver">The email address of the recipient.</param>
+        /// <param name="name">The name of the recipient.</param>
+        /// <param name="reason">The reason for blacklisting.</param>
+        /// <returns>A populated <see cref="MailRequestDTO"/> ready to be sent.</returns>
+        public static MailRequestDTO BlacklistNotification(string receiver, string name, string reason)
+        {
+            var subject = "⚠️ Account Restricted - Bara Platform";
+            var body = $@"
+                <br/>
+                <p>Hi {name},</p>
+                <p>Your account on Bara has been restricted (blacklisted). This means you will no longer be able to log in or access our services.</p>
+                <div style='background-color: #fcecea; border-left: 4px solid #f44336; padding: 15px; margin: 20px 0;'>
+                    <p style='color: #d32f2f; font-weight: bold; margin-bottom: 5px;'>Reason for restriction:</p>
+                    <p style='color: #000000; margin: 0;'>{reason}</p>
+                </div>
+                <p>If you believe this is a mistake, please contact our support team at baraglobalmain@gmail.com for further clarification.</p>";
+
+            return new MailRequestDTO
+            {
+                Receiver = receiver,
+                ReceiverName = name,
+                Subject = subject,
+                Body = BaseEmailTemplate(name, body)
+            };
+        }
     }
 }

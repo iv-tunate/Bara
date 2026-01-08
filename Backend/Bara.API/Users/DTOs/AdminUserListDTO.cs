@@ -11,5 +11,6 @@ namespace Bara.API.Users.DTOs
         public string VerificationStatus { get; set; }
         public DateTimeOffset CreatedAt { get; set; }
         public string? ProfileImageUrl { get; set; }
+        public bool IsBlacklisted { get; set; }
     }
 }

@@ -50,7 +50,7 @@ namespace Bara.API.Users.Repositories
                 var validationErrors = new List<string>();
                 var userProfile = await dbContext.Users
                                                 .Where(u => u.Email == email)
-                                                .Select(x => new { x.AuthProfile, x.VerificationStatus, x.Email, x.ProfileImageUrl })
+                                                .Select(x => new { x.AuthProfile, x.VerificationStatus, x.Email, x.ProfileImageUrl, x.IsBlacklisted })
                                                 .FirstOrDefaultAsync();
                 if (userProfile == null)
                 {
@@ -88,7 +88,7 @@ namespace Bara.API.Users.Repositories
                 }
 
                 else if (!user.IsEmailVerified) validationErrors.Add("Login unsuccessful...Email address is unverified... Please verify yout email and try again");
-                //else if (!user.IsVerified && user.Role != Role.Admin.ToString()) validationErrors.Add("Login unsuccessful... Account verification failed or is still in progress");
+                else if (userProfile.IsBlacklisted) validationErrors.Add("Login unsuccessful... Your account has been restricted due to policy violations. Please contact support.");
 
                 if (validationErrors.Count > 0)
                 {

@@ -7,11 +7,11 @@ import {
   LayoutDashboard,
   LogOut,
   User as UserIcon,
+  UserX,
 } from "lucide-react";
 import Image from "next/image";
 import { getUserSession, clearUserSession } from "@/utils/tokenManager";
 import { useEffect, useState } from "react";
-
 
 import { Users as UsersIcon } from "lucide-react";
 
@@ -35,6 +35,7 @@ export default function AdminSidebar() {
   const sidebarLinks = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { name: "App Users", href: "/admin/users", icon: UsersIcon },
+    { name: "Blacklisted Users", href: "/admin/blacklisted", icon: UserX },
     { name: "Manual KYC", href: "/admin/kyc", icon: ShieldCheck },
   ];
 
