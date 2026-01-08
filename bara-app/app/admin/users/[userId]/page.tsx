@@ -208,19 +208,61 @@ export default function UserDetailPage({
               <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">
                 Wallet Overview
               </h3>
-              <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                <div className="flex items-center gap-3 mb-1">
-                  <Wallet size={18} className="text-[#810306]" />
-                  <span className="text-xs text-gray-500 uppercase font-bold tracking-tight">
-                    Available Balance
-                  </span>
+              <div className="grid grid-cols-1 gap-4">
+                <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                  <div className="flex items-center gap-3 mb-1">
+                    <Wallet size={18} className="text-[#810306]" />
+                    <span className="text-xs text-gray-500 uppercase font-bold tracking-tight">
+                      Available Balance
+                    </span>
+                  </div>
+                  <p className="text-2xl font-black text-gray-900 tracking-tighter">
+                    {new Intl.NumberFormat("en-NG", {
+                      style: "currency",
+                      currency: user.currency || "NGN",
+                    }).format(user.walletBalance)}
+                  </p>
                 </div>
-                <p className="text-2xl font-black text-gray-900 tracking-tighter">
-                  {new Intl.NumberFormat("en-NG", {
-                    style: "currency",
-                    currency: user.currency || "NGN",
-                  }).format(user.walletBalance)}
-                </p>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                    <p className="text-[10px] text-gray-400 uppercase font-bold">
+                      Locked
+                    </p>
+                    <p className="text-sm font-bold text-gray-700">
+                      {new Intl.NumberFormat("en-NG", {
+                        style: "currency",
+                        currency: user.currency || "NGN",
+                      }).format(user.lockedBalance)}
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                    <p className="text-[10px] text-gray-400 uppercase font-bold">
+                      Total
+                    </p>
+                    <p className="text-sm font-bold text-gray-700">
+                      {new Intl.NumberFormat("en-NG", {
+                        style: "currency",
+                        currency: user.currency || "NGN",
+                      }).format(user.totalBalance)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-green-50 p-4 rounded-xl border border-green-100">
+                  <div className="flex items-center gap-3 mb-1">
+                    <CreditCard size={18} className="text-green-700" />
+                    <span className="text-xs text-green-700 uppercase font-bold tracking-tight">
+                      Total Earnings
+                    </span>
+                  </div>
+                  <p className="text-xl font-black text-green-900 tracking-tighter">
+                    {new Intl.NumberFormat("en-NG", {
+                      style: "currency",
+                      currency: user.currency || "NGN",
+                    }).format(user.totalEarnings)}
+                  </p>
+                </div>
               </div>
             </div>
           </div>

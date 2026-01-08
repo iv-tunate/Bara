@@ -726,6 +726,12 @@ export const api = {
       body: JSON.stringify(data),
     });
   },
+  adminUserTotalEarnings: async (userId: string) => {
+    return apiRequest(`${BASE_URL}/api/user/earnings/${userId}`, {
+      method: "GET",
+      requireAuth: true,
+    });
+  },
 };
 
 export const API_ERROR_MESSAGES = {

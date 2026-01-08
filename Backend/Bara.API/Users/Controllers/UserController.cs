@@ -259,5 +259,16 @@ namespace Bara.API.Users.Controllers
             var response = await userService.SearchUsers(query, pageNumber, pageSize);
             return StatusCode(response.StatusCode, response);
         }
+
+        /// <summary>
+        /// Retrieves total earnings for a user. Admin-only endpoint.
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpGet("earnings/{userId}")]
+        public async Task<IActionResult> GetTotalEarnings(Guid userId)
+        {
+            var response = await userService.GetTotalEarnings(userId);
+            return StatusCode(response.StatusCode, response);
+        }
     }
 }

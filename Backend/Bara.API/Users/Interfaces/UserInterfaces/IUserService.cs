@@ -101,5 +101,10 @@ namespace Bara.API.Users.Interfaces.UserInterfaces
         /// Searches for users by name or email with pagination.
         /// </summary>
         Task<ResponseDetail<List<AdminUserListDTO>>> SearchUsers(string query, int pageNumber, int pageSize);
+        
+        /// <summary>
+        /// Calculates the total earnings for a user from completed script transactions.
+        /// </summary>
+        Task<ResponseDetail<decimal>> GetTotalEarnings(Guid userId);
     }
 }

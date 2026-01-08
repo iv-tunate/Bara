@@ -423,6 +423,10 @@ namespace Bara.API.Users.Repositories
                     return ResponseDetail<AdminUserDetailDTO>.Failed("User not found", 404);
                 }
 
+                var totalEarnings = await dbContext.ScriptTransactions
+                    .Where(st => st.WriterId == userId && st.TransactionStatus == ScriptTransactionStatus.Completed)
+                    .SumAsync(st => st.WriterShare);
+
                 var detail = new AdminUserDetailDTO
                 {
                     Id = user.Id,
@@ -432,12 +436,45 @@ namespace Bara.API.Users.Repositories
                     CreatedAt = user.CreatedAt,
                     ProfileImageUrl = user.ProfileImageUrl,
                     PhoneNumber = user.PhoneNumber,
-                    WalletBalance = user.Wallet.AvailableBalance,
+                    WalletBalance = user.Wallet?.AvailableBalance ?? 0,
                     Bio = user.Bio,
-                    TotalBalance = user.Wallet.TotalBalance,
-                    LockedBalance = user.Wallet.LockedBalance,
+                    TotalBalance = user.Wallet?.TotalBalance ?? 0,
+                    LockedBalance = user.Wallet?.LockedBalance ?? 0,
+                    TotalEarnings = totalEarnings,
                     Name = (string.IsNullOrEmpty(user.FirstName) && string.IsNullOrEmpty(user.LastName)) ? string.Empty : user.FirstName + " " + user.LastName,
-                    
+                    Scripts = await dbContext.Scripts
+                        .AsNoTracking()
+                        .Where(s => s.WriterId == userId)
+                        .Select(s => new AdminUserScriptDTO
+                        {
+                            Id = s.Id,
+                            Title = s.Title,
+                            Status = s.Status.ToString(),
+                            CreatedAt = s.CreatedAt
+                        }).ToListAsync(),
+                    Transactions = await dbContext.Transactions
+                        .AsNoTracking()
+                        .Where(t => t.UserId == userId)
+                        .Select(t => new AdminUserTransactionDTO
+                        {
+                            Id = t.Id,
+                            Amount = t.Amount,
+                            Currency = t.Currency.ToString(),
+                            Type = t.TransactionType.ToString(),
+                            Status = t.Status.ToString(),
+                            CreatedAt = t.CreatedAt
+                        }).ToListAsync(),
+                    ScriptTransactions = await dbContext.ScriptTransactions
+                        .AsNoTracking()
+                        .Where(st => st.WriterId == userId || st.ProducerId == userId)
+                        .Select(st => new AdminUserScriptTransactionDTO
+                        {
+                            Id = st.Id,
+                            ScriptTitle = st.ScriptTitle,
+                            Amount = st.Amount,
+                            Status = st.TransactionStatus.ToString(),
+                            CreatedAt = st.CreatedAt
+                        }).ToListAsync()
                 };
 
                 return ResponseDetail<AdminUserDetailDTO>.Successful(detail, "User details retrieved successfully");
@@ -446,6 +483,23 @@ namespace Bara.API.Users.Repositories
             {
                 logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"retrieving admin user detail for {userId}");
                 return ResponseDetail<AdminUserDetailDTO>.Failed("An error occurred while retrieving user details", 500);
+            }
+        }
+
+        public async Task<ResponseDetail<decimal>> GetTotalEarnings(Guid userId)
+        {
+            try
+            {
+                var totalEarnings = await dbContext.ScriptTransactions
+                    .Where(st => st.WriterId == userId && st.TransactionStatus == ScriptTransactionStatus.Completed)
+                    .SumAsync(st => st.WriterShare);
+
+                return ResponseDetail<decimal>.Successful(totalEarnings, "Total earnings retrieved successfully");
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"calculating total earnings for user {userId}");
+                return ResponseDetail<decimal>.Failed(0, "An error occurred while calculating earnings", 500);
             }
         }
 
