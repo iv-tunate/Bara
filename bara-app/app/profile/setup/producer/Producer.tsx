@@ -13,6 +13,7 @@ import { updateUserSession, getUserSession } from "@/utils/tokenManager";
 import toast from "react-hot-toast";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+import { ProcessingModal, ProcessingStatus } from "@/components/ResponseModal";
 import LoadingButton from "@/components/LoadingButton";
 
 type TabType = "personal" | "location" | "identity";
@@ -20,7 +21,10 @@ type TabType = "personal" | "location" | "identity";
 export default function ProducerProfilePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("personal");
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [isProcessingModalOpen, setIsProcessingModalOpen] = useState(false);
+  const [processingStatus, setProcessingStatus] =
+    useState<ProcessingStatus>("loading");
   const [error, setError] = useState("");
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [profileImageUrl, setProfileImageUrl] = useState("");
@@ -29,8 +33,6 @@ export default function ProducerProfilePage() {
     null
   );
   const [uploading, setUploading] = useState(false);
-
-  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -182,7 +184,9 @@ export default function ProducerProfilePage() {
     (activeTab === "identity" && isIdentityInfoComplete);
 
   const submitProducerProfile = async () => {
-    setIsLoading(true);
+    setLoading(true);
+    setIsProcessingModalOpen(true);
+    setProcessingStatus("loading");
     setError("");
 
     try {
@@ -233,15 +237,19 @@ export default function ProducerProfilePage() {
       const response = await api.createProducer(form, userId);
 
       if (response.success) {
+        setProcessingStatus("success");
         toast.success("Producer profile setup complete!");
-        router.push("/dashboard");
 
         updateUserSession({
           profileComplete: true,
           name: `${response.data.data.name}`,
         });
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 2000);
         return;
       } else {
+        setProcessingStatus("error");
         setError(
           response.data.message ||
             "Failed to create producer profile. Please try again."
@@ -250,9 +258,10 @@ export default function ProducerProfilePage() {
       }
     } catch (error) {
       console.error("Producer profile creation error:", error);
+      setProcessingStatus("error");
       setError("An unexpected error occurred. Please try again.");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -574,6 +583,17 @@ export default function ProducerProfilePage() {
           </div>
         </div>
       </form>
+
+      <ProcessingModal
+        isOpen={isProcessingModalOpen}
+        status={processingStatus}
+        loadingMessage="Finalizing your profile setup"
+        successMessage="Profile created successfully! Redirecting..."
+        errorMessage={
+          error || "An error occurred during setup. Please try again."
+        }
+        onClose={() => setIsProcessingModalOpen(false)}
+      />
     </div>
   );
 }

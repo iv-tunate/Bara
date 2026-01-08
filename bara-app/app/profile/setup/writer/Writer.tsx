@@ -42,6 +42,9 @@ export default function WriterProfilePage() {
   const [uploading, setUploading] = useState(false);
 
   const [loading, setLoading] = useState(false);
+  const [isProcessingModalOpen, setIsProcessingModalOpen] = useState(false);
+  const [processingStatus, setProcessingStatus] =
+    useState<ProcessingStatus>("loading");
 
   const [experiences, setExperiences] = useState<Experience[]>([
     {
@@ -206,6 +209,8 @@ export default function WriterProfilePage() {
       }
 
       setLoading(true);
+      setIsProcessingModalOpen(true);
+      setProcessingStatus("loading");
 
       try {
         const form = new FormData();
@@ -276,24 +281,30 @@ export default function WriterProfilePage() {
         const res = await api.createWriter(form, userId as string);
         //  console.log("Response Data:", res.data);
         if (res.data.isSuccess && res.data.statusCode === 201) {
+          setProcessingStatus("success");
           toast.success("Writer profile setup complete!");
           updateUserSession({
             profileComplete: true,
             name: `${res.data.data.name}`,
           });
-          router.push(`/writer/profile`);
+          setTimeout(() => {
+            router.push(`/writer/profile`);
+          }, 2000);
           return;
         } else if (res.data.statusCode === 409) {
+          setProcessingStatus("conflict");
           toast.error(res.data.message);
           setTimeout(() => {
             router.push(`/writer/profile`);
           }, 1500);
           return;
         } else {
+          setProcessingStatus("error");
           toast.error(res.data.message || "Failed to create writer profile");
         }
       } catch (err) {
         console.error(err);
+        setProcessingStatus("error");
         toast.error("An unexpected error occurred. Check console.");
       } finally {
         setLoading(false);
@@ -602,6 +613,15 @@ export default function WriterProfilePage() {
           </div>
         </div>
       </form>
+
+      <ProcessingModal
+        isOpen={isProcessingModalOpen}
+        status={processingStatus}
+        loadingMessage="Finalizing your profile setup"
+        successMessage="Profile created successfully! Redirecting..."
+        errorMessage="An error occurred during setup. Please try again."
+        onClose={() => setIsProcessingModalOpen(false)}
+      />
     </div>
   );
 }
