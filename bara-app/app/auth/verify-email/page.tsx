@@ -61,7 +61,9 @@ function VerifyEmailPageContent() {
 
         const rawUserType = localStorage.getItem("userType") || "";
         const userType =
-          rawUserType !== "" ? rawUserType.toLowerCase() : (data.role || "unknown").toLowerCase();
+          rawUserType !== ""
+            ? rawUserType.toLowerCase()
+            : (data.role || "unknown").toLowerCase();
 
         setUserSession({
           userId: data.data.userId,
@@ -78,6 +80,10 @@ function VerifyEmailPageContent() {
 
         if (userType === "writer" || userType === "producer") {
           setTimeout(() => router.push(`/profile/setup/${userType}`), 1000);
+        } else if (userType === "admin") {
+          setTimeout(() => router.push("/admin"), 1000);
+        } else {
+          setTimeout(() => router.push("/dashboard"), 1000);
         }
       } else {
         const res = await response.json();
@@ -109,7 +115,7 @@ function VerifyEmailPageContent() {
 
     setIsResending(true);
     const deviceFingerprint = generateDeviceFingerprint();
-    
+
     try {
       const response = await fetch(
         `${baseUrl}${resendVerificationTokenUrl}/${email}/register/${deviceFingerprint}`,

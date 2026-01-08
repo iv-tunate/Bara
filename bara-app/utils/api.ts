@@ -183,6 +183,12 @@ const API_ENDPOINTS = {
   UPDATE_SCRIPT_CONTENT: (scriptId: string, writerId: string) =>
     `/api/script/${scriptId}/content/${writerId}`,
   NOTIFICATIONS: "/api/notification",
+  ADMIN_ALL_USERS: (pageNumber: number, pageSize: number) =>
+    `/api/user/all?pageNumber=${pageNumber}&pageSize=${pageSize}`,
+  ADMIN_USER_DETAIL: (userId: string) => `/api/user/detail/${userId}`,
+  ADMIN_SEARCH_USERS: (query: string) =>
+    `/api/user/search?query=${encodeURIComponent(query)}`,
+  ADMIN_RETRY_KYC: "/api/user/retry-kyc",
 };
 
 export const api = {
@@ -672,6 +678,53 @@ export const api = {
         requireAuth: true,
       }
     );
+  },
+
+  // --- ADMIN API ---
+  adminAllUsers: async (pageNumber: number = 1, pageSize: number = 50) => {
+    return apiRequest(
+      `${BASE_URL}${API_ENDPOINTS.ADMIN_ALL_USERS(pageNumber, pageSize)}`,
+      {
+        method: "GET",
+        requireAuth: true,
+      }
+    );
+  },
+
+  adminUserDetail: async (userId: string) => {
+    return apiRequest(`${BASE_URL}${API_ENDPOINTS.ADMIN_USER_DETAIL(userId)}`, {
+      method: "GET",
+      requireAuth: true,
+    });
+  },
+
+  adminSearchUsers: async (
+    query: string,
+    pageNumber: number = 1,
+    pageSize: number = 25
+  ) => {
+    return apiRequest(
+      `${BASE_URL}${API_ENDPOINTS.ADMIN_SEARCH_USERS(
+        query
+      )}&pageNumber=${pageNumber}&pageSize=${pageSize}`,
+      {
+        method: "GET",
+        requireAuth: true,
+      }
+    );
+  },
+
+  adminRetryKyc: async (data: {
+    UserId: string;
+    AdminId: string;
+    VerificationNumber: string;
+    VerificationType: string;
+  }) => {
+    return apiRequest(`${BASE_URL}${API_ENDPOINTS.ADMIN_RETRY_KYC}`, {
+      method: "POST",
+      requireAuth: true,
+      body: JSON.stringify(data),
+    });
   },
 };
 

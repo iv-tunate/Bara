@@ -83,8 +83,23 @@ namespace Bara.API.Users.Interfaces.UserInterfaces
         /// Manually retries KYC verification for a user who has previously failed verification.
         /// This endpoint allows administrators to trigger a new KYC verification attempt.
         /// </summary>
-        /// <param name="userId">The unique identifier of the user to retry KYC for</param>
+        /// <param name="payload">The payload containing userId, verificationNumber and verificationType</param>
         /// <returns>A response indicating whether the KYC retry was successfully initiated</returns>
-        Task<ResponseDetail<bool>> RetryKycVerification(Guid userId);
+        Task<ResponseDetail<bool>> RetryKycVerification(RetryKycDTO payload);
+
+        /// <summary>
+        /// Retrieves all users for admin dashboard.
+        /// </summary>
+        Task<ResponseDetail<List<AdminUserListDTO>>> GetAllUsers(int pageNumber, int pageSize);
+
+        /// <summary>
+        /// Retrieves detailed information about a user for admin dashboard.
+        /// </summary>
+        Task<ResponseDetail<AdminUserDetailDTO>> GetAdminUserDetail(Guid userId);
+
+        /// <summary>
+        /// Searches for users by name or email with pagination.
+        /// </summary>
+        Task<ResponseDetail<List<AdminUserListDTO>>> SearchUsers(string query, int pageNumber, int pageSize);
     }
 }

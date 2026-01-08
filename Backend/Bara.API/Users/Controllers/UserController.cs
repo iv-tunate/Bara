@@ -196,35 +196,68 @@ namespace Bara.API.Users.Controllers
         /// <summary>
         /// Manually retries KYC verification for a user. Admin-only endpoint.
         /// </summary>
-        /// <param name="userId">The unique identifier of the user to retry KYC for</param>
+        /// <param name="payload">The unique identifiers and verification details for the user</param>
         /// <returns>Returns 200 OK if retry was successful, 400/404 if validation fails, or 500 on error</returns>
         [Authorize(Roles = "Admin")]
-        [HttpPost("retry-kyc/{userId}")]
-        public async Task<IActionResult> RetryKycVerification(Guid userId)
+        [HttpPost("retry-kyc")]
+        public async Task<IActionResult> RetryKycVerification([FromBody] RetryKycDTO payload)
         {
             try
             {
-                var response = await userService.RetryKycVerification(userId);
+                var response = await userService.RetryKycVerification(payload);
                 if (response.IsSuccess)
                 {
                     return Ok(response);
                 }
                 else if (response.StatusCode == 404)
                 {
-                    logger.LogWarning("KYC retry failed for user {UserId}: User not found", userId);
+                    logger.LogWarning("KYC retry failed for user {UserId}: User not found", payload.UserId);
                     return NotFound(response);
                 }
                 else
                 {
-                    logger.LogWarning("KYC retry failed for user {UserId}: {Message}", userId, response.Message);
+                    logger.LogWarning("KYC retry failed for user {UserId}: {Message}", payload.UserId, response.Message);
                     return BadRequest(response);
                 }
             }
             catch (Exception ex)
             {
-                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"Retrying KYC for user {userId}");
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"Retrying KYC for user {payload.UserId}");
                 return StatusCode(500, ResponseDetail<string>.Failed("An error occurred while retrying KYC verification", 500, "Internal server error"));
             }
+        }
+
+        /// <summary>
+        /// Retrieves all users. Admin-only endpoint.
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAllUsers([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 50)
+        {
+            var response = await userService.GetAllUsers(pageNumber, pageSize);
+            return StatusCode(response.StatusCode, response);
+        }
+
+        /// <summary>
+        /// Retrieves detailed information about a user. Admin-only endpoint.
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpGet("detail/{userId}")]
+        public async Task<IActionResult> GetAdminUserDetail(Guid userId)
+        {
+            var response = await userService.GetAdminUserDetail(userId);
+            return StatusCode(response.StatusCode, response);
+        }
+
+        /// <summary>
+        /// Searches for users. Admin-only endpoint.
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpGet("search")]
+        public async Task<IActionResult> SearchUsers([FromQuery] string query, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 25)
+        {
+            var response = await userService.SearchUsers(query, pageNumber, pageSize);
+            return StatusCode(response.StatusCode, response);
         }
     }
 }

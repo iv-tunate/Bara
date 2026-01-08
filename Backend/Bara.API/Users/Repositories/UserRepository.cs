@@ -15,6 +15,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Services.MailingService;
 using System.Security.Cryptography;
+using Bara.API.Scripts.Models;
+using Bara.API.Transactions.Models;
+using Bara.API.Scripts.Enums;
+using Bara.API.Transactions.Enums;
 
 namespace Bara.API.Users.Repositories
 {
@@ -324,46 +328,173 @@ namespace Bara.API.Users.Repositories
             }
         }
 
-        public async Task<ResponseDetail<bool>> RetryKycVerification(Guid userId)
+        public async Task<ResponseDetail<bool>> RetryKycVerification(RetryKycDTO payload)
         {
             try
             {
                 var user = await dbContext.Users
                     .Include(x => x.Document)
-                    .FirstOrDefaultAsync(x => x.Id == userId);
+                    .FirstOrDefaultAsync(x => x.Id == payload.UserId);
 
                 if (user is null)
                 {
-                    logger.LogWarning($"KYC retry failed: User with ID {userId} not found");
+                    logger.LogWarning($" KYC retry failed: User with ID {payload.UserId} not found (Initiated by {payload.AdminId})");
                     return ResponseDetail<bool>.Failed(false, "User not found", 404, "Not Found");
                 }
 
-                if (user.Document is null || string.IsNullOrEmpty(user.Document.IdentificationNumber))
+                if (user.Document == null)
                 {
-                    logger.LogWarning($"KYC retry failed: User {userId} has no verification document");
-                    return ResponseDetail<bool>.Failed(false, "User has no verification document on file", 400, "Bad Request");
+                    logger.LogWarning($"KYC retry failed for user {user.Id}: No identity document record found.");
+                    return ResponseDetail<bool>.Failed(false, "No document found for this user. KYC retry cannot be initiated without an existing document record.", 400);
                 }
 
-                if (user.VerificationStatus == VerificationStatus.Approved)
-                {
-                    logger.LogInformation($"KYC retry skipped: User {userId} is already verified");
-                    return ResponseDetail<bool>.Successful(true, "User is already verified");
-                }
+                user.Document.IdentificationNumber = payload.VerificationNumber;
+                user.Document.DocumentType = payload.VerificationType;
+                
+                await dbContext.SaveChangesAsync();
 
                 KycHelper.InitiateKycProcess(
-                    user.Document.IdentificationNumber,
-                    user.Document.DocumentType,
+                    payload.VerificationNumber,
+                    payload.VerificationType,
                     user.Id,
                     user.LastName
                 );
 
-                logger.LogInformation($"KYC verification retry initiated for user {userId}");
+                logger.LogInformation($"Admin-initiated KYC verification retry for user {user.Id} by admin {payload.AdminId}");
                 return ResponseDetail<bool>.Successful(true, "KYC verification retry has been initiated successfully");
             }
             catch (Exception ex)
             {
-                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"retrying KYC for user {userId}");
-                return ResponseDetail<bool>.Failed(false, "An error occurred while retrying KYC verification. Please try again later.");
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"admin retrying KYC for user {payload.UserId}");
+                return ResponseDetail<bool>.Failed(false, "An error occurred while retrying KYC verification. Please try again later.", 500);
+            }
+        }
+
+        public async Task<ResponseDetail<List<AdminUserListDTO>>> GetAllUsers(int pageNumber, int pageSize)
+        {
+            try
+            {
+                var query = dbContext.Users.AsNoTracking();
+                var totalCount = await query.CountAsync();
+                var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+                var users = await query
+                    .OrderByDescending(u => u.CreatedAt)
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .Select(u => new AdminUserListDTO
+                    {
+                        Id = u.Id,
+                        Name = (string.IsNullOrEmpty(u.FirstName) && string.IsNullOrEmpty(u.LastName)) ? string.Empty : u.FirstName + " " + u.LastName,
+                        Email = u.Email,
+                        Role = u.AuthProfile.Role,
+                        VerificationStatus = u.VerificationStatus.ToString(),
+                        CreatedAt = u.CreatedAt,
+                        ProfileImageUrl = u.ProfileImageUrl
+                    })
+                    .ToListAsync();
+
+                if (totalCount < 1)
+                {
+                    return ResponseDetail<List<AdminUserListDTO>>.SuccessfulPaginatedResponse(users, totalCount, totalPages, pageNumber, "No users found", 204);
+                }
+
+                return ResponseDetail<List<AdminUserListDTO>>.SuccessfulPaginatedResponse(users, totalCount, totalPages, pageNumber, "Users retrieved successfully");
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, "retrieving all users for admin");
+                return ResponseDetail<List<AdminUserListDTO>>.Failed("An error occurred while retrieving users", 500);
+            }
+        }
+
+        public async Task<ResponseDetail<AdminUserDetailDTO>> GetAdminUserDetail(Guid userId)
+        {
+            try
+            {
+                var user = await dbContext.Users
+                    .AsNoTracking()
+                    .Include(u => u.AuthProfile)
+                    .Include(u => u.Wallet)
+                    .FirstOrDefaultAsync(u => u.Id == userId);
+
+                if (user == null)
+                {
+                    return ResponseDetail<AdminUserDetailDTO>.Failed("User not found", 404);
+                }
+
+                var detail = new AdminUserDetailDTO
+                {
+                    Id = user.Id,
+                    Email = user.Email,
+                    Role = user.AuthProfile.Role,
+                    VerificationStatus = user.VerificationStatus.ToString(),
+                    CreatedAt = user.CreatedAt,
+                    ProfileImageUrl = user.ProfileImageUrl,
+                    PhoneNumber = user.PhoneNumber,
+                    WalletBalance = user.Wallet.AvailableBalance,
+                    Bio = user.Bio,
+                    TotalBalance = user.Wallet.TotalBalance,
+                    LockedBalance = user.Wallet.LockedBalance,
+                    Name = (string.IsNullOrEmpty(user.FirstName) && string.IsNullOrEmpty(user.LastName)) ? string.Empty : user.FirstName + " " + user.LastName,
+                    
+                };
+
+                return ResponseDetail<AdminUserDetailDTO>.Successful(detail, "User details retrieved successfully");
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"retrieving admin user detail for {userId}");
+                return ResponseDetail<AdminUserDetailDTO>.Failed("An error occurred while retrieving user details", 500);
+            }
+        }
+
+        public async Task<ResponseDetail<List<AdminUserListDTO>>> SearchUsers(string query, int pageNumber, int pageSize)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(query))
+                {
+                    return ResponseDetail<List<AdminUserListDTO>>.Failed("Search query cannot be empty", 400);
+                }
+
+                var lowerQuery = query.ToLower();
+                var baseQuery = dbContext.Users
+                    .AsNoTracking()
+                    .Where(u => u.Email.ToLower().Contains(lowerQuery) || 
+                               u.FirstName.ToLower().Contains(lowerQuery) || 
+                               u.LastName.ToLower().Contains(lowerQuery));
+
+                var totalCount = await baseQuery.CountAsync();
+                var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+                var users = await baseQuery
+                    .OrderByDescending(u => u.CreatedAt)
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .Select(u => new AdminUserListDTO
+                    {
+                        Id = u.Id,
+                        Name = (string.IsNullOrEmpty(u.FirstName) && string.IsNullOrEmpty(u.LastName)) ? string.Empty : u.FirstName + " " + u.LastName,
+                        Email = u.Email,
+                        Role = u.AuthProfile.Role,
+                        VerificationStatus = u.VerificationStatus.ToString(),
+                        CreatedAt = u.CreatedAt,
+                        ProfileImageUrl = u.ProfileImageUrl
+                    })
+                    .ToListAsync();
+
+                if (totalCount < 1)
+                {
+                    return ResponseDetail<List<AdminUserListDTO>>.SuccessfulPaginatedResponse(users, totalCount, totalPages, pageNumber, $"No users found matching '{query}'", 204);
+                }
+
+                return ResponseDetail<List<AdminUserListDTO>>.SuccessfulPaginatedResponse(users, totalCount, totalPages, pageNumber, $"Found {totalCount} users matching '{query}'");
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"paginated searching users for '{query}'");
+                return ResponseDetail<List<AdminUserListDTO>>.Failed("An error occurred during user search", 500);
             }
         }
     }

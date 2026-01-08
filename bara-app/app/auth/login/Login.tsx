@@ -62,7 +62,7 @@ export default function LoginPage() {
         setUserSession({
           userId: response.userId,
           email: response.email,
-          name: response.name,
+          name: response.name ?? "Friend",
           userType: response.role,
           accessToken: response.accessToken,
           wrongLoginAttempts: response.wrongLoginAttempts,
@@ -72,7 +72,9 @@ export default function LoginPage() {
           VerificationStatus: response.verificationStatus,
         });
 
-        if (!response.isProfileSetupComplete) {
+        if (response.role === "Admin") {
+          router.push("/admin");
+        } else if (!response.isProfileSetupComplete) {
           router.push(`/profile/setup/${response.role.toLowerCase()}`);
         } else {
           router.push(returnUrl);
@@ -128,14 +130,14 @@ export default function LoginPage() {
           VerificationStatus: response.verificationStatus,
         });
 
-        if (!response.isProfileSetupComplete) {
+        if (response.role === "Admin") {
+          router.push("/admin");
+        } else if (!response.isProfileSetupComplete) {
           if (response.role === "Producer") {
             router.push("/profile/setup/producer");
           } else if (response.role === "Writer") {
             router.push("/profile/setup/writer");
-          } //else {
-          //router.push(`/dashboard`);
-          //}
+          }
         } else {
           router.push(returnUrl);
         }
@@ -213,7 +215,7 @@ export default function LoginPage() {
             src="/family.png"
             alt="Login Illustration"
             fill
-            className="object-cover object-left-top"
+            className="object-cover object-top-left"
             priority
           />
         </div>
@@ -223,7 +225,13 @@ export default function LoginPage() {
           <div className="w-full max-w-sm ">
             {" "}
             <div className="mb-4 -ml-4 self-start cursor-pointer">
-              <Image src="/logo.png" alt="Bara Logo" width={90} height={60} onClick={() => router.push("/")}  />
+              <Image
+                src="/logo.png"
+                alt="Bara Logo"
+                width={90}
+                height={60}
+                onClick={() => router.push("/")}
+              />
             </div>
             <h1 className="text-2xl font-semibold mb-8 text-[#22242A] text-left">
               {needsVerification ? "Verify Login" : "Log in"}
