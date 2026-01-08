@@ -286,21 +286,22 @@ namespace Bara.API.Users.Repositories
         {
             try
             {
-                var blackListedUser = await dbContext.BlackListedUsers
-                    .Include(x => x.User)
-                    .FirstOrDefaultAsync(x => x.UserId == userId);
+                var user = await dbContext.BlackListedUsers
+                    .Include(b => b.User)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(b => b.UserId == userId);
 
-                if (blackListedUser == null)
+                if (user == null)
                 {
-                    return ResponseDetail<BlackListedUser>.Failed(null, "Blacklist record not found", 404);
+                    return ResponseDetail<BlackListedUser>.Failed("Blacklisted user record not found", 404);
                 }
 
-                return ResponseDetail<BlackListedUser>.Successful(blackListedUser, "Blacklisted user retrieved successfully");
+                return ResponseDetail<BlackListedUser>.Successful(user, "Blacklisted user details retrieved successfully");
             }
             catch (Exception ex)
             {
-                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"getting blacklisted user {userId}");
-                return ResponseDetail<BlackListedUser>.Failed(null, "An error occurred while retrieving the blacklisted user", 500);
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"retrieving blacklisted user detail for {userId}");
+                return ResponseDetail<BlackListedUser>.Failed("An error occurred while retrieving blacklisted user details", 500);
             }
         }
 
@@ -308,19 +309,49 @@ namespace Bara.API.Users.Repositories
         {
             try
             {
-                var blackListedUsers = await dbContext.BlackListedUsers
-                    .Include(x => x.User)
-                    .OrderByDescending(x => x.BlackListedAt)
+                var query = dbContext.BlackListedUsers
+                    .Include(b => b.User)
+                    .AsNoTracking();
+
+                var totalCount = await query.CountAsync();
+                var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+                var users = await query
+                    .OrderByDescending(b => b.BlackListedAt)
                     .Skip((pageNumber - 1) * pageSize)
                     .Take(pageSize)
                     .ToListAsync();
 
-                return ResponseDetail<List<BlackListedUser>>.Successful(blackListedUsers, "Blacklisted users retrieved successfully");
+                return ResponseDetail<List<BlackListedUser>>.SuccessfulPaginatedResponse(users, totalCount, totalPages, pageNumber, "Blacklisted users retrieved successfully");
             }
             catch (Exception ex)
             {
-                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, "getting blacklisted users");
-                return ResponseDetail<List<BlackListedUser>>.Failed(new List<BlackListedUser>(), "An error occurred while retrieving blacklisted users", 500);
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, "retrieving blacklisted users");
+                return ResponseDetail<List<BlackListedUser>>.Failed("An error occurred while retrieving blacklisted users", 500);
+            }
+        }
+
+        public async Task<ResponseDetail<PlatformStatsDTO>> GetPlatformStats()
+        {
+            try
+            {
+                var stats = new PlatformStatsDTO
+                {
+                    TotalUsers = await dbContext.Users.CountAsync(),
+                    PendingKyc = await dbContext.Users.CountAsync(u => u.VerificationStatus == VerificationStatus.Pending),
+                    BlacklistedUsers = await dbContext.BlackListedUsers.CountAsync(),
+                    TotalScripts = await dbContext.Scripts.CountAsync(),
+                    TotalPlatformEarnings = await dbContext.ScriptTransactions
+                        .Where(st => st.TransactionStatus == ScriptTransactionStatus.Completed)
+                        .SumAsync(st => st.Amount)
+                };
+
+                return ResponseDetail<PlatformStatsDTO>.Successful(stats, "Platform statistics retrieved successfully");
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, "calculating platform statistics");
+                return ResponseDetail<PlatformStatsDTO>.Failed("An error occurred while calculating platform statistics", 500);
             }
         }
 

@@ -29,8 +29,9 @@ export default function BlacklistedUsersPage() {
     try {
       const response = await api.getBlacklistedUsers(currentPage, pageSize);
       if (response.success && response.data) {
-        setBlacklistedUsers(response.data);
-        setTotalPages(response.totalPages || 1);
+        const responseDetail = response.data;
+        setBlacklistedUsers(responseDetail.data || []);
+        setTotalPages(responseDetail.totalPages || 1);
       }
     } catch (error) {
       console.error("Failed to load blacklisted users:", error);

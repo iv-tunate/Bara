@@ -306,5 +306,15 @@ namespace Bara.API.Users.Controllers
             var response = await userService.GetBlackListedUsers(pageNumber, pageSize);
             return StatusCode(response.StatusCode, response);
         }
+        /// <summary>
+        /// Retrieves platform-wide statistics. Admin-only endpoint.
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpGet("stats")]
+        public async Task<IActionResult> GetPlatformStats()
+        {
+            var response = await userService.GetPlatformStats();
+            return StatusCode(response.StatusCode, response);
+        }
     }
 }

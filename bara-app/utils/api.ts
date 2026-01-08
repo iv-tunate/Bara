@@ -761,6 +761,12 @@ export const api = {
       }
     );
   },
+  getPlatformStats: async () => {
+    return apiRequest(`${BASE_URL}/api/user/stats`, {
+      method: "GET",
+      requireAuth: true,
+    });
+  },
 };
 
 export const API_ERROR_MESSAGES = {

@@ -106,5 +106,10 @@ namespace Bara.API.Users.Interfaces.UserInterfaces
         /// Calculates the total earnings for a user from completed script transactions.
         /// </summary>
         Task<ResponseDetail<decimal>> GetTotalEarnings(Guid userId);
+
+        /// <summary>
+        /// Retrieves platform-wide statistics for the admin dashboard.
+        /// </summary>
+        Task<ResponseDetail<PlatformStatsDTO>> GetPlatformStats();
     }
 }

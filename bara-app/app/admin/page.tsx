@@ -1,47 +1,73 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { api } from "@/utils/api";
 import { getUserSession } from "@/utils/tokenManager";
-import { Users, TrendingUp, ShieldCheck, Activity } from "lucide-react";
+import {
+  Users,
+  TrendingUp,
+  ShieldCheck,
+  Activity,
+  User as UserIcon,
+} from "lucide-react";
 
 export default function AdminDashboardPage() {
   const [adminEmail, setAdminEmail] = useState("");
+  const [statsData, setStatsData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const session = getUserSession();
     if (session) {
       setAdminEmail(session.email);
     }
+
+    const fetchStats = async () => {
+      try {
+        const response = await api.getPlatformStats();
+        if (response.success && response.data) {
+          setStatsData(response.data.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch stats:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
   }, []);
 
   const stats = [
     {
       name: "Total Users",
-      value: "---",
+      value: loading ? "..." : statsData?.totalUsers?.toLocaleString() || "0",
       icon: Users,
       color: "text-blue-600",
       bg: "bg-blue-50",
     },
     {
       name: "Pending KYC",
-      value: "---",
+      value: loading ? "..." : statsData?.pendingKyc?.toLocaleString() || "0",
       icon: ShieldCheck,
       color: "text-yellow-600",
       bg: "bg-yellow-50",
     },
     {
-      name: "Daily Activity",
-      value: "---",
+      name: "Blacklisted",
+      value: loading
+        ? "..."
+        : statsData?.blacklistedUsers?.toLocaleString() || "0",
+      icon: UserIcon,
+      color: "text-red-600",
+      bg: "bg-red-50",
+    },
+    {
+      name: "Total Scripts",
+      value: loading ? "..." : statsData?.totalScripts?.toLocaleString() || "0",
       icon: Activity,
       color: "text-green-600",
       bg: "bg-green-50",
-    },
-    {
-      name: "Platform Growth",
-      value: "+---%",
-      icon: TrendingUp,
-      color: "text-purple-600",
-      bg: "bg-purple-50",
     },
   ];
 
