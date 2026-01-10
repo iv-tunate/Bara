@@ -2,6 +2,7 @@
 using Bara.API.Scripts.Models.ScriptRelatedChats;
 using Bara.API.Transactions.Models;
 using Bara.API.Users.Models;
+using Bara.API.Utilities.Models;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -51,6 +52,7 @@ namespace Bara.API.DataContext
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<Chat> Chats { get; set; }
         public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
+        public DbSet<DatabaseBackup> DatabaseBackups { get; set; }
 
         //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         //{

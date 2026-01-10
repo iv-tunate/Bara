@@ -1,7 +1,10 @@
-﻿using Bara.API.Services.Paystack;
+﻿using Bara.API.Services.BackgroudServices;
+using Bara.API.Services.Paystack;
 using Bara.API.Utilities.ToolKit;
+using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Bara.API.Utilities.Controllers
 {
@@ -38,5 +41,18 @@ namespace Bara.API.Utilities.Controllers
                 return StatusCode(500, ResponseDetail<string>.Failed("An error occured", 500, "Internal server error"));
             }
         }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost("admin/backups/run")]
+        public IActionResult RunBackup()
+        {
+            var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+            if (userEmail != "baraglobalmain@gmail.com")
+                return Forbid();
+
+            BackgroundJob.Enqueue<HangfireJobs>(job => job.RunAsync(userEmail));
+            return Ok("Backup job enqueued. You will receive an email when done.");
+        }
+
     }
 }

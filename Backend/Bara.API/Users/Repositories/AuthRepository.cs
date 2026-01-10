@@ -125,7 +125,7 @@ namespace Bara.API.Users.Repositories
                 }
                 else
                 {
-                    var accessToken = GenerateJwtToken(user.Role, user.IsVerified ? "Verified" : "Unverified", user.UserId);
+                    var accessToken = GenerateJwtToken(user.Role, user.IsVerified ? "Verified" : "Unverified", user.UserId, user.Email);
 
                     response.AccessToken = accessToken;
                     response.WrongLoginAttempts = user.LoginAttempts;
@@ -282,7 +282,7 @@ namespace Bara.API.Users.Repositories
                         return ResponseDetail<LoginResponseDTO>.Failed("Operation failed... Please try again", 400, "Invalid or Expired Token");
                     }
                     var (Ip, Country) = await externalService.GetIpAndCountryAsync(secrets.IpInfoKey);
-                    var accessToken = GenerateJwtToken(user.Role, user.IsVerified ? "Verified" : "Unverified", user.UserId);
+                    var accessToken = GenerateJwtToken(user.Role, user.IsVerified ? "Verified" : "Unverified", user.UserId, user.Email);
 
                     response.AccessToken = accessToken;
                     response.WrongLoginAttempts = user.LoginAttempts;
@@ -341,7 +341,7 @@ namespace Bara.API.Users.Repositories
                     return ResponseDetail<LoginResponseDTO>.Failed("Operation can't be completed at the moment because the token is invalid or expired", 403, "Forbidden");
                 }
                 cache.Remove(cacheKey);
-                var jwt_token = GenerateJwtToken(user.Role, user.IsVerified ? "Verified" : "Unverified", user.UserId);
+                var jwt_token = GenerateJwtToken(user.Role, user.IsVerified ? "Verified" : "Unverified", user.UserId, user.Email);
                 var (Ip, Country) = await externalService.GetIpAndCountryAsync(secrets.IpInfoKey);
 
                 response.AccessToken = jwt_token;
@@ -396,13 +396,14 @@ namespace Bara.API.Users.Repositories
             }
         }
 
-        public string GenerateJwtToken(string role, string verificationStatus, Guid userId)
+        public string GenerateJwtToken(string role, string verificationStatus, Guid userId, string email)
         {
             var claims = new List<Claim>
             {
                 new("UserId", userId.ToString()),
                 new ("Role", role),
-                new("VerificationStatus", verificationStatus)
+                new("VerificationStatus", verificationStatus),
+                new("Email",email )
             };
             var random = new Random();
             string issuer = secrets.Issuers[random.Next(secrets.Issuers.Length)];

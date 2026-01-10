@@ -29,7 +29,8 @@
         public int SMTP_Port { get; set; }
         public string SMTP_DisplayName { get; set; }
         public string SMTP_Password { get; set; }
-
+        public string R2Endpoint { get; set; }
+        public string R2PublicUrl { get; set; }
         // JWT
 
 

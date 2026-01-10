@@ -79,8 +79,9 @@ namespace Bara.API.Users.Interfaces.UserInterfaces
         /// <param name="role"></param>
         /// <param name="verificationStatus"></param>
         /// <param name="userId"></param>
+        /// <param name="email"></param>
         /// <returns></returns>
-        string GenerateJwtToken(string role, string verificationStatus, Guid userId);
+        string GenerateJwtToken(string role, string verificationStatus, Guid userId, string email);
 
     }
 }

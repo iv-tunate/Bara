@@ -142,7 +142,7 @@ namespace Bara.API.Users.Repositories
                 await transaction.CommitAsync();
 
                 BackgroundJob.Enqueue(() => hangfire.SendMailAsync(verificationMail));
-                var jwt_token = authService.GenerateJwtToken(user.AuthProfile.Role, user.AuthProfile.IsVerified ? "Verified" : "Unverified", user.Id);
+                var jwt_token = authService.GenerateJwtToken(user.AuthProfile.Role, user.AuthProfile.IsVerified ? "Verified" : "Unverified", user.Id, user.Email);
                 var response = new RegisterResponseDTO
                 {
                     UserId = user.Id,
@@ -518,7 +518,8 @@ namespace Bara.API.Users.Repositories
                         Role = u.AuthProfile.Role,
                         VerificationStatus = u.VerificationStatus.ToString(),
                         CreatedAt = u.CreatedAt,
-                        ProfileImageUrl = u.ProfileImageUrl
+                        ProfileImageUrl = u.ProfileImageUrl,
+                        IsBlacklisted = u.IsBlacklisted
                     })
                     .ToListAsync();
 
@@ -663,7 +664,8 @@ namespace Bara.API.Users.Repositories
                         Role = u.AuthProfile.Role,
                         VerificationStatus = u.VerificationStatus.ToString(),
                         CreatedAt = u.CreatedAt,
-                        ProfileImageUrl = u.ProfileImageUrl
+                        ProfileImageUrl = u.ProfileImageUrl,
+                        IsBlacklisted = u.IsBlacklisted
                     })
                     .ToListAsync();
 

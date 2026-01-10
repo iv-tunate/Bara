@@ -24,5 +24,8 @@
         public string PaystackPublic { get; set; }
         public string PaystackTestPublic { get; set; }
         public string ExchangeAPIKey { get; set; }
+        public string R2BucketName { get; set; }
+        public string R2SecretAccessKey { get; set; }
+        public string R2AccessKeyId { get; set; }
     }
 }

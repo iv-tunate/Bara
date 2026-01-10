@@ -51,6 +51,7 @@ namespace Services.FileStorageServices.CloudinaryStorage
             }
         }
 
+        //Direct download
         public async Task<(MemoryStream?, string)> DownloadAsync(string urlOrPublicId)
         {
             try
@@ -156,6 +157,37 @@ namespace Services.FileStorageServices.CloudinaryStorage
                 return result;
             }
         }
+
+        public string GenerateSignedUrl(string publicId, TimeSpan validFor)
+        {
+            try
+            {
+                var cloudinary = new Cloudinary(new Account(
+                    secrets.CloudinaryName,
+                    secrets.CloudinaryAPIKEY,
+                    secrets.CloudinaryAPISecret));
+
+                if (string.IsNullOrWhiteSpace(publicId))
+                    throw new ArgumentException("publicId cannot be null or empty");
+
+                var signedUrl = cloudinary.Api.Url
+                    .ResourceType("raw")
+                    .Action("upload")
+                    .Transform(new Transformation().Flags("attachment"))
+                    .Signed(true)
+                    .Secure(true)
+                    .BuildUrl(publicId);
+
+
+                return signedUrl;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Failed to generate signed URL for publicId: {publicId}");
+                return null;
+            }
+        }
+
         private async Task<FolderResponse> GetAllFolders()
         {
             try
