@@ -24,7 +24,7 @@ namespace Bara.API.Services.FileStorageServices.CloudfareStorage
             _logger = logger;
             this.settings = settings.Value;
             _bucketName = secrets.Value.R2BucketName;
-            _baseFolder = "Bara"; 
+            _baseFolder = "bara"; 
 
             var config = new AmazonS3Config
             {

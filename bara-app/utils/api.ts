@@ -189,6 +189,8 @@ const API_ENDPOINTS = {
   ADMIN_SEARCH_USERS: (query: string) =>
     `/api/user/search?query=${encodeURIComponent(query)}`,
   ADMIN_RETRY_KYC: "/api/user/retry-kyc",
+  ADMIN_GET_BACKUPS: "/api/utilities/admin/backups",
+  ADMIN_TRIGGER_BACKUP: "/api/utilities/admin/backups/run",
 };
 
 export const api = {
@@ -764,6 +766,18 @@ export const api = {
   getPlatformStats: async () => {
     return apiRequest(`${BASE_URL}/api/user/stats`, {
       method: "GET",
+      requireAuth: true,
+    });
+  },
+  getBackups: async () => {
+    return apiRequest(`${BASE_URL}${API_ENDPOINTS.ADMIN_GET_BACKUPS}`, {
+      method: "GET",
+      requireAuth: true,
+    });
+  },
+  triggerBackup: async () => {
+    return apiRequest(`${BASE_URL}${API_ENDPOINTS.ADMIN_TRIGGER_BACKUP}`, {
+      method: "POST",
       requireAuth: true,
     });
   },

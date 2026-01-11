@@ -28,7 +28,7 @@ export interface User {
   id: string;
   firstName: string;
   lastName: string;
-  name:string;
+  name: string;
   middleName?: string;
   email: string;
   phoneNumber: string;
@@ -80,5 +80,6 @@ export interface Writer extends User {
 }
 
 export interface Producer extends User {
+  companyName?: string;
   purchasedScripts: Script[];
 }

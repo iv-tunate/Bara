@@ -13,7 +13,7 @@ import Image from "next/image";
 import { getUserSession, clearUserSession } from "@/utils/tokenManager";
 import { useEffect, useState } from "react";
 
-import { Users as UsersIcon } from "lucide-react";
+import { Users as UsersIcon, Database } from "lucide-react";
 
 export default function AdminSidebar() {
   const pathname = usePathname();
@@ -38,6 +38,14 @@ export default function AdminSidebar() {
     { name: "Blacklisted Users", href: "/admin/blacklisted", icon: UserX },
     { name: "Manual KYC", href: "/admin/kyc", icon: ShieldCheck },
   ];
+
+  if (adminEmail.toLowerCase() === "baraglobalmain@gmail.com") {
+    sidebarLinks.push({
+      name: "Database Backups",
+      href: "/admin/backups",
+      icon: Database,
+    });
+  }
 
   return (
     <div className="flex flex-col h-screen w-64 bg-white border-r border-gray-200">

@@ -56,8 +56,6 @@ namespace Bara.API.Services.BackgroudServices
         {
             try
             {
-
-
                 var res = await youVerify.VerifyIdentificationNumberAsync(payload);
 
                 if (!res.Success)
@@ -111,12 +109,15 @@ namespace Bara.API.Services.BackgroudServices
             _context.DatabaseBackups.Add(backupRecord);
             await _context.SaveChangesAsync();
 
+            string dumpPath = Path.Combine(Path.GetTempPath(), fileName);
+
             try
             {
                 var connectionString = _config.GetConnectionString("Connection");
-                var dumpPath = Path.Combine(Path.GetTempPath(), fileName);
+                var builder = new Npgsql.NpgsqlConnectionStringBuilder(connectionString);
 
-                var pgDumpArgs = $"--format=custom --no-owner --no-privileges --file=\"{dumpPath}\" {connectionString}";
+                var pgDumpArgs = $"--format=custom --no-owner --no-privileges --host={builder.Host} --port={builder.Port} --username={builder.Username} --dbname={builder.Database} --file=\"{dumpPath}\"";
+                
                 var psi = new ProcessStartInfo
                 {
                     FileName = "pg_dump",
@@ -126,6 +127,12 @@ namespace Bara.API.Services.BackgroudServices
                     UseShellExecute = false,
                     CreateNoWindow = true
                 };
+
+                // Securely pass password via environment variable
+                if (!string.IsNullOrEmpty(builder.Password))
+                {
+                    psi.EnvironmentVariables["PGPASSWORD"] = builder.Password;
+                }
 
                 using (var process = Process.Start(psi))
                 {
@@ -149,15 +156,21 @@ namespace Bara.API.Services.BackgroudServices
                 backupRecord.FileSize = fs.Length;
                 await _context.SaveChangesAsync();
 
-                var signedUrl = (fileStorage as CloudflareR2Service)?.GenerateSignedUrl(uploadResult.PublicId, TimeSpan.FromDays(7));
+                // Generate Signed URL
+                // Check if the service supports signed URLs via casting, as it might not be on the interface
+                string signedUrl = uploadResult.Url;
+                if (fileStorage is CloudflareR2Service r2Service)
+                {
+                     signedUrl = r2Service.GenerateSignedUrl(uploadResult.PublicId, TimeSpan.FromDays(7));
+                }
+
                 var mailReqBody = new MailRequestDTO
                 {
                     Receiver = adminEmail,
                     Subject = "Database Backup Completed",
-                    Body = $"Backup completed at {timestamp:u}. Download here: {signedUrl}"
+                    Body = $"Backup completed at {timestamp:u}. Download here (Valid for 7 days): {signedUrl}"
                 };
-                await mailService.SendMail(
-                    mailReqBody);
+                await mailService.SendMail(mailReqBody);
 
                 logger.LogInformation($"Database backup completed successfully: {fileName}");
             }
@@ -169,8 +182,17 @@ namespace Bara.API.Services.BackgroudServices
             }
             finally
             {
-                if (File.Exists(fileName))
-                    File.Delete(fileName);
+                if (File.Exists(dumpPath))
+                {
+                    try 
+                    {
+                        File.Delete(dumpPath);
+                    }
+                    catch (Exception deleteEx)
+                    {
+                        logger.LogError(deleteEx, $"Failed to delete temp backup file: {dumpPath}");
+                    }
+                }
             }
         }
     }

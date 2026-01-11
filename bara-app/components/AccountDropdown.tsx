@@ -207,9 +207,14 @@ export default function AccountDropdown({
       )}
 
       <div className="py-2">
-        {userData?.userType === "Writer" && (
+        {(userData?.userType === "Writer" ||
+          userData?.userType === "Producer") && (
           <Link
-            href={`/writer/profile`}
+            href={
+              userData?.userType === "Writer"
+                ? "/writer/profile"
+                : "/producer/profile"
+            }
             onClick={onClose}
             className="flex items-center px-4 py-3 text-sm text-[#333740] hover:bg-linear-gradient-to-r hover:from-gray-50 hover:to-gray-100 transition-all duration-200 group"
           >

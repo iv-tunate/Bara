@@ -19,7 +19,7 @@ interface EditProducerProfileModalProps {
 
 export default function EditProducerProfileModal({
   isOpen,
-  on Close,
+  onClose,
   onSave,
   initialData,
 }: EditProducerProfileModalProps) {
@@ -166,7 +166,7 @@ export default function EditProducerProfileModal({
       form.append("Gender", formData.gender || "");
       form.append("Bio", formData.bio || "");
       form.append("DateOfBirth", formData.dateOfBirth || "");
-      form.append("CompanyName", formData.companyName || "");
+      form.append("Company", formData.companyName || "");
       form.append("AddressDetail.Street", formData.address?.street || "");
       form.append("AddressDetail.City", formData.address?.city || "");
       form.append("AddressDetail.State", formData.address?.state || "");
@@ -176,7 +176,7 @@ export default function EditProducerProfileModal({
       );
       form.append(
         "AddressDetail.PostalCode",
-        formData.address?.postalCode ||  ""
+        formData.address?.postalCode || ""
       );
       form.append(
         "AddressDetail.AdditionalDetails",

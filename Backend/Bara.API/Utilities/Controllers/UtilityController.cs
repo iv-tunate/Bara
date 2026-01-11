@@ -1,9 +1,12 @@
-﻿using Bara.API.Services.BackgroudServices;
+﻿using Bara.API.DataContext;
+using Bara.API.Services.BackgroudServices;
 using Bara.API.Services.Paystack;
+using Bara.API.Utilities.Models;
 using Bara.API.Utilities.ToolKit;
 using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace Bara.API.Utilities.Controllers
@@ -14,12 +17,14 @@ namespace Bara.API.Utilities.Controllers
     {
         private readonly ILogger<UtilityController> logger;
         private readonly LogHelper<UtilityController> logHelper;
-        private readonly IPaystackService PaystackService;
-        public UtilityController(ILogger<UtilityController> logger, LogHelper<UtilityController> logHelper, IPaystackService paystackService)
+        private readonly BaraContext _context;
+        private readonly IPaystackService paystackService;
+        public UtilityController(ILogger<UtilityController> logger, LogHelper<UtilityController> logHelper, IPaystackService paystackService, Bara.API.DataContext.BaraContext context)
         {
             this.logger = logger;
             this.logHelper = logHelper;
-            PaystackService = paystackService;
+            this.paystackService = paystackService;
+            _context = context;
         }
 
         /// <summary>
@@ -32,7 +37,7 @@ namespace Bara.API.Utilities.Controllers
         {
             try
             {
-                var response = await PaystackService.GetBanksAsync();
+                var response = await paystackService.GetBanksAsync();
                 return Ok(response);
             }
             catch (Exception ex)
@@ -47,12 +52,35 @@ namespace Bara.API.Utilities.Controllers
         public IActionResult RunBackup()
         {
             var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
-            if (userEmail != "baraglobalmain@gmail.com")
+            if (string.IsNullOrEmpty(userEmail) || !userEmail.Equals("baraglobalmain@gmail.com", StringComparison.OrdinalIgnoreCase))
                 return Forbid();
 
             BackgroundJob.Enqueue<HangfireJobs>(job => job.RunAsync(userEmail));
-            return Ok("Backup job enqueued. You will receive an email when done.");
+            return Ok(ResponseDetail<string>.Successful("Backup job enqueued. You will receive an email when done."));
         }
 
+        [Authorize(Roles = "Admin")]
+        [HttpGet("admin/backups")]
+        public async Task<IActionResult> GetBackups()
+        {
+            var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+             if (string.IsNullOrEmpty(userEmail) || !userEmail.Equals("baraglobalmain@gmail.com", StringComparison.OrdinalIgnoreCase))
+                return Forbid();
+
+            var backups = await _context.DatabaseBackups
+                .OrderByDescending(b => b.CreatedAt)
+                .Select(b => new BackendBackupResponseDTO
+                {
+                    Id = b.Id,
+                    CreatedAt = b.CreatedAt,
+                    Status = b.Status,
+                    FileName = b.FileName,
+                    FileSize = b.FileSize,
+                    FileUrl = b.FileUrl,
+                    TriggeredBy = b.TriggeredBy
+                }).ToListAsync();
+               
+            return Ok(ResponseDetail<List<BackendBackupResponseDTO>>.Successful(backups));
+        }
     }
 }
