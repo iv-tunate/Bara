@@ -94,7 +94,7 @@ namespace Bara.API.Services.BackgroudServices
             }
         }
 
-        public async Task RunAsync(string adminEmail)
+        public async Task RunBackupAsync(string adminEmail)
         {
             var timestamp = DateTime.UtcNow;
             var fileName = $"bara_backup_{timestamp:yyyyMMdd_HHmmss}.dump.gz";
@@ -117,10 +117,17 @@ namespace Bara.API.Services.BackgroudServices
                 var builder = new Npgsql.NpgsqlConnectionStringBuilder(connectionString);
 
                 var pgDumpArgs = $"--format=custom --no-owner --no-privileges --host={builder.Host} --port={builder.Port} --username={builder.Username} --dbname={builder.Database} --file=\"{dumpPath}\"";
-                
+
+                var pgDumpPath = @"C:\Program Files\PostgreSQL\17\bin\pg_dump.exe";
+
+                if (!File.Exists(pgDumpPath))
+                {
+                    throw new FileNotFoundException("pg_dump not found", pgDumpPath);
+                }
+
                 var psi = new ProcessStartInfo
                 {
-                    FileName = "pg_dump",
+                    FileName = pgDumpPath,
                     Arguments = pgDumpArgs,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
@@ -128,7 +135,6 @@ namespace Bara.API.Services.BackgroudServices
                     CreateNoWindow = true
                 };
 
-                // Securely pass password via environment variable
                 if (!string.IsNullOrEmpty(builder.Password))
                 {
                     psi.EnvironmentVariables["PGPASSWORD"] = builder.Password;
@@ -156,8 +162,6 @@ namespace Bara.API.Services.BackgroudServices
                 backupRecord.FileSize = fs.Length;
                 await _context.SaveChangesAsync();
 
-                // Generate Signed URL
-                // Check if the service supports signed URLs via casting, as it might not be on the interface
                 string signedUrl = uploadResult.Url;
                 if (fileStorage is CloudflareR2Service r2Service)
                 {
@@ -176,7 +180,7 @@ namespace Bara.API.Services.BackgroudServices
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Database backup job failed.");
+                logger.LogError(ex, "Database backup job failed");
                 backupRecord.Status = "Failed";
                 await _context.SaveChangesAsync();
             }

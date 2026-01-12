@@ -49,11 +49,12 @@ namespace Bara.API.Services.FileStorageServices.CloudfareStorage
                     BucketName = _bucketName,
                     Key = key,
                     InputStream = stream,
-                    ContentType = file.ContentType
+                    ContentType = file.ContentType,
+                    
                 };
 
                 var response = await _s3Client.PutObjectAsync(putRequest);
-
+                _logger.LogInformation("Cloudfare returned this response {response:} while trying to upload a document", response);
                 result.Success = response.HttpStatusCode == System.Net.HttpStatusCode.OK;
                 result.Url = $"{settings.R2PublicUrl}/{key}";
                 result.PublicId = key;

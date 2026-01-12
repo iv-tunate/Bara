@@ -66,6 +66,8 @@ export default function AddScriptPage() {
   const [showCatalogModal, setShowCatalogModal] = useState(false);
   const [showAiImageModal, setShowAiImageModal] = useState(false);
 
+  const [showUploadModal, setShowUploadModal] = useState(false);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [role, setRole] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -193,7 +195,7 @@ export default function AddScriptPage() {
     );
   };
 
-  const isFormComplete =
+  const isFormDetailsComplete =
     title &&
     selectedGenres.length > 0 &&
     logline &&
@@ -201,9 +203,10 @@ export default function AddScriptPage() {
     ownership &&
     price &&
     scriptFile &&
-    mediaFile &&
     isOriginal &&
     agreeCommission;
+
+  // const isFormComplete = isFormDetailsComplete && mediaFile;
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseFloat(e.target.value);
@@ -211,8 +214,13 @@ export default function AddScriptPage() {
     if (!isNaN(val)) validatePrice(val);
   };
   const handleSubmit = async () => {
-    if (!isFormComplete) {
+    if (!isFormDetailsComplete) {
       toast.error("Complete all required fields");
+      return;
+    }
+
+    if (!mediaFile) {
+      setShowUploadModal(true);
       return;
     }
 
@@ -244,7 +252,7 @@ export default function AddScriptPage() {
         fd.append("RegistrationBody", registrationBody);
       }
       fd.append("OwnershipRights", ownership);
-      fd.append("File", scriptFile);
+      fd.append("File", scriptFile!);
       if (copyrightNumber) {
         fd.append("CopyrightNumber", copyrightNumber);
       }
@@ -476,24 +484,28 @@ export default function AddScriptPage() {
               Upload Cover Image *
             </label>
 
-            <span
-              onClick={() => setShowAiImageModal(true)}
-              className="flex items-center text-xs font-bold text-[#800000] cursor-pointer hover:underline"
-            >
+            <span className="flex items-center text-xs font-bold text-gray-400 cursor-not-allowed">
               Generate with AI
-              <Image
-                src="/star.png"
-                alt=""
-                width={10}
-                height={10}
-                className="ml-1"
-              />
+              <span className="ml-1 text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500 font-normal">
+                Coming Soon
+              </span>
             </span>
           </div>
 
-          <p className="text-xs italic text-gray-500 my-2">
-            A cover image helps producers visualize the tone of your story.
-          </p>
+          <div className="bg-red-50 border border-red-100 rounded-lg p-4 my-3 text-sm text-[#810306]">
+            <p className="font-semibold mb-1">
+              You must upload a cover photo to proceed.
+            </p>
+            <p className="opacity-90">
+              A compelling cover visualizes your story's tone. We recommend
+              using AI tools like{" "}
+              <span className="font-semibold">Ideogram</span>,{" "}
+              <span className="font-semibold">Midjourney</span>, or{" "}
+              <span className="font-semibold">DALL-E</span>, or graphic design
+              tools like <span className="font-semibold">Canva</span> to create
+              one.
+            </p>
+          </div>
 
           <div
             onDragOver={(e) => {
@@ -549,7 +561,7 @@ export default function AddScriptPage() {
               <p className="text-sm text-[#333740]">Drag & drop (PNG, JPG)</p>
               <p className="text-sm text-[#333740] mt-1">
                 or <span className="text-[#810306] font-semibold">Browse</span>{" "}
-                or{" "}
+                {/* or{" "}
                 <button
                   type="button"
                   onClick={(e) => {
@@ -559,7 +571,7 @@ export default function AddScriptPage() {
                   className="text-[#810306] font-semibold hover:underline"
                 >
                   Choose from gallery
-                </button>
+                </button> */}
               </p>
             </div>
 
@@ -654,9 +666,9 @@ export default function AddScriptPage() {
         <div className="flex justify-center mt-6">
           <button
             onClick={handleSubmit}
-            disabled={!isFormComplete || isSubmitting}
+            disabled={!isFormDetailsComplete || isSubmitting}
             className={`w-full sm:w-80 md:w-96 py-3 rounded-md text-sm font-medium ${
-              !isFormComplete || isSubmitting
+              !isFormDetailsComplete || isSubmitting
                 ? "bg-[#DADBDD] text-[#858990] cursor-not-allowed"
                 : "bg-[#800000] text-white hover:bg-[#660000]"
             }`}
@@ -688,6 +700,85 @@ export default function AddScriptPage() {
             }}
             onClose={() => setShowAiImageModal(false)}
           />
+        )}
+
+        {/* Validation Modal for Cover Image */}
+        {showUploadModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 relative animate-fade-in-up">
+              <button
+                onClick={() => setShowUploadModal(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg
+                    className="w-8 h-8 text-[#810306]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-[#22242A] mb-2">
+                  Cover Photo Required
+                </h3>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  A compelling cover photo is essential to attract producers and
+                  visualizing the tone of your story.
+                </p>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-100">
+                <h4 className="text-xs font-bold text-[#810306] uppercase tracking-wider mb-2">
+                  How to get one?
+                </h4>
+                <ul className="text-sm text-gray-600 space-y-2">
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#810306] mt-1">•</span>
+                    <span>
+                      Generate using AI tools like <b>Ideogram</b>,{" "}
+                      <b>Midjourney</b>, or <b>DALL-E</b>.
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#810306] mt-1">•</span>
+                    <span>
+                      Design one using free tools like <b>Canva</b>.
+                    </span>
+                  </li>
+                </ul>
+              </div>
+
+              <button
+                onClick={() => setShowUploadModal(false)}
+                className="w-full bg-[#810306] text-white py-3 rounded-md font-medium hover:bg-[#660000] transition-colors"
+              >
+                Got it, I'll upload one
+              </button>
+            </div>
+          </div>
         )}
       </main>
     </div>

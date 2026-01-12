@@ -51,11 +51,11 @@ namespace Bara.API.Utilities.Controllers
         [HttpPost("admin/backups/run")]
         public IActionResult RunBackup()
         {
-            var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+            var userEmail = User.FindFirst("Email")?.Value;
             if (string.IsNullOrEmpty(userEmail) || !userEmail.Equals("baraglobalmain@gmail.com", StringComparison.OrdinalIgnoreCase))
                 return Forbid();
 
-            BackgroundJob.Enqueue<HangfireJobs>(job => job.RunAsync(userEmail));
+            BackgroundJob.Enqueue<HangfireJobs>(job => job.RunBackupAsync(userEmail));
             return Ok(ResponseDetail<string>.Successful("Backup job enqueued. You will receive an email when done."));
         }
 
@@ -63,7 +63,7 @@ namespace Bara.API.Utilities.Controllers
         [HttpGet("admin/backups")]
         public async Task<IActionResult> GetBackups()
         {
-            var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+            var userEmail = User.FindFirst("Email")?.Value;
              if (string.IsNullOrEmpty(userEmail) || !userEmail.Equals("baraglobalmain@gmail.com", StringComparison.OrdinalIgnoreCase))
                 return Forbid();
 
