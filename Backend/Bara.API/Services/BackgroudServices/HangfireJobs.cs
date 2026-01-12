@@ -151,7 +151,11 @@ namespace Bara.API.Services.BackgroudServices
                 }
                 
                 await using var fs = File.OpenRead(dumpPath);
-                var formFile = new FormFile(fs, 0, fs.Length, "backup", fileName);
+                var formFile = new FormFile(fs, 0, fs.Length, "backup", fileName)
+                {
+                    Headers = new HeaderDictionary(),
+                    ContentType = "application/x-gzip"
+                };
                 var uploadResult = await fileStorage.UploadDocumentAsync("DatabaseBackups", formFile);
 
                 if (!uploadResult.Success)
