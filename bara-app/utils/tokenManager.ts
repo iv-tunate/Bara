@@ -9,6 +9,7 @@ export interface UserSession {
   createdAt?: number;
   isVerified: boolean;
   VerificationStatus: string;
+  profileImageUrl?: string;
 }
 
 const TOKEN_KEY = "user_session";
@@ -23,8 +24,8 @@ export function setUserSession(session: UserSession): void {
     localStorage.setItem(USER_ID_KEY, session.userId);
     localStorage.setItem(USER_TYPE_KEY, session.userType);
     localStorage.setItem("VerificationStatus", session.VerificationStatus);
-  //  const sessionDetails = sessionStorage.getItem(TOKEN_KEY);
-   // console.log("User Session Details", sessionDetails);
+    //  const sessionDetails = sessionStorage.getItem(TOKEN_KEY);
+    // console.log("User Session Details", sessionDetails);
   } catch (error) {
     console.error("Failed to store user session:", error);
   }
@@ -52,7 +53,7 @@ export function updateUserSession(updates: Partial<UserSession>): void {
 }
 
 export function getUserSession(): UserSession | null {
-  if (typeof window === "undefined") return null; 
+  if (typeof window === "undefined") return null;
   try {
     const sessionData = sessionStorage.getItem(TOKEN_KEY);
     if (!sessionData) return null;

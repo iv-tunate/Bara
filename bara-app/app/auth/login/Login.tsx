@@ -70,6 +70,7 @@ export default function LoginPage() {
           createdAt: Date.now() - 2 * 60 * 1000,
           isVerified: response.isVerified,
           VerificationStatus: response.verificationStatus,
+          profileImageUrl: response.profileImageUrl,
         });
 
         if (response.role === "Admin") {
@@ -128,6 +129,7 @@ export default function LoginPage() {
           createdAt: Date.now() - 2 * 60 * 1000,
           isVerified: response.isVerified,
           VerificationStatus: response.verificationStatus,
+          profileImageUrl: response.profileImageUrl,
         });
 
         if (response.role === "Admin") {

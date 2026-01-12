@@ -3,11 +3,8 @@
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { clearUserSession } from "@/utils/tokenManager";
-
-interface Props {
-  onClose: () => void;
-}
 
 export interface UserData {
   userId: string;
@@ -16,6 +13,7 @@ export interface UserData {
   userType: string;
   verificationStatus: string;
   isVerified: boolean;
+  profileImageUrl?: string;
 }
 
 export interface WalletData {
@@ -137,20 +135,29 @@ export default function AccountDropdown({
             </div>
           </div>
           <div className="ml-3">
-            <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-              <svg
-                className="w-6 h-6 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+            <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center overflow-hidden relative">
+              {userData?.profileImageUrl ? (
+                <Image
+                  src={userData.profileImageUrl}
+                  alt={userData.name}
+                  fill
+                  className="object-cover"
                 />
-              </svg>
+              ) : (
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                </svg>
+              )}
             </div>
           </div>
         </div>
@@ -235,27 +242,6 @@ export default function AccountDropdown({
           </Link>
         )}
 
-        {/* <Link
-          href="/account/id"
-          onClick={onClose}
-          className="flex items-center px-4 py-2 text-sm text-[#333740] hover:bg-[#F5F5F5] transition-colors"
-        >
-          <svg
-            className="w-4 h-4 mr-3"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5.121 17.804A13.937 13.937 0 0112 15c2.487 0 4.807.63 6.879 1.804M12 11a3 3 0 100-6 3 3 0 000 6z"
-            />
-          </svg>
-          My Account
-        </Link> */}
-
         <Link
           href="/wallet"
           onClick={onClose}
@@ -302,6 +288,27 @@ export default function AccountDropdown({
             />
           </svg>
           <span className="font-medium">Help and Support</span>
+        </Link>
+
+        <Link
+          href="/terms"
+          onClick={onClose}
+          className="flex items-center px-4 py-3 text-sm text-[#333740] hover:bg-linear-gradient-to-r hover:from-gray-50 hover:to-gray-100 transition-all duration-200 group"
+        >
+          <svg
+            className="w-5 h-5 mr-3 text-gray-600 group-hover:text-[#800000] transition-colors"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+          <span className="font-medium">Terms & Conditions</span>
         </Link>
 
         <hr className="my-2 border-gray-200" />

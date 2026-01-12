@@ -13,7 +13,7 @@ import Image from "next/image";
 import { getUserSession, clearUserSession } from "@/utils/tokenManager";
 import { useEffect, useState } from "react";
 
-import { Users as UsersIcon, Database } from "lucide-react";
+import { Users as UsersIcon, Database, FileText } from "lucide-react";
 
 export default function AdminSidebar() {
   const pathname = usePathname();
@@ -37,6 +37,7 @@ export default function AdminSidebar() {
     { name: "App Users", href: "/admin/users", icon: UsersIcon },
     { name: "Blacklisted Users", href: "/admin/blacklisted", icon: UserX },
     { name: "Manual KYC", href: "/admin/kyc", icon: ShieldCheck },
+    // { name: "Terms & Conditions", href: "/terms", icon: FileText },
   ];
 
   if (adminEmail.toLowerCase() === "baraglobalmain@gmail.com") {
