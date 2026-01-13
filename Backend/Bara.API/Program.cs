@@ -108,7 +108,7 @@ builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IYouVerifyService, YouVerifyService>();
 builder.Services.AddTransient<ExternalApiIntegrationService>();
 builder.Services.AddTransient<IFileStorageService, CloudinaryService>();
-builder.Services.AddTransient<IFileStorageService, CloudflareR2Service>();
+builder.Services.AddTransient<CloudflareR2Service>();
 builder.Services.AddTransient<IFileService, FileRepository>();
 builder.Services.AddTransient<IMailService, MailService>();
 builder.Services.AddTransient<IWriterService, WriterRepository>();

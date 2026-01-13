@@ -7,7 +7,7 @@ using Services.FileStorageServices.Interfaces;
 
 namespace Bara.API.Services.FileStorageServices.CloudfareStorage
 {
-    public class CloudflareR2Service : IFileStorageService
+    public class CloudflareR2Service
     {
         private readonly ILogger<CloudflareR2Service> _logger;
         private readonly Secrets _secrets;
