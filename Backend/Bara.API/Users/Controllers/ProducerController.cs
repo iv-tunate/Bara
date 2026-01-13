@@ -106,7 +106,7 @@ namespace Bara.API.Users.Controllers
         /// </returns>
         [Authorize(Roles = "Producer, Admin")]
         [HttpPut("profile/{producerId}")]
-        public async Task<IActionResult> UpdateProducer(Guid producerId, [FromForm] PostProducerDetailDTO updateProducerDetail)
+        public async Task<IActionResult> UpdateProducer(Guid producerId, [FromForm] UpdateProducerDetailDTO updateProducerDetail)
         {
             try
             {

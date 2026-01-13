@@ -108,7 +108,7 @@ namespace Bara.API.Users.Controllers
         /// </returns>
         [Authorize(Roles = "Writer, Admin")]
         [HttpPut("profile/{writerId}")]
-        public async Task<IActionResult> UpdateWriter(Guid writerId, [FromForm] PostWriterDetailDTO updateWriterDetail)
+        public async Task<IActionResult> UpdateWriter(Guid writerId, [FromForm] UpdateWriterDetailDTO updateWriterDetail)
         {
             try
             {

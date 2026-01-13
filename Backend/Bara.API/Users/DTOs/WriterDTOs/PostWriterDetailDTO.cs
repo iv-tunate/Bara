@@ -125,9 +125,6 @@ namespace Bara.API.Users.DTOs.WriterDTOs
         /// The list of services the writer wants to offer on registration (e.g., editing, proofreading).
         /// </summary>
         public List<PostServiceDetailDTO>? PostServiceDetail { get; init; }
-
-        public string ProfileImageUrl { get; init; }
-        public string ProfileImagePublicId { get; init; }
         public string PortfolioUrl { get; set; }
     }
 }

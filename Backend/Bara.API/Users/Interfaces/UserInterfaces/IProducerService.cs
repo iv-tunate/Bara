@@ -32,7 +32,7 @@ namespace Bara.API.Users.Interfaces.UserInterfaces
         /// <returns>
         /// A <see cref="ResponseDetail{T}"/> containing the updated producer profile as a <see cref="GetProducerDetailDTO"/>.
         /// </returns>
-        Task<ResponseDetail<GetProducerDetailDTO>> UpdateProducer(PostProducerDetailDTO producerDetailDTO, Guid producerId);
+        Task<ResponseDetail<GetProducerDetailDTO>> UpdateProducer(UpdateProducerDetailDTO producerDetailDTO, Guid producerId);
 
         /// <summary>
         /// Deletes a producer’s profile permanently from the system.
