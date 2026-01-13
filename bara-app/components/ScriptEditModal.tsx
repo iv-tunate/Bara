@@ -49,7 +49,6 @@ export default function ScriptEditModal({
   const [availableGenres, setAvailableGenres] = useState<any[]>([]);
   const [genreOpen, setGenreOpen] = useState(false);
 
-  // Form state
   const [formData, setFormData] = useState({
     Title: script.title || "",
     Logline: script.logline || "",
@@ -108,7 +107,7 @@ export default function ScriptEditModal({
     }
 
     if (formData.Price <= 0) {
-      toast.error("Price must be greater than 0");
+      toast.error("Price must be greater than limit");
       return;
     }
 
@@ -119,12 +118,14 @@ export default function ScriptEditModal({
         GenreId: selectedGenres.map((g) => g.id),
       };
 
+      debugger;
       const response = await api.updateScript(
         script.id,
         script.writerId || "",
         updateData
       );
 
+      console.log(response);
       if (response.success) {
         toast.success("Script updated successfully");
         onSuccess();
@@ -187,7 +188,7 @@ export default function ScriptEditModal({
         </div>
 
         {/* Warning Banner */}
-        <div className="mx-6 mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex gap-3">
+        {/* <div className="mx-6 mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex gap-3">
           <svg
             className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5"
             fill="none"
@@ -205,7 +206,7 @@ export default function ScriptEditModal({
             <strong>Note:</strong> You cannot change the script PDF or cover
             image. To upload a different script, please delete and re-upload.
           </p>
-        </div>
+        </div> */}
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">

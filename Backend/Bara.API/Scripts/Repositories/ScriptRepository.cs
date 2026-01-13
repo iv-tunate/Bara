@@ -557,7 +557,7 @@ namespace Bara.API.Scripts.Repositories
             }
         }
 
-        public async Task<ResponseDetail<Script>> UpdateScript(PostScriptDetailDTO scriptDetails, Guid writerId, Guid scriptId)
+        public async Task<ResponseDetail<Script>> UpdateScript(UpdateScriptDTO scriptDetails, Guid writerId, Guid scriptId)
         {
             try
             {
@@ -598,16 +598,16 @@ namespace Bara.API.Scripts.Repositories
                     return ResponseDetail<Script>.Failed("Invalid genres selected", 400, "Bad Request");
                 }
 
-                script.Title = scriptDetails.Title.ToUpper();
-                script.Logline = scriptDetails.Logline;
-                script.Synopsis = scriptDetails.Synopsis;
+                script.Title = scriptDetails.Title.ToUpper() ?? script.Title;
+                script.Logline = scriptDetails.Logline ?? script.Logline;
+                script.Synopsis = scriptDetails.Synopsis ?? script.Synopsis;
                 script.Price = scriptDetails.Price;
                 script.Currency = scriptDetails.Currency;
                 script.IsScriptRegistered = scriptDetails.IsScriptRegistered;
                 script.RegistrationBody = scriptDetails.RegistrationBody;
-                script.CopyrightNumber = scriptDetails.CopyrightNumber ?? " ";
+                script.CopyrightNumber = scriptDetails.CopyrightNumber ?? script.CopyrightNumber;
                 script.OwnershipRights = scriptDetails.OwnershipRights;
-                script.ProofUrl = scriptDetails.ProofUrl;
+                script.ProofUrl = scriptDetails.ProofUrl ?? script.ProofUrl;
                 script.Genres = genres;
                 script.ModifiedAt = DateTimeOffset.UtcNow;
 

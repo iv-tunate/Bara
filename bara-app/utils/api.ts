@@ -526,6 +526,7 @@ export const api = {
   },
 
   updateScript: async (scriptId: string, writerId: string, scriptData: any) => {
+    debugger;
     return apiRequest(
       `${BASE_URL}${API_ENDPOINTS.UPDATE_SCRIPT(scriptId, writerId)}`,
       {

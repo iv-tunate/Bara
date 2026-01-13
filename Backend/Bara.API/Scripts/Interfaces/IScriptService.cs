@@ -49,7 +49,7 @@ namespace Bara.API.Scripts.Interfaces
         /// <param name="scriptDetails">Represents the details of the script </param>
         /// <param name="writerId">Represents the id of the writer</param>
         /// <param name="scriptId">Represents the id of the script to be updated</param>
-        Task<ResponseDetail<Script>> UpdateScript(PostScriptDetailDTO scriptDetails, Guid writerId, Guid scriptId);
+        Task<ResponseDetail<Script>> UpdateScript(UpdateScriptDTO scriptDetails, Guid writerId, Guid scriptId);
 
         /// <summary>
         /// Updates the actual script content (PDF file) by replacing the existing file in storage.

@@ -343,7 +343,7 @@ namespace Bara.API.Scripts.Controllers
         /// </returns>
         [Authorize(Roles = "Writer", Policy = "VerifiedOnly")]
         [HttpPut("script/{scriptId}/{writerId}")]
-        public async Task<IActionResult> UpdateScript([FromBody] PostScriptDetailDTO scriptDetails, Guid scriptId, Guid writerId)
+        public async Task<IActionResult> UpdateScript([FromBody] UpdateScriptDTO scriptDetails, Guid scriptId, Guid writerId)
         {
             try
             {
