@@ -111,5 +111,10 @@ namespace Bara.API.Users.Interfaces.UserInterfaces
         /// Retrieves platform-wide statistics for the admin dashboard.
         /// </summary>
         Task<ResponseDetail<PlatformStatsDTO>> GetPlatformStats();
+
+        /// <summary>
+        /// Updates only the profile image metadata for a user.
+        /// </summary>
+        Task<ResponseDetail<bool>> UpdateProfileImage(Guid userId, UpdateProfileImageDTO imageInfo);
     }
 }

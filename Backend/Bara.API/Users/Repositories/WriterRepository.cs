@@ -361,7 +361,7 @@ namespace Bara.API.Users.Repositories
             throw new NotImplementedException();
         }
 
-        public Task<ResponseDetail<GetWriterDetailDTO>> UpdateWriterDetail(Guid writerId, PostWriterDetailDTO updateWriterDetail)
+        public Task<ResponseDetail<GetWriterDetailDTO>> UpdateWriterDetail(Guid writerId, UpdateWriterDetailDTO updateWriterDetail)
         {
             throw new NotImplementedException();
         }

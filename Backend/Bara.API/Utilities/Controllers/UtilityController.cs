@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using Services.FileStorageServices.Interfaces;
 
 namespace Bara.API.Utilities.Controllers
 {
@@ -19,12 +20,14 @@ namespace Bara.API.Utilities.Controllers
         private readonly LogHelper<UtilityController> logHelper;
         private readonly BaraContext _context;
         private readonly IPaystackService paystackService;
-        public UtilityController(ILogger<UtilityController> logger, LogHelper<UtilityController> logHelper, IPaystackService paystackService, Bara.API.DataContext.BaraContext context)
+        private readonly IFileStorageService storageService;
+        public UtilityController(ILogger<UtilityController> logger, LogHelper<UtilityController> logHelper, IPaystackService paystackService, Bara.API.DataContext.BaraContext context, IFileStorageService storageService)
         {
             this.logger = logger;
             this.logHelper = logHelper;
             this.paystackService = paystackService;
             _context = context;
+            this.storageService = storageService;
         }
 
         /// <summary>
@@ -64,7 +67,7 @@ namespace Bara.API.Utilities.Controllers
         public async Task<IActionResult> GetBackups()
         {
             var userEmail = User.FindFirst("Email")?.Value;
-             if (string.IsNullOrEmpty(userEmail) || !userEmail.Equals("baraglobalmain@gmail.com", StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrEmpty(userEmail) || !userEmail.Equals("baraglobalmain@gmail.com", StringComparison.OrdinalIgnoreCase))
                 return Forbid();
 
             var backups = await _context.DatabaseBackups
@@ -79,8 +82,23 @@ namespace Bara.API.Utilities.Controllers
                     FileUrl = b.FileUrl,
                     TriggeredBy = b.TriggeredBy
                 }).ToListAsync();
-               
+
             return Ok(ResponseDetail<List<BackendBackupResponseDTO>>.Successful(backups));
+        }
+        [Authorize(Roles = "Admin, Producer, Writer")]
+        [HttpDelete("file/{publicId}")]
+        public async Task<IActionResult> DeleteFile(string publicId)
+        {
+            try
+            {
+                await storageService.DeleteAsync(publicId);
+                return Ok(ResponseDetail<bool>.Successful(true, "File deleted successfully"));
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"deleting file {publicId}");
+                return StatusCode(500, ResponseDetail<bool>.Failed(false, "An error occurred while deleting file", 500, "Internal server error"));
+            }
         }
     }
 }

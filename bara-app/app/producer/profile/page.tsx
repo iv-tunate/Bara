@@ -271,7 +271,10 @@ export default function ProducerProfile() {
         <ChangePhotoModal
           isOpen={isPhotoModalOpen}
           onClose={() => setIsPhotoModalOpen(false)}
-          currentAvatar={profileImage || "/writer.png"}
+          currentAvatar={profileImage || "/producer.png"}
+          userData={profileData}
+          userType="Producer"
+          onSave={(data) => setProfileData(data)}
         />
       </main>
     </div>

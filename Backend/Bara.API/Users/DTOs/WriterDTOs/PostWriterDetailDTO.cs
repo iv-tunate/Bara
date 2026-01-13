@@ -73,4 +73,61 @@ namespace Bara.API.Users.DTOs.WriterDTOs
         public string ProfileImagePublicId { get; init; }
         public string PortfolioUrl { get; set; }
     }
+
+    public record class UpdateWriterDetailDTO
+    {
+        /// <summary>
+        /// The writer's first name.
+        /// </summary>
+        public string FirstName { get; init; }
+
+        /// <summary>
+        /// The writer's last name.
+        /// </summary>
+        public string LastName { get; init; }
+
+        /// <summary>
+        /// The writer's middle name, if available.
+        /// </summary>
+        public string MiddleName { get; init; }
+
+        /// <summary>
+        /// The writer's phone number, including country code.
+        /// </summary>
+        public string PhoneNumber { get; init; }
+
+        /// <summary>
+        /// The gender of the writer.
+        /// </summary>
+        public Gender Gender { get; init; }
+        /// <summary>
+        /// A brief biography or description provided by the user.
+        /// </summary>
+        public string Bio { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Indicates whether the writer is a premium member.
+        /// </summary>
+        public bool IsPremiumMember { get; init; } = false;
+
+        /// <summary>
+        /// The address details of the writer.
+        /// </summary>
+        public AddressDetail AddressDetail { get; init; }
+
+        /// <summary>
+        /// Represents the experiences of a writer including their bio description, projects, organization, etc.
+        /// </summary>
+        public List<BioExperienceDTO>? Experiences { get; init; }
+
+       
+        /// <summary>
+        /// The list of services the writer wants to offer on registration (e.g., editing, proofreading).
+        /// </summary>
+        public List<PostServiceDetailDTO>? PostServiceDetail { get; init; }
+
+        public string ProfileImageUrl { get; init; }
+        public string ProfileImagePublicId { get; init; }
+        public string PortfolioUrl { get; set; }
+    }
 }

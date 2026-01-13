@@ -682,5 +682,32 @@ namespace Bara.API.Users.Repositories
                 return ResponseDetail<List<AdminUserListDTO>>.Failed("An error occurred during user search", 500);
             }
         }
+        public async Task<ResponseDetail<bool>> UpdateProfileImage(Guid userId, UpdateProfileImageDTO imageInfo)
+        {
+            try
+            {
+                var user = await dbContext.Users.FirstOrDefaultAsync(x => x.Id == userId);
+                if (user == null)
+                {
+                    return ResponseDetail<bool>.Failed(false, "User not found", 404);
+                }
+
+                user.ProfileImageUrl = imageInfo.ProfileImageUrl;
+                user.ProfileImagePublicId = imageInfo.ProfileImagePublicId;
+                user.ModifiedAt = DateTimeOffset.UtcNow;
+
+                await dbContext.SaveChangesAsync();
+                
+                cache.Remove($"Writer_Profile_{userId}");
+                cache.Remove($"Producer_Profile_{userId}");
+
+                return ResponseDetail<bool>.Successful(true, "Profile image updated successfully");
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"updating profile image for {userId}");
+                return ResponseDetail<bool>.Failed(false, "An error occurred while updating profile image", 500);
+            }
+        }
     }
 }

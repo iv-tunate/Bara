@@ -437,6 +437,9 @@ export default function WriterProfile() {
           isOpen={isPhotoModalOpen}
           onClose={() => setIsPhotoModalOpen(false)}
           currentAvatar={profileImage || "/writer.png"}
+          userData={profileData}
+          userType="Writer"
+          onSave={(data) => setProfileData(data)}
         />
       </main>
     </div>

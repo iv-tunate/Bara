@@ -50,7 +50,7 @@ namespace Bara.API.Users.Interfaces.UserInterfaces
         /// <returns>
         /// A <see cref="ResponseDetail{T}"/> containing the updated writer profile in <see cref="GetWriterDetailDTO"/> format.
         /// </returns>
-        Task<ResponseDetail<GetWriterDetailDTO>> UpdateWriterDetail(Guid writerId, PostWriterDetailDTO updateWriterDetail);
+        Task<ResponseDetail<GetWriterDetailDTO>> UpdateWriterDetail(Guid writerId, UpdateWriterDetailDTO updateWriterDetail);
 
         /// <summary>
         /// Permanently deletes a writer’s profile by their unique identifier.

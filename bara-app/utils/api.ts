@@ -782,6 +782,24 @@ export const api = {
       requireAuth: true,
     });
   },
+
+  updateProfileImage: async (
+    userId: string,
+    data: { profileImageUrl: string; profileImagePublicId: string }
+  ) => {
+    return apiRequest(`${BASE_URL}/api/user/update-image/${userId}`, {
+      method: "PUT",
+      requireAuth: true,
+      body: JSON.stringify(data),
+    });
+  },
+
+  deleteFile: async (publicId: string) => {
+    return apiRequest(`${BASE_URL}/api/utilities/file/${publicId}`, {
+      method: "DELETE",
+      requireAuth: true,
+    });
+  },
 };
 
 export const API_ERROR_MESSAGES = {

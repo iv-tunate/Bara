@@ -247,7 +247,7 @@ namespace Bara.API.Users.Repositories
             }
         }
 
-        public Task<ResponseDetail<GetProducerDetailDTO>> UpdateProducer(PostProducerDetailDTO producerDetailDTO, Guid producerId)
+        public Task<ResponseDetail<GetProducerDetailDTO>> UpdateProducer(UpdateProducerDetailDTO producerDetailDTO, Guid producerId)
         {
             throw new NotImplementedException();
         }

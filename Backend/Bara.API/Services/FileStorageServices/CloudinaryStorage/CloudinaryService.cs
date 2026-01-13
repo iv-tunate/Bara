@@ -37,7 +37,7 @@ namespace Services.FileStorageServices.CloudinaryStorage
             {
                 var deletionParams = new DeletionParams(publicId)
                 {
-                    ResourceType = ResourceType.Raw
+                    ResourceType = ResourceType.Image 
                 };
                 var cloudinary = new Cloudinary(new Account(secrets.CloudinaryName, secrets.CloudinaryAPIKEY, secrets.CloudinaryAPISecret));
                 var result = await cloudinary.DestroyAsync(deletionParams);

@@ -2,26 +2,38 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { uploadImage } from "@/utils/upload";
+import { api } from "@/utils/api";
+import toast from "react-hot-toast";
 
 interface ChangePhotoModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentAvatar?: string;
+  userData: any;
+  userType: "Writer" | "Producer";
+  onSave?: (updatedData: any) => void;
 }
 
 export default function ChangePhotoModal({
   isOpen,
   onClose,
   currentAvatar,
+  userData,
+  userType,
+  onSave,
 }: ChangePhotoModalProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      setSelectedFile(file);
       const imageUrl = URL.createObjectURL(file);
       setSelectedImage(imageUrl);
       setIsEditing(true);
@@ -30,13 +42,58 @@ export default function ChangePhotoModal({
 
   const handleDiscard = () => {
     setSelectedImage(null);
+    setSelectedFile(null);
     setIsEditing(false);
   };
 
-  const handleSave = () => {
-   // console.log("Saved image:", selectedImage);
-    setIsEditing(false);
-    onClose();
+  const handleSave = async () => {
+    if (!selectedFile || !userData) return;
+
+    try {
+      setLoading(true);
+
+      if (userData.profileImagePublicId) {
+        try {
+          await api.deleteFile(userData.profileImagePublicId);
+        } catch (error) {
+          console.error("Failed to delete old image:", error);
+        }
+      }
+
+      const uploadResult = await uploadImage(selectedFile, userType, {
+        id: userData.id,
+        name: userData.name || `${userData.firstName} ${userData.lastName}`,
+      });
+
+      if (!uploadResult) {
+        throw new Error("Failed to upload image");
+      }
+
+      const response = await api.updateProfileImage(userData.id, {
+        profileImageUrl: uploadResult.url,
+        profileImagePublicId: uploadResult.publicId || "",
+      });
+
+      if (response.success) {
+        toast.success("Profile photo updated successfully");
+
+        const updatedData = {
+          ...userData,
+          profileImageUrl: uploadResult.url,
+          profileImagePublicId: uploadResult.publicId || "",
+        };
+
+        onSave?.(updatedData);
+        onClose();
+      } else {
+        toast.error(response.message || "Failed to update profile photo");
+      }
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.message || "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -94,9 +151,17 @@ export default function ChangePhotoModal({
             <>
               <button
                 onClick={handleSave}
-                className="bg-[#810306] text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-[#6a0505] cursor-pointer"
+                disabled={loading}
+                className="bg-[#810306] text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-[#6a0505] cursor-pointer disabled:opacity-70 flex items-center gap-2"
               >
-                Save
+                {loading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save"
+                )}
               </button>
               <button
                 onClick={handleDiscard}

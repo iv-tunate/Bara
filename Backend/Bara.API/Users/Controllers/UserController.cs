@@ -316,5 +316,23 @@ namespace Bara.API.Users.Controllers
             var response = await userService.GetPlatformStats();
             return StatusCode(response.StatusCode, response);
         }
+        /// <summary>
+        /// Updates the profile image for a user.
+        /// </summary>
+        [Authorize(Roles = "Admin, Producer, Writer")]
+        [HttpPut("update-image/{userId}")]
+        public async Task<IActionResult> UpdateProfileImage(Guid userId, [FromBody] UpdateProfileImageDTO payload)
+        {
+            try
+            {
+                var response = await userService.UpdateProfileImage(userId, payload);
+                return StatusCode(response.StatusCode, response);
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"updating profile image for user {userId}");
+                return StatusCode(500, ResponseDetail<bool>.Failed(false, "An error occurred while updating profile image", 500, "Internal server error"));
+            }
+        }
     }
 }

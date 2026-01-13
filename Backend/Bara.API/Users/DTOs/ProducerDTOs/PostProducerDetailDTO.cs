@@ -66,12 +66,12 @@ namespace Bara.API.Users.DTOs.ProducerDTOs
         /// <summary>
         /// The first name of the producer.
         /// </summary>
-        public required string FirstName { get; init; }
+        public string FirstName { get; init; }
 
         /// <summary>
         /// The last name (surname) of the producer.
         /// </summary>
-        public required string LastName { get; init; }
+        public string LastName { get; init; }
 
         /// <summary>
         /// The middle name of the producer, if applicable.
@@ -81,27 +81,17 @@ namespace Bara.API.Users.DTOs.ProducerDTOs
         /// <summary>
         /// The producer's phone number.
         /// </summary>
-        public required string PhoneNumber { get; init; }
-
-        /// <summary>
-        /// The date of birth of the producer.
-        /// </summary>
-        public required DateOnly DateOfBirth { get; init; }
+        public string PhoneNumber { get; init; }
 
         /// <summary>
         /// The gender of the producer.
         /// </summary>
-        public required Gender Gender { get; init; }
+        public Gender Gender { get; init; }
 
         /// <summary>
         /// The address details of the producer.
         /// </summary>
         public AddressDetail AddressDetail { get; init; }
-
-        /// <summary>
-        /// The verification document required for validating the producer's identity.
-        /// </summary>
-        public PostDocumentDetailDTO VerificationDocument { get; init; }
 
         /// <summary>
         /// A short biography or description about the producer.
@@ -113,5 +103,4 @@ namespace Bara.API.Users.DTOs.ProducerDTOs
         public string PortfolioUrl { get; set; }
         public string Company { get; set; } = string.Empty;
     }
-
 }
