@@ -198,6 +198,7 @@ namespace Bara.API.Users.Repositories
                                         Name = $"{x.FirstName} {x.LastName}",
                                         Bio = x.Bio,
                                         MiddleName = x.MiddleName ?? "-",
+                                        DateOfBirth = x.DateOfBirth,
                                         Address = new AddressDetail
                                         {
                                             City = x.Address.City,
@@ -247,9 +248,52 @@ namespace Bara.API.Users.Repositories
             }
         }
 
-        public Task<ResponseDetail<GetProducerDetailDTO>> UpdateProducer(UpdateProducerDetailDTO producerDetailDTO, Guid producerId)
+        public async Task<ResponseDetail<GetProducerDetailDTO>> UpdateProducer(UpdateProducerDetailDTO producerDetailDTO, Guid producerId)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var producer = await dbContext.Producers.Include(x => x.Address).Include(x => x.AuthProfile).FirstOrDefaultAsync(x => x.Id == producerId);
+                if (producer == null)
+                {
+                    return ResponseDetail<GetProducerDetailDTO>.Failed("Producer not found", 404, "Not Found");
+                }
+
+                producer.FirstName = !string.IsNullOrWhiteSpace(producerDetailDTO.FirstName) ? producerDetailDTO.FirstName.ToUpperInvariant() : producer.FirstName;
+                producer.LastName = !string.IsNullOrWhiteSpace(producerDetailDTO.LastName) ? producerDetailDTO.LastName.ToUpperInvariant() : producer.LastName;
+                producer.MiddleName = !string.IsNullOrWhiteSpace(producerDetailDTO.MiddleName) ? producerDetailDTO.MiddleName.ToUpperInvariant() : producer.MiddleName;
+                producer.PhoneNumber = !string.IsNullOrWhiteSpace(producerDetailDTO.PhoneNumber) ? producerDetailDTO.PhoneNumber : producer.PhoneNumber;
+                producer.Bio = !string.IsNullOrWhiteSpace(producerDetailDTO.Bio) ? producerDetailDTO.Bio : producer.Bio;
+                producer.Gender = producerDetailDTO.Gender != Gender.UNDECIDED ? producerDetailDTO.Gender : producer.Gender;
+                producer.PortfolioUrl = !string.IsNullOrWhiteSpace(producerDetailDTO.PortfolioUrl) ? producerDetailDTO.PortfolioUrl : producer.PortfolioUrl;
+                producer.CompanyOrStudio = !string.IsNullOrWhiteSpace(producerDetailDTO.Company) ? producerDetailDTO.Company : producer.CompanyOrStudio;
+
+                if (producerDetailDTO.AddressDetail != null)
+                {
+                    producer.Address.Street = !string.IsNullOrWhiteSpace(producerDetailDTO.AddressDetail.Street) ? producerDetailDTO.AddressDetail.Street.ToUpperInvariant() : producer.Address.Street;
+                    producer.Address.City = !string.IsNullOrWhiteSpace(producerDetailDTO.AddressDetail.City) ? producerDetailDTO.AddressDetail.City.ToUpperInvariant() : producer.Address.City;
+                    producer.Address.State = !string.IsNullOrWhiteSpace(producerDetailDTO.AddressDetail.State) ? producerDetailDTO.AddressDetail.State.ToUpperInvariant() : producer.Address.State;
+                    producer.Address.Country = !string.IsNullOrWhiteSpace(producerDetailDTO.AddressDetail.Country) ? producerDetailDTO.AddressDetail.Country.ToUpperInvariant() : producer.Address.Country;
+                    producer.Address.PostalCode = !string.IsNullOrWhiteSpace(producerDetailDTO.AddressDetail.PostalCode) ? producerDetailDTO.AddressDetail.PostalCode : producer.Address.PostalCode;
+                    producer.Address.AdditionalDetails = !string.IsNullOrWhiteSpace(producerDetailDTO.AddressDetail.AdditionalDetails) ? producerDetailDTO.AddressDetail.AdditionalDetails.ToUpperInvariant() : producer.Address.AdditionalDetails;
+                }
+
+                if (producer.AuthProfile != null)
+                {
+                    producer.AuthProfile.FullName = $"{producer.FirstName} {producer.LastName}".ToUpperInvariant();
+                }
+
+                await dbContext.SaveChangesAsync();
+
+                cache.Remove($"Producer_Profile{producerId}");
+
+                var updatedProfile = await GetProducer(producerId);
+                return updatedProfile;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"An error occurred while updating producer profile for ID: {producerId}. Exception: {ex.Message}");
+                return ResponseDetail<GetProducerDetailDTO>.Failed("An unexpected error occurred", 500, "Error");
+            }
         }
     }
 }

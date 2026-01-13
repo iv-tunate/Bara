@@ -1,4 +1,4 @@
-﻿using Bara.API.Users.DTOs.ProducerDTOs;
+using Bara.API.Users.DTOs.ProducerDTOs;
 using Bara.API.Users.Interfaces.UserInterfaces;
 using Bara.API.Utilities.ToolKit;
 using Microsoft.AspNetCore.Authorization;
@@ -112,7 +112,8 @@ namespace Bara.API.Users.Controllers
             {
                 if (updateProducerDetail == null || !ModelState.IsValid)
                 {
-                    return BadRequest("Producer update request is null or invalid");
+                    var errors = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+                    return BadRequest(ResponseDetail<string>.Failed($"Producer update request is invalid: {errors}", 400, "Bad Request"));
                 }
 
                 var res = await producerService.UpdateProducer(updateProducerDetail, producerId);

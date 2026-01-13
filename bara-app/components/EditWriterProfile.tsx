@@ -54,7 +54,13 @@ export default function EditWriterProfileModal({
 
   useEffect(() => {
     if (isOpen) {
-      setFormData(initialData);
+      const formattedData = {
+        ...initialData,
+        dateOfBirth: initialData.dateOfBirth
+          ? initialData.dateOfBirth.split("T")[0]
+          : "",
+      };
+      setFormData(formattedData);
 
       if (initialData.experiences) {
         const mappedExp = initialData.experiences.map((exp: any) => {
@@ -237,10 +243,10 @@ export default function EditWriterProfileModal({
 
       if (validExperiences.length > 0) {
         validExperiences.forEach((exp, index) => {
-          form.append(`Experiences[${index}].Description`, exp.description);
-          form.append(`Experiences[${index}].Organization`, exp.org);
-          form.append(`Experiences[${index}].Project`, exp.title);
-          form.append(`Experiences[${index}].IsCurrent`, String(exp.ongoing));
+          form.append(`Experiences[${index}].Description`, exp.description || "N/A");
+          form.append(`Experiences[${index}].Organization`, exp.org || "");
+          form.append(`Experiences[${index}].Project`, exp.title || "");
+          form.append(`Experiences[${index}].IsCurrent`, String(exp.ongoing || false));
 
           if (exp.startYear && exp.startMonth) {
             form.append(

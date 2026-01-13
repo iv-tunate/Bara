@@ -39,7 +39,12 @@ export default function EditProducerProfileModal({
 
   useEffect(() => {
     if (isOpen) {
-      setFormData(initialData);
+      setFormData({
+        ...initialData,
+        dateOfBirth: initialData.dateOfBirth
+          ? initialData.dateOfBirth.split("T")[0]
+          : "",
+      });
     }
   }, [isOpen, initialData]);
 

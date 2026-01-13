@@ -114,7 +114,8 @@ namespace Bara.API.Users.Controllers
             {
                 if (updateWriterDetail == null || !ModelState.IsValid)
                 {
-                    return BadRequest("Writer update request is null or invalid");
+                    var errors = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+                    return BadRequest(ResponseDetail<string>.Failed($"Writer update request is invalid: {errors}", 400, "Bad Request"));
                 }
 
                 var res = await writerService.UpdateWriterDetail(writerId, updateWriterDetail);

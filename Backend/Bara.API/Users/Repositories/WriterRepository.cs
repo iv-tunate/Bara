@@ -5,6 +5,7 @@ using Bara.API.Transactions.DTOs;
 using Bara.API.Users.DTOs.AddressDTOs;
 using Bara.API.Users.DTOs.ServiceDTOs;
 using Bara.API.Users.DTOs.WriterDTOs;
+using Bara.API.Users.Enums;
 using Bara.API.Users.Interfaces.UserInterfaces;
 using Bara.API.Users.Models;
 using Bara.API.Utilities.Settings;
@@ -229,7 +230,8 @@ namespace Bara.API.Users.Repositories
                     TimeCreated = writerProfile.TimeCreated,
                     DateModified = writerProfile.DateModified,
                     ModifiedAt = writerProfile.ModifiedAt,
-                    TimeModified = writerProfile.TimeModified
+                    TimeModified = writerProfile.TimeModified,
+                    DateOfBirth = writerProfile.DateOfBirth
                 };
 
 
@@ -341,7 +343,8 @@ namespace Bara.API.Users.Repositories
                                         ProfileImageUrl = x.ProfileImageUrl,
                                         PortfolioUrl = x.PortfolioUrl,
                                         TimeModified = x.TimeModified,
-                                        VerificationStatus = x.VerificationStatus.ToString()
+                                        VerificationStatus = x.VerificationStatus.ToString(),
+                                        DateOfBirth = x.DateOfBirth
                                     }).FirstOrDefaultAsync(x => x.Id == writerId);
                 if (writerProfile == null)
                 {
@@ -361,9 +364,84 @@ namespace Bara.API.Users.Repositories
             throw new NotImplementedException();
         }
 
-        public Task<ResponseDetail<GetWriterDetailDTO>> UpdateWriterDetail(Guid writerId, UpdateWriterDetailDTO updateWriterDetail)
+        public async Task<ResponseDetail<GetWriterDetailDTO>> UpdateWriterDetail(Guid writerId, UpdateWriterDetailDTO updateWriterDetail)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var writer = await dbContext.Writers.Include(x => x.Address).Include(x => x.AuthProfile).Include(x => x.Experiences).Include(x => x.Services).FirstOrDefaultAsync(x => x.Id == writerId);
+                if (writer == null)
+                {
+                    return ResponseDetail<GetWriterDetailDTO>.Failed("Writer not found", 404, "Not Found");
+                }
+
+                writer.FirstName = !string.IsNullOrWhiteSpace(updateWriterDetail.FirstName) ? updateWriterDetail.FirstName.ToUpperInvariant() : writer.FirstName;
+                writer.LastName = !string.IsNullOrWhiteSpace(updateWriterDetail.LastName) ? updateWriterDetail.LastName.ToUpperInvariant() : writer.LastName;
+                writer.MiddleName = !string.IsNullOrWhiteSpace(updateWriterDetail.MiddleName) ? updateWriterDetail.MiddleName.ToUpperInvariant() : writer.MiddleName;
+                writer.PhoneNumber = !string.IsNullOrWhiteSpace(updateWriterDetail.PhoneNumber) ? updateWriterDetail.PhoneNumber : writer.PhoneNumber;
+                writer.Bio = !string.IsNullOrWhiteSpace(updateWriterDetail.Bio) ? updateWriterDetail.Bio : writer.Bio;
+                writer.Gender = updateWriterDetail.Gender != Gender.UNDECIDED ? updateWriterDetail.Gender : writer.Gender;
+                writer.PortfolioUrl = !string.IsNullOrWhiteSpace(updateWriterDetail.PortfolioUrl) ? updateWriterDetail.PortfolioUrl : writer.PortfolioUrl;
+                writer.IsPremiumMember = updateWriterDetail.IsPremiumMember;
+
+                if (updateWriterDetail.AddressDetail != null)
+                {
+                    writer.Address.Street = !string.IsNullOrWhiteSpace(updateWriterDetail.AddressDetail.Street) ? updateWriterDetail.AddressDetail.Street.ToUpperInvariant() : writer.Address.Street;
+                    writer.Address.City = !string.IsNullOrWhiteSpace(updateWriterDetail.AddressDetail.City) ? updateWriterDetail.AddressDetail.City.ToUpperInvariant() : writer.Address.City;
+                    writer.Address.State = !string.IsNullOrWhiteSpace(updateWriterDetail.AddressDetail.State) ? updateWriterDetail.AddressDetail.State.ToUpperInvariant() : writer.Address.State;
+                    writer.Address.Country = !string.IsNullOrWhiteSpace(updateWriterDetail.AddressDetail.Country) ? updateWriterDetail.AddressDetail.Country.ToUpperInvariant() : writer.Address.Country;
+                    writer.Address.PostalCode = !string.IsNullOrWhiteSpace(updateWriterDetail.AddressDetail.PostalCode) ? updateWriterDetail.AddressDetail.PostalCode : writer.Address.PostalCode;
+                    writer.Address.AdditionalDetails = !string.IsNullOrWhiteSpace(updateWriterDetail.AddressDetail.AdditionalDetails) ? updateWriterDetail.AddressDetail.AdditionalDetails.ToUpperInvariant() : writer.Address.AdditionalDetails;
+                }
+
+                if (updateWriterDetail.Experiences != null && updateWriterDetail.Experiences.Any())
+                {
+                    writer.Experiences = updateWriterDetail.Experiences.Select(x => new BioExperience
+                    {
+                        WriterId = writerId,
+                        IsCurrent = x.IsCurrent,
+                        Organization = x.Organization?.ToUpperInvariant() ?? "",
+                        Project = x.Project?.ToUpperInvariant() ?? "",
+                        StartDate = x.StartDate,
+                        EndDate = x.EndDate,
+                        Description = x.Description?.ToUpperInvariant() ?? writer.Bio ?? ""
+                    }).ToList();
+                }
+
+                if (updateWriterDetail.PostServiceDetail != null && updateWriterDetail.PostServiceDetail.Any())
+                {
+                    writer.Services = updateWriterDetail.PostServiceDetail.Select(dto => new Service
+                    {
+                        Name = dto.Name,
+                        Description = dto.Description,
+                        MinPrice = dto.MinPrice,
+                        MaxPrice = dto.MaxPrice,
+                        Currency = dto.Currency,
+                        IPDealType = dto.IPDealType,
+                        SharePercentage = dto.SharePercentage,
+                        PaymentType = dto.PaymentType,
+                        Genre = dto.Genre ?? [],
+                        WriterId = writerId
+                    }).ToList();
+                }
+
+                if (writer.AuthProfile != null)
+                {
+                    writer.AuthProfile.FullName = $"{writer.FirstName} {writer.LastName}".ToUpperInvariant();
+                }
+
+                await dbContext.SaveChangesAsync();
+
+                // Clear cache
+                cache.Remove($"Writer_Profile{writerId}");
+
+                var updatedProfile = await GetWriterDetail(writerId);
+                return updatedProfile;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"An error occurred while updating writer profile for ID: {writerId}. Exception: {ex.Message}");
+                return ResponseDetail<GetWriterDetailDTO>.Failed("An unexpected error occurred", 500, "Error");
+            }
         }
     }
 }

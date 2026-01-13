@@ -101,6 +101,8 @@ namespace Bara.API.Users.DTOs.WriterDTOs
         /// </summary>
         public GetWalletDetailDTO Wallet { get; init; }
 
+        public DateOnly DateOfBirth { get; init; }
+
         /// <summary>
         /// The exact timestamp when the writer was created in the system.
         /// </summary>
