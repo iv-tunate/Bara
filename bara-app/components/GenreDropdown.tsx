@@ -19,7 +19,7 @@ export default function GenreDropdown({ onChange }: GenreDropdownProps) {
     async function fetchGenres() {
       try {
         const response = await api.getGenres();
-       //console.log(response);
+        //console.log(response);
         setGenres(response.data.data || []);
       } catch (error) {
         console.error("Failed to load genres:", error);
@@ -56,9 +56,9 @@ export default function GenreDropdown({ onChange }: GenreDropdownProps) {
     <div className="relative">
       <button
         onClick={() => setOpen((prev) => !prev)}
-        className="flex items-center gap-2 px-3 py-3 rounded-md text-sm text-[#22242A] font-medium cursor-pointer"
+        className="flex items-center gap-2 px-4 py-2 rounded-full text-sm text-[#22242A] font-semibold cursor-pointer hover:bg-gray-50 transition-colors"
       >
-        <Image src="/menu.png" alt="Menu" width={20} height={20} />
+        <Image src="/menu.png" alt="Menu" width={18} height={18} />
         Genres
       </button>
 

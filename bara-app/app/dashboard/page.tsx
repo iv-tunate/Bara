@@ -17,8 +17,8 @@ import Pagination from "@/components/Pagination";
 import { ScriptGrid } from "@/components/Script";
 import { useVerificationRecovery } from "@/app/hooks/useVerificationRecovery";
 import toast from "react-hot-toast";
-import { toast as toastify } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css'; 
+import { toast as toastify } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function DashboardPage() {
   useVerificationRecovery();
@@ -68,7 +68,7 @@ export default function DashboardPage() {
         response = await api.getScriptsByGenre(
           selectedGenres[0].id,
           page,
-          pageSize
+          pageSize,
         );
       } else {
         response = await api.getAllScripts(page, pageSize);
@@ -78,7 +78,7 @@ export default function DashboardPage() {
         setScripts((prev) =>
           append
             ? [...prev, ...(response.data.data || [])]
-            : response.data.data || []
+            : response.data.data || [],
         );
         setTotalPages(response.totalPages || 1);
       } else {
@@ -113,46 +113,48 @@ export default function DashboardPage() {
         <DashboardNavbar />
       )}
 
-      <div className="max-w-7xl mx-auto px-4 md:px-10 lg:px-10 py-4">
-        <div className="flex flex-col gap-4 mt-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-bold text-[#22242A]">
-              Hello {userName}
-            </h2>
-            <Image src="/wave.png" alt="Wave" width={20} height={20} />
+      <div className="max-w-7xl mx-auto px-4 md:px-10 lg:px-10 py-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          {/* Greeting Section */}
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-3">
+              <h1 className="text-1xl md:text-2xl font-extrabold text-[#22242A] tracking-tight">
+                Hello, {userName}
+              </h1>
+              <div className="animate-bounce-subtle">
+                <Image
+                  src="/wave.png"
+                  alt="Wave"
+                  width={28}
+                  height={28}
+                  priority
+                />
+              </div>
+            </div>
+            <p className="text-sm text-[#666B75] max-w-md">
+              {role === "writer"
+                ? "Your creative space to upload scripts and inspire the world."
+                : "Discover powerful stories and connect with talented writers."}
+            </p>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
+          {/* Action Section */}
+          <div className="flex items-center gap-3 self-end md:self-center">
             {role === "writer" && profileState === true && (
-              <Link href="/writer/add-script" className="w-full sm:w-auto">
+              <Link href="/writer/add-script">
                 <button
                   type="button"
-                  className="w-full sm:w-auto bg-[#800000] text-white font-medium px-6 py-2 rounded-md hover:bg-[#1a0000] transition-colors"
+                  className="bg-[#800000] text-white font-semibold px-5 py-2.5 rounded-full hover:bg-[#1a0000] transition-all duration-300 shadow-md hover:shadow-lg active:scale-95 flex items-center gap-2 text-sm md:text-base"
                 >
-                  + Add Script
+                  <span className="text-lg">+</span> Add Script
                 </button>
               </Link>
             )}
 
-            <GenreDropdown />
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between mt-2">
-          <p className="text-sm text-[#22242A]">
-            {role === "writer"
-              ? "Share your creativity, upload your scripts, and inspire the world."
-              : "Explore powerful scripts, connect with talented writers."}
-          </p>
-
-          {/* {role === "Writer" && (
-            <div className="flex items-center gap-2">
-              <Image src="/menu.png" alt="Menu" width={20} height={20} />
-              <span className="text-sm font-medium text-[#22242A]">
-                Categories
-              </span>
+            <div className="bg-white border border-[#E5E7EB] rounded-full px-1 shadow-sm hover:shadow-md transition-shadow">
+              <GenreDropdown />
             </div>
-          )} */}
+          </div>
         </div>
         {role === "writer" && (
           <section className="relative bg-[#F2F0E4] rounded-lg p-6 md:p-8 my-8 overflow-hidden border border-[#ABADB2]">

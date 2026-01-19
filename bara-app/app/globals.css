@@ -1,11 +1,25 @@
 @import "tailwindcss";
 
+@keyframes bounce-subtle {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s ease-in-out infinite;
+}
+
 /* Global body styles */
 body {
   background-color: #ffffff; /* white background */
-  color: #000000;            /* black text */
+  color: #000000; /* black text */
   font-family: var(--font-lato), var(--font-dm-sans), sans-serif;
-   -ms-overflow-style: none;
+  -ms-overflow-style: none;
   overflow-y: scroll;
 }
 
@@ -46,9 +60,6 @@ html {
   scrollbar-width: none;
 }
 
-
-
-
 input::-ms-reveal,
 input::-ms-clear {
   display: none !important;
@@ -63,14 +74,12 @@ input::-webkit-search-cancel-button {
   -webkit-appearance: none;
 }
 
-
 input[type="password"],
 input[type="text"] {
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
   background-size: 1rem;
 }
-
 
 @layer base {
   button:not([disabled]),
@@ -83,4 +92,3 @@ input[type="text"] {
     cursor: not-allowed;
   }
 }
-
