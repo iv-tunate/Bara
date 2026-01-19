@@ -80,14 +80,14 @@ export default function WriterProfile() {
         const response = await api.getScriptsByWriterId(
           writerId,
           page,
-          pageSize
+          pageSize,
         );
 
         if (response.success && response.data) {
           setScripts((prev) =>
             append
               ? [...prev, ...(response.data.data || [])]
-              : response.data.data || []
+              : response.data.data || [],
           );
           setTotalPages(response.totalPages || 1);
         } else {
@@ -102,7 +102,7 @@ export default function WriterProfile() {
         setScriptsLoading(false);
       }
     },
-    [writerId]
+    [writerId],
   );
 
   useEffect(() => {
@@ -121,7 +121,7 @@ export default function WriterProfile() {
       try {
         const imageUrl = await downloadImage(
           (profileData?.profileImageUrl || profileData?.profileImagePublicId)!,
-          "cloudinary"
+          "cloudinary",
         );
         setProfileImage(imageUrl);
       } catch (error) {
@@ -255,7 +255,7 @@ export default function WriterProfile() {
                         className="p-1 rounded cursor-pointer"
                       >
                         <Image
-                          src="/copy.png"
+                          src="/Copy.png"
                           alt="Copy"
                           width={14}
                           height={14}
@@ -356,7 +356,7 @@ export default function WriterProfile() {
                             ? "Present"
                             : new Date(exp.endDate).toLocaleDateString(
                                 "en-US",
-                                { month: "short", year: "numeric" }
+                                { month: "short", year: "numeric" },
                               )}
                         </span>
                       </div>

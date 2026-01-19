@@ -48,8 +48,8 @@ export default function AccountDropdown({
         onClose();
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
   }, [onClose]);
 
   const handleLogout = () => {
@@ -101,7 +101,7 @@ export default function AccountDropdown({
   return (
     <div
       ref={dropdownRef}
-      className="w-80 bg-white shadow-2xl rounded-xl border border-gray-100 z-50 overflow-hidden"
+      className="w-[calc(100vw-2rem)] sm:w-80 bg-white shadow-2xl rounded-xl border border-gray-100 z-50 overflow-hidden"
     >
       {/* Header with gradient */}
       <div className="p-5 bg-linear-to-br from-[#800000] to-[#a00000] text-white">
@@ -187,7 +187,7 @@ export default function AccountDropdown({
               <span className="font-bold text-[#800000]">
                 {formatCurrency(
                   walletData.totalBalance,
-                  walletData.currencySymbol
+                  walletData.currencySymbol,
                 )}
               </span>
             </div>
@@ -196,7 +196,7 @@ export default function AccountDropdown({
               <span className="font-semibold text-green-700">
                 {formatCurrency(
                   walletData.availableBalance,
-                  walletData.currencySymbol
+                  walletData.currencySymbol,
                 )}
               </span>
             </div>
@@ -205,7 +205,7 @@ export default function AccountDropdown({
               <span className="font-semibold text-orange-700">
                 {formatCurrency(
                   walletData.lockedBalance,
-                  walletData.currencySymbol
+                  walletData.currencySymbol,
                 )}
               </span>
             </div>
@@ -214,15 +214,16 @@ export default function AccountDropdown({
       )}
 
       <div className="py-2">
-        {(userData?.userType === "Writer" ||
-          userData?.userType === "Producer") && (
+        {["writer", "producer"].includes(
+          userData?.userType?.toLowerCase() || "",
+        ) && (
           <Link
             href={
-              userData?.userType === "Writer"
+              userData?.userType?.toLowerCase() === "writer"
                 ? "/writer/profile"
                 : "/producer/profile"
             }
-            onClick={onClose}
+            onClick={() => setTimeout(onClose, 100)}
             className="flex items-center px-4 py-3 text-sm text-[#333740] hover:bg-linear-gradient-to-r hover:from-gray-50 hover:to-gray-100 transition-all duration-200 group"
           >
             <svg

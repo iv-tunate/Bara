@@ -68,7 +68,7 @@ export default function ProducerProfile() {
       try {
         const imageUrl = await downloadImage(
           (profileData?.profileImageUrl || profileData?.profileImagePublicId)!,
-          "cloudinary"
+          "cloudinary",
         );
         setProfileImage(imageUrl);
       } catch (error) {
@@ -247,7 +247,7 @@ export default function ProducerProfile() {
                             title="Copy Link"
                           >
                             <Image
-                              src="/copy.png"
+                              src="/Copy.png"
                               alt="Copy"
                               width={14}
                               height={14}

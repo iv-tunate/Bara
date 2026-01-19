@@ -18,9 +18,9 @@ export default function CreateAccountDropdown({ onClose }: Props) {
         onClose();
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("click", handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("click", handleClickOutside);
     };
   }, [onClose]);
 
@@ -39,7 +39,7 @@ export default function CreateAccountDropdown({ onClose }: Props) {
     >
       <Link
         href="/auth/register?type=Producer"
-        onClick={onClose}
+        onClick={() => setTimeout(onClose, 100)}
         className="block p-3 hover:bg-[#F5F5F5] rounded-md cursor-pointer [font-family:var(--font-lato)] transition-colors"
       >
         <h3 className="font-bold text-[#22242A]">I am a Producer</h3>
