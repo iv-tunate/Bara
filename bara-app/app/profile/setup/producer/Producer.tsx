@@ -296,7 +296,6 @@ export default function ProducerProfilePage() {
           name: `${response.data.data.name}`,
         });
 
-        // Clear persisted form data on success
         if (storageKey) {
           localStorage.removeItem(storageKey);
         }
