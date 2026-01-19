@@ -129,7 +129,7 @@ namespace Bara.API.Transactions.Repositories
                     };
 
                     var paymentResponse = await paystack.InitializePaymentAsync(paymentInitRequest);
-
+                    logger.LogInformation($"Paystack sent a response at the point of initializing payment for {user.FullName}..... || \n {paymentResponse}");
                     if (paymentResponse.Status)
                     {
                         transaction.Status = TransactionStatus.Pending;
@@ -152,7 +152,7 @@ namespace Bara.API.Transactions.Repositories
                     {
                         transaction.Status = TransactionStatus.Failed;
                         await dbTransaction.RollbackAsync();
-                        logger.LogError($"Failed to initialize payment for user {user.FullName}. Error: {paymentResponse.Message}");
+                        logger.LogError($"Failed to initialize payment for user {user.FullName}. Error: {paymentResponse}");
                         return ResponseDetail<object>.Failed(paymentResponse.Message, 500);
                     }
                 }

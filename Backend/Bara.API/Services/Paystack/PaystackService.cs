@@ -61,7 +61,7 @@ namespace Bara.API.Services.Paystack
                 };
 
                 var res = paystack.Transactions.Initialize(transactionRequest);
-
+                logger.LogInformation("Paystack Initialize Payment Response: {@Response}", res);
                 if (res.Status)
                 {
                     return new PaymentInitResponse
