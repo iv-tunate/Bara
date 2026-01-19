@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X } from "lucide-react"; 
+import { Menu, X } from "lucide-react";
 import Logo from "./Logo";
 import CreateAccountDropdown from "./CreateAccountDropdown";
 
@@ -14,17 +14,28 @@ export default function Navbar() {
       <Logo />
 
       <div className="hidden md:flex items-center space-x-10">
-        <Link
-          href="/auth/login"
-          className="text-barRedMain font-medium hover:text-[#1a0000]"
-        >
-          Log in
-        </Link>
+        <div className="flex items-center gap-6">
+          <Link
+            href="/terms"
+            className="text-gray-500 text-sm font-medium hover:text-barRedMain transition-colors"
+          >
+            Terms & Conditions
+          </Link>
+
+          <span className="w-px h-4 bg-gray-200" aria-hidden="true" />
+
+          <Link
+            href="/auth/login"
+            className="text-barRedMain font-semibold hover:text-[#5a0000] transition-colors"
+          >
+            Log in
+          </Link>
+        </div>
 
         <div className="relative">
           <button
             onClick={() => setShowDropdown((prev) => !prev)}
-            className="bg-[#800000] text-white font-medium px-10 py-3 rounded-md hover:bg-[#1a0000] transition-colors text-center cursor-pointer"
+            className="bg-[#800000] text-white font-medium px-10 py-3 rounded-md hover:bg-[#1a0000] transition-colors text-center cursor-pointer shadow-sm"
           >
             Create account
           </button>
@@ -50,13 +61,21 @@ export default function Navbar() {
           <div className="flex flex-col items-start px-6 py-4 space-y-4">
             <Link
               href="/auth/login"
-              className="text-barRedMain font-medium hover:text-[#1a0000]"
+              className="text-barRedMain font-semibold hover:text-[#5a0000] py-2 text-lg transition-colors"
               onClick={() => setShowMobileMenu(false)}
             >
               Log in
             </Link>
 
-            <div className="relative w-full">
+            <Link
+              href="/terms"
+              className="text-gray-500 font-medium hover:text-barRedMain py-2 text-sm transition-colors border-t border-gray-100 w-full"
+              onClick={() => setShowMobileMenu(false)}
+            >
+              Terms & Conditions
+            </Link>
+
+            <div className="relative w-full pt-2">
               <button
                 onClick={() => setShowDropdown((prev) => !prev)}
                 className="bg-[#800000] text-white font-medium w-full py-3 rounded-md hover:bg-[#1a0000] transition-colors text-center"

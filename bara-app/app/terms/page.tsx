@@ -139,7 +139,17 @@ Use of Bara is at your own risk.`,
 Bara is not liable for losses caused by compromised accounts.`,
   },
   {
-    title: "12. Platform Modifications & Governing Law",
+    title: "12. Marketplace Commissions & Refund Deductions",
+    content: `Bara maintains the following fee structure to support platform operations:
+
+- Sales Commission: Bara deducts a 10% platform service fee from every successful script sale made by a writer.
+- Refund Deductions: In the event of a canceled script transaction within the 14-day window, Bara deducts a 5% processing fee from the total transaction amount before issuing the refund to the buyer.
+- Secure Escrow: All funds are held in a secure escrow account during the 14-day transaction window to protect both parties.
+
+These fees are non-negotiable and are automatically applied by the platform.`,
+  },
+  {
+    title: "13. Platform Modifications & Governing Law",
     content: `Bara reserves the right to:
 - Modify fees with notice
 - Update features
@@ -266,7 +276,7 @@ export default function Terms() {
                         >
                           {line}
                         </p>
-                      )
+                      ),
                     )}
                   </div>
                 </div>

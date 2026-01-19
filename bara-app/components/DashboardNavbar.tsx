@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
+import { usePathname } from "next/navigation";
 import AccountDropdown, { UserData, WalletData } from "./AccountDropdown";
 import MessageDropdown from "./MessageDropdown";
 import { getUserSession, clearUserSession } from "@/utils/tokenManager";
@@ -17,6 +18,7 @@ export default function DashboardNavbar() {
   const [isLoading, setIsLoading] = useState(true);
 
   const { walletData, isLoading: walletLoading } = useWallet();
+  const pathname = usePathname();
 
   useEffect(() => {
     const session = getUserSession();
@@ -28,7 +30,10 @@ export default function DashboardNavbar() {
             if (session.profileImageUrl.startsWith("http")) {
               imageUrl = session.profileImageUrl;
             } else {
-              imageUrl = await downloadImage(session.profileImageUrl, "cloudinary");
+              imageUrl = await downloadImage(
+                session.profileImageUrl,
+                "cloudinary",
+              );
             }
           } catch (e) {
             console.error("Failed to load profile image", e);
@@ -89,25 +94,27 @@ export default function DashboardNavbar() {
       {/* Desktop Links */}
       <div className="hidden md:flex items-center gap-6 text-sm font-semibold text-[#22242A]">
         {/* Dashboard Link */}
-        <Link
-          href="/dashboard"
-          className="hover:text-[#800000] hover:bg-gray-100 flex items-center gap-2 cursor-pointer px-3 py-2 rounded-md transition-colors"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        {pathname !== "/dashboard" && (
+          <Link
+            href="/dashboard"
+            className="hover:text-[#800000] hover:bg-gray-100 flex items-center gap-2 cursor-pointer px-3 py-2 rounded-md transition-colors"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-            />
-          </svg>
-          Dashboard
-        </Link>
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+              />
+            </svg>
+            Dashboard
+          </Link>
+        )}
 
         {/* Messages Dropdown */}
         <div className="relative">
@@ -251,26 +258,28 @@ export default function DashboardNavbar() {
             </Link>
 
             {/* Dashboard Link Mobile */}
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-100 rounded-md"
-              onClick={() => setShowMobileMenu(false)}
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            {pathname !== "/dashboard" && (
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-100 rounded-md"
+                onClick={() => setShowMobileMenu(false)}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                />
-              </svg>{" "}
-              Dashboard
-            </Link>
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                  />
+                </svg>{" "}
+                Dashboard
+              </Link>
+            )}
 
             {/* Mobile Search */}
             {/* <div className="w-full mt-2">
