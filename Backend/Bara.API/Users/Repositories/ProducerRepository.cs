@@ -74,7 +74,7 @@ namespace Bara.API.Users.Repositories
                 producer.Type = Role.Producer;
                 producer.AuthProfile.FullName = $"{producerDetailDTO.FirstName} {producerDetailDTO.LastName}".ToUpperInvariant();
                 producer.AuthProfile.IsProfileSetupComplete = true;
-                producer.CompanyOrStudio = producerDetailDTO.Company;
+                producer.CompanyOrStudio = producerDetailDTO.Company ?? "No Company/Studio";
                 producer.Address = new Address
                 {
                     City = producerDetailDTO.AddressDetail.City.ToUpperInvariant(),

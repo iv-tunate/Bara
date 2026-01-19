@@ -30,7 +30,7 @@ export default function ProducerProfilePage() {
   const [profileImageUrl, setProfileImageUrl] = useState("");
   const [profileImagePublicId, setProfileImagePublicId] = useState("");
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(
-    null
+    null,
   );
   const [uploading, setUploading] = useState(false);
 
@@ -67,10 +67,44 @@ export default function ProducerProfilePage() {
     file: null,
   });
 
+  const STORAGE_KEY = `bara_setup_producer_${localStorage.getItem("userId")}`;
+
+  useEffect(() => {
+    const savedData = localStorage.getItem(STORAGE_KEY);
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        if (parsed.formData)
+          setFormData((prev) => ({ ...prev, ...parsed.formData }));
+        if (parsed.locationForm)
+          setLocationForm((prev) => ({ ...prev, ...parsed.locationForm }));
+        if (parsed.identityForm)
+          setIdentityForm((prev) => ({
+            ...prev,
+            ...parsed.identityForm,
+            file: null, 
+          }));
+      } catch (err) {
+        
+      }
+    }
+  }, [STORAGE_KEY]);
+  useEffect(() => {
+    const dataToSave = {
+      formData,
+      locationForm,
+      identityForm: {
+        documentType: identityForm.documentType,
+        verificationNumber: identityForm.verificationNumber,
+      },
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+  }, [formData, locationForm, identityForm, STORAGE_KEY]);
+
   useEffect(() => {
     const user = getUserSession();
     if (user === null) {
-      router.push("auth/login");
+      router.push("/auth/login");
       return;
     } else if (
       user.userType.toLowerCase() === "writer" &&
@@ -97,7 +131,7 @@ export default function ProducerProfilePage() {
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    >,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -125,7 +159,7 @@ export default function ProducerProfilePage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleProfileImageChange = async (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -157,25 +191,25 @@ export default function ProducerProfilePage() {
 
   const isPersonalInfoComplete = Boolean(
     formData.firstName &&
-      formData.lastName &&
-      formData.phone &&
-      formData.dateOfBirth &&
-      formData.gender &&
-      formData.bio
+    formData.lastName &&
+    formData.phone &&
+    formData.dateOfBirth &&
+    formData.gender &&
+    formData.bio,
   );
 
   const isLocationInfoComplete = Boolean(
     locationForm.country &&
-      locationForm.state &&
-      locationForm.city &&
-      locationForm.postalCode &&
-      locationForm.street
+    locationForm.state &&
+    locationForm.city &&
+    locationForm.postalCode &&
+    locationForm.street,
   );
 
   const isIdentityInfoComplete = Boolean(
     identityForm.documentType &&
-      identityForm.file &&
-      identityForm.verificationNumber
+    identityForm.file &&
+    identityForm.verificationNumber,
   );
 
   const isCurrentStepComplete =
@@ -203,7 +237,14 @@ export default function ProducerProfilePage() {
       form.append("LastName", formData.lastName);
       form.append("MiddleName", formData.middleName || "none");
       form.append("PhoneNumber", formData.phone);
-      form.append("Gender", formData.gender);
+
+      const genderMap: Record<string, string> = {
+        Male: "MALE",
+        Female: "FEMALE",
+        Other: "RATHERNOTSAY",
+      };
+      form.append("Gender", genderMap[formData.gender] || formData.gender);
+
       form.append("Bio", formData.bio || "");
       form.append("Company", formData.company);
       form.append("DateOfBirth", formData.dateOfBirth);
@@ -216,17 +257,17 @@ export default function ProducerProfilePage() {
       form.append("PortfolioUrl", formData.portfolioLink || "");
       form.append(
         "AddressDetail.AdditionalDetails",
-        locationForm.additionalDetails || "no additional details"
+        locationForm.additionalDetails || "no additional details",
       );
       form.append("VerificationDocument.Type", identityForm.documentType);
       form.append(
         "VerificationDocument.VerificationNumber",
-        identityForm.verificationNumber || ""
+        identityForm.verificationNumber || "",
       );
       form.append(
         "VerificationDocument.Document",
         identityForm.file!,
-        identityForm.file!.name
+        identityForm.file!.name,
       );
 
       if (profileImageUrl) {
@@ -234,9 +275,11 @@ export default function ProducerProfilePage() {
         form.append("ProfileImagePublicId", profileImagePublicId);
       }
 
+      // console.log("Submitting Producer Profile...");
       const response = await api.createProducer(form, userId);
+      // console.log("Producer response:", response);
 
-      if (response.success) {
+      if (response.success && response.data?.isSuccess) {
         setProcessingStatus("success");
         toast.success("Producer profile setup complete!");
 
@@ -244,15 +287,19 @@ export default function ProducerProfilePage() {
           profileComplete: true,
           name: `${response.data.data.name}`,
         });
+
+        localStorage.removeItem(STORAGE_KEY);
+
         setTimeout(() => {
           router.push("/dashboard");
         }, 2000);
         return;
       } else {
         setProcessingStatus("error");
+        const backendError = response.data?.message || response.message;
         setError(
-          response.data.message ||
-            "Failed to create producer profile. Please try again."
+          backendError ||
+            "Failed to create producer profile. Please try again.",
         );
         return;
       }
@@ -274,7 +321,7 @@ export default function ProducerProfilePage() {
   };
 
   return (
-    <div className="fixed inset-0 bg-[#1a0000] bg-opacity-80 flex items-center justify-center z-50 p-4 h-full overflow-auto">
+    <div className="fixed inset-0 backdrop-blur-md bg-black/30 flex items-center justify-center z-50 p-4 h-full overflow-auto">
       <form
         onSubmit={handleSubmit}
         className="bg-white rounded-lg shadow-lg p-3 md:p-6 w-full max-w-3xl max-h-screen overflow-y-auto flex flex-col space-y-1"
@@ -288,9 +335,16 @@ export default function ProducerProfilePage() {
         {/* Error Message */}
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-sm text-red-600">{error}</p>
+            <p className="text-sm text-red-600 font-medium">{error}</p>
           </div>
         )}
+
+        <div className="mb-2">
+          <p className="text-xs text-gray-500">
+            Fields marked with <span className="text-red-500">*</span> are
+            required.
+          </p>
+        </div>
 
         <div className="flex border-b border-gray-300 text-sm font-medium text-[#858990] space-x-6">
           {(["personal", "location", "identity"] as TabType[]).map((tab) => (
@@ -308,8 +362,8 @@ export default function ProducerProfilePage() {
                 {tab === "personal"
                   ? "Personal information"
                   : tab === "location"
-                  ? "Location details"
-                  : "Identity verification"}
+                    ? "Location details"
+                    : "Identity verification"}
               </span>
               {activeTab === tab && (
                 <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-1 w-full bg-[#810306] rounded-tr-2xl rounded-tl-2xl" />
@@ -324,7 +378,7 @@ export default function ProducerProfilePage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="flex flex-col">
                 <label className="text-sm font-semibold text-[#22242A] mb-1">
-                  First Name
+                  First Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -337,7 +391,7 @@ export default function ProducerProfilePage() {
 
               <div className="flex flex-col">
                 <label className="text-sm font-semibold text-[#22242A] mb-1">
-                  Last Name
+                  Last Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -453,7 +507,7 @@ export default function ProducerProfilePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div className="flex flex-col">
                 <label className="text-sm font-semibold text-[#22242A] mb-1">
-                  Date of birth
+                  Date of birth <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
@@ -466,7 +520,7 @@ export default function ProducerProfilePage() {
 
               <div className="flex flex-col">
                 <label className="text-sm font-semibold text-[#22242A] mb-1">
-                  Gender
+                  Gender <span className="text-red-500">*</span>
                 </label>
                 <select
                   name="gender"
@@ -542,7 +596,7 @@ export default function ProducerProfilePage() {
               {/* Phone */}
               <div className="flex flex-col">
                 <label className="text-sm font-semibold text-[#22242A] mb-1">
-                  Phone Number
+                  Phone Number <span className="text-red-500">*</span>
                 </label>
                 <div className="border border-[#ABADB2] rounded-md px-2 py-1 w-full">
                   <PhoneInput

@@ -37,7 +37,8 @@ namespace Bara.API.Users.Controllers
             {
                 if (!ModelState.IsValid)
                 {
-                    return BadRequest("Invalid request body");
+                    var errors = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+                    return BadRequest(ResponseDetail<string>.Failed($"Producer request is invalid: {errors}", 400, "Bad Request"));
                 }
                 var response = await producerService.AddProducer(producerDetail, userId);
                 if (response.IsSuccess is false && response.StatusCode == 500)

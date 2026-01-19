@@ -40,7 +40,8 @@ namespace Bara.API.Users.Controllers
             {
                 if (writerDetail == null || !ModelState.IsValid)
                 {
-                    return BadRequest("Writer request body is null or invalid");
+                    var errors = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+                    return BadRequest(ResponseDetail<string>.Failed($"Writer request is invalid: {errors}", 400, "Bad Request"));
                 }
                 var response = await writerService.AddWriter(writerDetail, userId);
                 if (response.IsSuccess)

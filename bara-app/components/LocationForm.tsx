@@ -95,7 +95,7 @@ export default function LocationForm({ form, setForm }: LocationFormProps) {
         {/* Country */}
         <div className="flex flex-col">
           <label htmlFor="country" className="mb-1 font-medium">
-            Country
+            Country <span className="text-red-500">*</span>
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
@@ -139,7 +139,7 @@ export default function LocationForm({ form, setForm }: LocationFormProps) {
         {/* State */}
         <div className="flex flex-col">
           <label htmlFor="state" className="mb-1 font-medium">
-            State / Province
+            State / Province <span className="text-red-500">*</span>
           </label>
           <select
             id="state"
@@ -160,7 +160,7 @@ export default function LocationForm({ form, setForm }: LocationFormProps) {
         {/* City */}
         <div className="flex flex-col">
           <label htmlFor="city" className="mb-1 font-medium">
-            City
+            City <span className="text-red-500">*</span>
           </label>
           <select
             id="city"
@@ -184,7 +184,7 @@ export default function LocationForm({ form, setForm }: LocationFormProps) {
         {/* Street */}
         <div className="flex flex-col md:col-span-6">
           <label htmlFor="street" className="mb-1 font-medium">
-            Street
+            Street <span className="text-red-500">*</span>
           </label>
           <input
             id="street"
@@ -198,7 +198,7 @@ export default function LocationForm({ form, setForm }: LocationFormProps) {
         {/* Zip code */}
         <div className="flex flex-col md:col-span-6">
           <label htmlFor="zipCode" className="mb-1 font-medium">
-            Postal code
+            Postal code <span className="text-red-500">*</span>
           </label>
           <input
             id="postalCode"

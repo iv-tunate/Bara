@@ -36,7 +36,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.  
 //Console.WriteLine($"ENVIRONMENT: {builder.Environment.EnvironmentName}");
-builder.Services.AddControllers();
+// // builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle  
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -55,10 +55,15 @@ builder.Configuration
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 builder.Services.Configure<Secrets>(builder.Configuration.GetSection("Secrets"));
 
-builder.Services.AddControllers().AddJsonOptions(options =>
-{
-    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-});
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    })
+    .ConfigureApiBehaviorOptions(options => 
+    {
+        options.SuppressModelStateInvalidFilter = true;
+    });
 builder.Services.AddMemoryCache();
 
 //builder.Services.AddHangfire(config =>

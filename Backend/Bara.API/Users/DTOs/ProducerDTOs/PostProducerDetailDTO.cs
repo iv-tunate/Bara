@@ -57,8 +57,8 @@ namespace Bara.API.Users.DTOs.ProducerDTOs
 
         public string ProfileImageUrl { get; init; }
         public string ProfileImagePublicId { get; init; }
-        public string PortfolioUrl { get; set; }
-        public string Company { get; set; } = string.Empty;
+        public string? PortfolioUrl { get; set; } = "";
+        public string? Company { get; set; } = "No company or studio";
     }
 
     public record UpdateProducerDetailDTO

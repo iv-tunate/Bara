@@ -48,8 +48,14 @@ export default function IdentityVerificationForm({
     const file = e.target.files?.[0] ?? null;
     if (!file) return;
 
-    if (file.type !== "application/pdf") {
-      toast.error("Only PDF files are accepted for verification documents");
+    if (
+      file.type !== "application/pdf" &&
+      file.type !== "image/jpeg" &&
+      file.type !== "image/png"
+    ) {
+      toast.error(
+        "Only PDF, JPG, JPEG, and PNG files are accepted for verification documents",
+      );
       return;
     }
 
@@ -66,7 +72,7 @@ export default function IdentityVerificationForm({
         {/* Document Type Dropdown */}
         <div className="relative">
           <label className="block mb-1 text-sm font-semibold text-[#22242A]">
-            Proof of identity
+            Proof of identity <span className="text-red-500">*</span>
           </label>
           <div
             className="relative cursor-pointer"
@@ -112,7 +118,7 @@ export default function IdentityVerificationForm({
 
         <div>
           <label className="block mb-1 text-sm font-semibold text-[#22242A]">
-            Identity Verification number
+            Identity Verification number <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -138,7 +144,8 @@ export default function IdentityVerificationForm({
       {/* Upload Section */}
       <div>
         <label className="block mb-1 text-sm font-semibold text-[#22242A]">
-          Upload selected proof of identity
+          Upload selected proof of identity{" "}
+          <span className="text-red-500">*</span>
         </label>
 
         {form.file ? (
@@ -154,12 +161,10 @@ export default function IdentityVerificationForm({
                 Upload complete
               </span>
 
-              {/* Show filename for PDFs */}
               <div className="text-sm font-medium">{form.file.name}</div>
 
               <div className="w-full h-1 bg-green-600 rounded" />
 
-              {/* 👇 Add “Edit File” button */}
               <button
                 type="button"
                 onClick={handleBrowseClick}
@@ -188,7 +193,7 @@ export default function IdentityVerificationForm({
 
         <input
           type="file"
-          accept="application/pdf"
+          accept="application/pdf, image/jpeg, image/png"
           onChange={handleFileChange}
           ref={fileInputRef}
           className="hidden"

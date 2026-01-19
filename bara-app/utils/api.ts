@@ -257,6 +257,7 @@ export const api = {
   },
 
   createProducer: async (formData: FormData, userId: string) => {
+    debugger;
     return apiRequest(`${BASE_URL}${API_ENDPOINTS.CREATE_PRODUCER(userId)}`, {
       method: "POST",
       body: formData,

@@ -43,8 +43,10 @@ namespace Bara.API.Services.FileStorageServices.FileRepositories
                     return ResponseDetail<Document>.Failed($"Document exceeds limit of {limit}", 413, "File Limit Exceeded");
                 }
 
-                var allowedExtensions = new[] { ".pdf" };
-                var allowedMimeTypes = new[] { "application/pdf" };
+                var allowedExtensions = new[] { ".pdf", ".jpg", ".jpeg", ".png" };
+
+                var allowedMimeTypes = new[] { "application/pdf", "image/jpeg", "image/png" };
+
 
                 var fileName = file.FileName.Trim();
                 var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();

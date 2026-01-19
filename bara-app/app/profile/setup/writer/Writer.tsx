@@ -37,11 +37,12 @@ export default function WriterProfilePage() {
   const [profileImageUrl, setProfileImageUrl] = useState("");
   const [profileImagePublicId, setProfileImagePublicId] = useState("");
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(
-    null
+    null,
   );
   const [uploading, setUploading] = useState(false);
 
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [isProcessingModalOpen, setIsProcessingModalOpen] = useState(false);
   const [processingStatus, setProcessingStatus] =
     useState<ProcessingStatus>("loading");
@@ -89,6 +90,46 @@ export default function WriterProfilePage() {
     file: null,
   });
 
+  // Form Persistence Logic
+  const STORAGE_KEY = `bara_setup_writer_${localStorage.getItem("userId")}`;
+
+  // Load saved data on mount
+  useEffect(() => {
+    const savedData = localStorage.getItem(STORAGE_KEY);
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        if (parsed.formData)
+          setFormData((prev) => ({ ...prev, ...parsed.formData }));
+        if (parsed.locationForm)
+          setLocationForm((prev) => ({ ...prev, ...parsed.locationForm }));
+        if (parsed.experiences) setExperiences(parsed.experiences);
+        if (parsed.identityForm)
+          setIdentityForm((prev) => ({
+            ...prev,
+            ...parsed.identityForm,
+            file: null, // Files cannot be persisted in localStorage
+          }));
+      } catch (err) {
+        // console.error("Failed to load saved form data:", err);
+      }
+    }
+  }, [STORAGE_KEY]);
+
+  // Save data on change
+  useEffect(() => {
+    const dataToSave = {
+      formData,
+      locationForm,
+      experiences,
+      identityForm: {
+        documentType: identityForm.documentType,
+        verificationNumber: identityForm.verificationNumber,
+      },
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+  }, [formData, locationForm, experiences, identityForm, STORAGE_KEY]);
+
   //This use effect ensures only a writer with an active session can access this page...You can comment out if you're still building
   //But do not forget to uncomment it
   useEffect(() => {
@@ -125,7 +166,7 @@ export default function WriterProfilePage() {
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    >,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -134,7 +175,7 @@ export default function WriterProfilePage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleProfileImageChange = async (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -166,24 +207,24 @@ export default function WriterProfilePage() {
 
   const isPersonalInfoComplete = Boolean(
     formData.firstName &&
-      formData.lastName &&
-      formData.phone &&
-      formData.dateOfBirth &&
-      formData.gender
+    formData.lastName &&
+    formData.phone &&
+    formData.dateOfBirth &&
+    formData.gender,
   );
 
   const isLocationInfoComplete = Boolean(
     locationForm.country &&
-      locationForm.state &&
-      locationForm.city &&
-      locationForm.postalCode &&
-      locationForm.street
+    locationForm.state &&
+    locationForm.city &&
+    locationForm.postalCode &&
+    locationForm.street,
   );
 
   const isIdentityInfoComplete = Boolean(
     identityForm.documentType &&
-      identityForm.file &&
-      identityForm.verificationNumber
+    identityForm.file &&
+    identityForm.verificationNumber,
   );
 
   const isCurrentStepComplete =
@@ -203,7 +244,7 @@ export default function WriterProfilePage() {
     } else if (activeTab === "identity") {
       if (!isIdentityInfoComplete) {
         toast.error(
-          "Please complete identity verification (type, number, and upload)."
+          "Please complete identity verification (type, number, and upload).",
         );
         return;
       }
@@ -219,7 +260,14 @@ export default function WriterProfilePage() {
         form.append("LastName", formData.lastName);
         form.append("MiddleName", formData.middleName || "none");
         form.append("PhoneNumber", formData.phone);
-        form.append("Gender", formData.gender);
+
+        const genderMap: Record<string, string> = {
+          Male: "MALE",
+          Female: "FEMALE",
+          Other: "RATHERNOTSAY",
+        };
+        form.append("Gender", genderMap[formData.gender] || formData.gender);
+
         form.append("Bio", formData.bio || "");
         form.append("DateOfBirth", formData.dateOfBirth);
         form.append("IsPremiumMember", "false");
@@ -231,17 +279,17 @@ export default function WriterProfilePage() {
         form.append("PortfolioUrl", formData.portfolioLink || "");
         form.append(
           "AddressDetail.AdditionalDetails",
-          locationForm.additionalDetails || "no additional details"
+          locationForm.additionalDetails || "no additional details",
         );
         form.append("VerificationDocument.Type", identityForm.documentType);
         form.append(
           "VerificationDocument.VerificationNumber",
-          identityForm.verificationNumber || ""
+          identityForm.verificationNumber || "",
         );
         form.append(
           "VerificationDocument.Document",
           identityForm.file!,
-          identityForm.file!.name
+          identityForm.file!.name,
         );
 
         if (profileImageUrl) {
@@ -251,7 +299,7 @@ export default function WriterProfilePage() {
 
         const validExperiences = experiences.filter(
           (exp) =>
-            exp.org?.trim() && exp.title?.trim() && exp.description?.trim()
+            exp.org?.trim() && exp.title?.trim() && exp.description?.trim(),
         );
 
         if (validExperiences.length > 0) {
@@ -264,46 +312,53 @@ export default function WriterProfilePage() {
             if (exp.startYear && exp.startMonth) {
               form.append(
                 `Experiences[${index}].StartDate`,
-                `${exp.startYear}-${exp.startMonth}-01`
+                `${exp.startYear}-${exp.startMonth}-01`,
               );
             }
 
             if (!exp.ongoing && exp.endYear && exp.endMonth) {
               form.append(
                 `Experiences[${index}].EndDate`,
-                `${exp.endYear}-${exp.endMonth}-01`
+                `${exp.endYear}-${exp.endMonth}-01`,
               );
             }
           });
         }
         //debugger;
         const userId = localStorage.getItem("userId");
-        const res = await api.createWriter(form, userId as string);
-        //  console.log("Response Data:", res.data);
-        if (res.data.isSuccess && res.data.statusCode === 201) {
+        const response = await api.createWriter(form, userId as string);
+        // console.log("Writer response:", response);
+
+        if (response.success && response.data?.isSuccess) {
           setProcessingStatus("success");
           toast.success("Writer profile setup complete!");
           updateUserSession({
             profileComplete: true,
-            name: `${res.data.data.name}`,
+            name: `${response.data.data.name}`,
           });
+
+          // Clear persisted form data on success
+          localStorage.removeItem(STORAGE_KEY);
+
           setTimeout(() => {
             router.push(`/writer/profile`);
           }, 2000);
           return;
-        } else if (res.data.statusCode === 409) {
+        } else if (response.data?.statusCode === 409) {
           setProcessingStatus("conflict");
-          toast.error(res.data.message);
+          toast.error(response.data.message);
           setTimeout(() => {
             router.push(`/writer/profile`);
           }, 1500);
           return;
         } else {
           setProcessingStatus("error");
-          toast.error(res.data.message || "Failed to create writer profile");
+          const backendError = response.data?.message || response.message;
+          toast.error(backendError || "Failed to create writer profile");
+          setError(backendError || "Failed to create writer profile");
         }
       } catch (err) {
-        console.error(err);
+        // console.error(err);
         setProcessingStatus("error");
         toast.error("An unexpected error occurred. Check console.");
       } finally {
@@ -321,7 +376,7 @@ export default function WriterProfilePage() {
   };
 
   return (
-    <div className="fixed inset-0 bg-[#1a0000] bg-opacity-80 flex items-center justify-center z-50 p-2 overflow-auto">
+    <div className="fixed inset-0 backdrop-blur-md bg-black/30 flex items-center justify-center z-50 p-2 overflow-auto">
       <form
         onSubmit={handleSubmit}
         className="bg-white rounded-lg shadow-lg p-3 md:p-6 w-full max-w-3xl max-h-screen overflow-y-auto flex flex-col space-y-1 "
@@ -330,10 +385,21 @@ export default function WriterProfilePage() {
           <Logo />
         </div>
 
+        {/* Error Message */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-sm text-red-600 font-medium">{error}</p>
+          </div>
+        )}
+
         <div className="flex flex-col space-y-1 p-3">
-          <h1 className="text-xl md:text-2xl font-medium text-[#22242A] mb-4">
+          <h1 className="text-xl md:text-2xl font-medium text-[#22242A] mb-1">
             Set up your profile
           </h1>
+          <p className="text-xs text-gray-500 mb-4">
+            Fields marked with <span className="text-red-500">*</span> are
+            required.
+          </p>
 
           {/* Tabs */}
           <div className="flex border-b border-gray-300 text-sm font-medium text-[#858990] space-x-6 mb-6">
@@ -352,8 +418,8 @@ export default function WriterProfilePage() {
                   {tab === "personal"
                     ? "Personal information"
                     : tab === "location"
-                    ? "Location details"
-                    : "Identity verification"}
+                      ? "Location details"
+                      : "Identity verification"}
                 </span>
                 {activeTab === tab && (
                   <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-1 w-full bg-[#810306] rounded-tr-2xl rounded-tl-2xl" />
@@ -368,7 +434,7 @@ export default function WriterProfilePage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="flex flex-col">
                   <label className="text-sm font-semibold text-[#22242A] mb-1">
-                    First Name
+                    First Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -381,7 +447,7 @@ export default function WriterProfilePage() {
 
                 <div className="flex flex-col">
                   <label className="text-sm font-semibold text-[#22242A] mb-1">
-                    Last Name
+                    Last Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -498,7 +564,7 @@ export default function WriterProfilePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div className="flex flex-col">
                   <label className="text-sm font-semibold text-[#22242A] mb-1">
-                    Date of birth
+                    Date of birth <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="date"
@@ -511,7 +577,7 @@ export default function WriterProfilePage() {
 
                 <div className="flex flex-col">
                   <label className="text-sm font-semibold text-[#22242A] mb-1">
-                    Gender
+                    Gender <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="gender"
@@ -571,7 +637,7 @@ export default function WriterProfilePage() {
                 {/* Phone */}
                 <div className="flex flex-col">
                   <label className="text-sm font-semibold text-[#22242A] mb-1">
-                    Phone Number
+                    Phone Number <span className="text-red-500">*</span>
                   </label>
                   <div className="border border-[#ABADB2] rounded-md px-2 py-1 w-full">
                     <PhoneInput
