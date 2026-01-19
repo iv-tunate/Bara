@@ -17,6 +17,8 @@ import Pagination from "@/components/Pagination";
 import { ScriptGrid } from "@/components/Script";
 import { useVerificationRecovery } from "@/app/hooks/useVerificationRecovery";
 import toast from "react-hot-toast";
+import { toast as toastify } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css'; 
 
 export default function DashboardPage() {
   useVerificationRecovery();
@@ -112,7 +114,7 @@ export default function DashboardPage() {
       )}
 
       <div className="max-w-7xl mx-auto px-4 md:px-10 lg:px-10 py-4">
-        <div className="flex items-center justify-between mt-4">
+        <div className="flex flex-col gap-4 mt-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-bold text-[#22242A]">
               Hello {userName}
@@ -120,21 +122,22 @@ export default function DashboardPage() {
             <Image src="/wave.png" alt="Wave" width={20} height={20} />
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
             {role === "writer" && profileState === true && (
-              <Link href="/writer/add-script">
+              <Link href="/writer/add-script" className="w-full sm:w-auto">
                 <button
                   type="button"
-                  className="bg-[#800000] text-white font-medium px-6 py-2 rounded-md hover:bg-[#1a0000] transition-colors"
+                  className="w-full sm:w-auto bg-[#800000] text-white font-medium px-6 py-2 rounded-md hover:bg-[#1a0000] transition-colors"
                 >
                   + Add Script
                 </button>
               </Link>
             )}
 
-            <GenreDropdown onChange={handleGenreChange} />
+            <GenreDropdown />
           </div>
         </div>
+
         <div className="flex items-center justify-between mt-2">
           <p className="text-sm text-[#22242A]">
             {role === "writer"
@@ -176,7 +179,12 @@ export default function DashboardPage() {
                   producer searches, increased visibility by genre, and access
                   to valuable insights like script views and engagement.
                 </p>
-                <Button className="bg-[#810306] text-white px-6 py-2 w-fit" onClick={() => toast.error("Feature still in progress")}>
+                <Button
+                  className="bg-[#810306] text-white px-6 py-2 w-fit"
+                  onClick={() =>
+                    toastify.info("Coming Soon", { position: "top-right" })
+                  }
+                >
                   Get Bara Premium
                 </Button>
               </div>
@@ -224,13 +232,13 @@ export default function DashboardPage() {
               {searchTerm
                 ? `No scripts match "${searchTerm}"`
                 : selectedGenres.length > 0
-                ? `No scripts found in ${selectedGenres
-                    .map((g) => g.name)
-                    .join(", ")
-                    .replace(/, ([^,]*)$/, " and $1")} genre${
-                    selectedGenres.length > 1 ? "s" : ""
-                  }`
-                : "No available scripts at the moment"}
+                  ? `No scripts found in ${selectedGenres
+                      .map((g) => g.name)
+                      .join(", ")
+                      .replace(/, ([^,]*)$/, " and $1")} genre${
+                      selectedGenres.length > 1 ? "s" : ""
+                    }`
+                  : "No available scripts at the moment"}
             </p>
           </div>
         ) : (

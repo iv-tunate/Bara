@@ -252,11 +252,7 @@ export default function DashboardNavbar() {
 
             {/* Dashboard Link Mobile */}
             <Link
-              href={
-                userData?.userType === "Writer"
-                  ? "/writer/profile"
-                  : "/producer/dashboard"
-              }
+              href="/dashboard"
               className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-100 rounded-md"
               onClick={() => setShowMobileMenu(false)}
             >
@@ -277,7 +273,7 @@ export default function DashboardNavbar() {
             </Link>
 
             {/* Mobile Search */}
-            <div className="w-full mt-2">
+            {/* <div className="w-full mt-2">
               <div className="relative w-full">
                 <input
                   type="text"
@@ -292,7 +288,7 @@ export default function DashboardNavbar() {
                   className="absolute left-3 top-1/2 -translate-y-1/2"
                 />
               </div>
-            </div>
+            </div> */}
             {/* Terms Link Mobile */}
             <Link
               href="/terms"
