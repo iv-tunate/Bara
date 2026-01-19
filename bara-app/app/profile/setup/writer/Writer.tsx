@@ -90,12 +90,18 @@ export default function WriterProfilePage() {
     file: null,
   });
 
-  // Form Persistence Logic
-  const STORAGE_KEY = `bara_setup_writer_${localStorage.getItem("userId")}`;
+  const [storageKey, setStorageKey] = useState<string | null>(null);
 
-  // Load saved data on mount
   useEffect(() => {
-    const savedData = localStorage.getItem(STORAGE_KEY);
+    const userId = localStorage.getItem("userId");
+    if (userId) {
+      setStorageKey(`bara_setup_writer_${userId}`);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!storageKey) return;
+    const savedData = localStorage.getItem(storageKey);
     if (savedData) {
       try {
         const parsed = JSON.parse(savedData);
@@ -108,16 +114,14 @@ export default function WriterProfilePage() {
           setIdentityForm((prev) => ({
             ...prev,
             ...parsed.identityForm,
-            file: null, // Files cannot be persisted in localStorage
+            file: null,
           }));
-      } catch (err) {
-        // console.error("Failed to load saved form data:", err);
-      }
+      } catch (err) {}
     }
-  }, [STORAGE_KEY]);
+  }, [storageKey]);
 
-  // Save data on change
   useEffect(() => {
+    if (!storageKey) return;
     const dataToSave = {
       formData,
       locationForm,
@@ -127,11 +131,9 @@ export default function WriterProfilePage() {
         verificationNumber: identityForm.verificationNumber,
       },
     };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
-  }, [formData, locationForm, experiences, identityForm, STORAGE_KEY]);
+    localStorage.setItem(storageKey, JSON.stringify(dataToSave));
+  }, [formData, locationForm, experiences, identityForm, storageKey]);
 
-  //This use effect ensures only a writer with an active session can access this page...You can comment out if you're still building
-  //But do not forget to uncomment it
   useEffect(() => {
     const user = getUserSession();
     if (user === null) {
@@ -146,7 +148,7 @@ export default function WriterProfilePage() {
       user.userType.toLowerCase() === "producer" &&
       user.profileComplete
     ) {
-      router.push("/dashboard"); // This is a place holder for now because i'm not sure producer's have a page.
+      router.push("/producer/profile");
     } else if (
       user.userType.toLowerCase() === "writer" &&
       user.profileComplete
@@ -337,12 +339,13 @@ export default function WriterProfilePage() {
             name: `${response.data.data.name}`,
           });
 
-          // Clear persisted form data on success
-          localStorage.removeItem(STORAGE_KEY);
+          if (storageKey) {
+            localStorage.removeItem(storageKey);
+          }
 
           setTimeout(() => {
             router.push(`/writer/profile`);
-          }, 2000);
+          }, 1000);
           return;
         } else if (response.data?.statusCode === 409) {
           setProcessingStatus("conflict");

@@ -67,10 +67,18 @@ export default function ProducerProfilePage() {
     file: null,
   });
 
-  const STORAGE_KEY = `bara_setup_producer_${localStorage.getItem("userId")}`;
+  const [storageKey, setStorageKey] = useState<string | null>(null);
 
   useEffect(() => {
-    const savedData = localStorage.getItem(STORAGE_KEY);
+    const userId = localStorage.getItem("userId");
+    if (userId) {
+      setStorageKey(`bara_setup_producer_${userId}`);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!storageKey) return;
+    const savedData = localStorage.getItem(storageKey);
     if (savedData) {
       try {
         const parsed = JSON.parse(savedData);
@@ -82,14 +90,14 @@ export default function ProducerProfilePage() {
           setIdentityForm((prev) => ({
             ...prev,
             ...parsed.identityForm,
-            file: null, 
+            file: null,
           }));
-      } catch (err) {
-        
-      }
+      } catch (err) {}
     }
-  }, [STORAGE_KEY]);
+  }, [storageKey]);
+
   useEffect(() => {
+    if (!storageKey) return;
     const dataToSave = {
       formData,
       locationForm,
@@ -98,8 +106,8 @@ export default function ProducerProfilePage() {
         verificationNumber: identityForm.verificationNumber,
       },
     };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
-  }, [formData, locationForm, identityForm, STORAGE_KEY]);
+    localStorage.setItem(storageKey, JSON.stringify(dataToSave));
+  }, [formData, locationForm, identityForm, storageKey]);
 
   useEffect(() => {
     const user = getUserSession();
@@ -288,11 +296,14 @@ export default function ProducerProfilePage() {
           name: `${response.data.data.name}`,
         });
 
-        localStorage.removeItem(STORAGE_KEY);
+        // Clear persisted form data on success
+        if (storageKey) {
+          localStorage.removeItem(storageKey);
+        }
 
         setTimeout(() => {
           router.push("/dashboard");
-        }, 2000);
+        }, 1000);
         return;
       } else {
         setProcessingStatus("error");

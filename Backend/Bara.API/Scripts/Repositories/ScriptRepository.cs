@@ -93,7 +93,7 @@ namespace Bara.API.Scripts.Repositories
                     return ResponseDetail<ScriptDTO>.Failed($"Script exceeds limit of {sizeLimit}", 413, "File Limit Exceeded");
                 }
 
-                var userDirectoryName = $"{writer.FirstName ?? "test"}_{writer.LastName ?? "test"}-{writerId}";
+                var userDirectoryName = $"Writer_{writer.FirstName?.ToUpperInvariant() ?? "UNKNOWN"}_{writer.LastName?.ToUpperInvariant() ?? "UNKNOWN"}-{writerId}";
                 var uploadScriptResponse = await cloudinary.UploadScriptAsync(userDirectoryName, script);
                 if (uploadScriptResponse == null || !uploadScriptResponse.Success)
                 {
@@ -721,7 +721,7 @@ namespace Bara.API.Scripts.Repositories
 
                 }
 
-                var userDirectoryName = $"Writer_{writer.FirstName.ToUpper()}-{writer.LastName.ToUpper()}_{writerId}";
+                var userDirectoryName = $"Writer_{writer.FirstName.ToUpperInvariant()}_{writer.LastName.ToUpperInvariant()}-{writerId}";
                 var uploadResult = await cloudinary.UploadScriptAsync(userDirectoryName, newFile);
 
                 if (!uploadResult.Success)

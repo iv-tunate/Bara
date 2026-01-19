@@ -14,19 +14,20 @@ export async function uploadImage(
   file: File,
   userType: "Writer" | "Producer",
   user: UserInfo,
-  imageType: "profile-picture" | "script-cover" = "profile-picture"
+  imageType: "profile-picture" | "script-cover" = "profile-picture",
 ): Promise<UploadResult> {
   if (!file) throw new Error("No file provided");
   debugger;
   const provider = process.env.NEXT_PUBLIC_UPLOAD_PROVIDER || "cloudinary";
-  const folder = `bara/${userType}_${user.name.toUpperCase()}-${user.id}`;
+  const nameParts = user.name.split(" ").join("_").toUpperCase();
+  const folder = `bara/${userType}_${nameParts}-${user.id}`;
 
   if (provider === "cloudinary") {
     const formData = new FormData();
     formData.append("file", file);
     formData.append(
       "upload_preset",
-      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
+      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!,
     );
     formData.append("folder", folder);
 
@@ -43,7 +44,7 @@ export async function uploadImage(
       {
         method: "POST",
         body: formData,
-      }
+      },
     );
 
     if (!res.ok) throw new Error("Cloudinary upload failed");
@@ -80,7 +81,7 @@ export async function uploadImage(
 
 export async function downloadImage(
   publicIdOrUrl: string,
-  provider: "cloudinary" | "s3"
+  provider: "cloudinary" | "s3",
 ): Promise<string> {
   try {
     if (provider === "cloudinary") {
