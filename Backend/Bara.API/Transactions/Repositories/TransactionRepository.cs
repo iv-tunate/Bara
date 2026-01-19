@@ -329,7 +329,11 @@ namespace Bara.API.Transactions.Repositories
                     logger.LogInformation($"Transaction with reference {reference} not found.");
                     return ResponseDetail<bool>.Failed("Transaction not found", 404);
                 }
-
+                if (result.Transaction.Status == TransactionStatus.Completed)
+                {
+                    logger.LogInformation($"Transaction with reference {reference} has already been completed.");
+                    return ResponseDetail<bool>.Successful(true, "Transaction already verified");
+                }
                 var transaction = result.Transaction;
                 var wallet = result.Wallet;
                 var user = result.User;

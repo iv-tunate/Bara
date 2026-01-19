@@ -15,10 +15,10 @@ function PaystackCallbackContent() {
     searchParams?.get("reference") || searchParams?.get("trxref");
 
   const [status, setStatus] = useState<"verifying" | "success" | "failed">(
-    "verifying"
+    "verifying",
   );
   const [message, setMessage] = useState(
-    "We are confirming your transaction with Paystack..."
+    "We are confirming your transaction with Paystack...",
   );
   const hasVerified = useRef(false);
 
@@ -36,7 +36,7 @@ function PaystackCallbackContent() {
           JSON.stringify({
             reference,
             timestamp: Date.now(),
-          })
+          }),
         );
       }
 
