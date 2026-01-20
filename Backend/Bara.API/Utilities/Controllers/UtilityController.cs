@@ -50,6 +50,52 @@ namespace Bara.API.Utilities.Controllers
             }
         }
 
+        /// <summary>
+        /// Resolves a bank account number to retrieve the account holder's name.
+        /// Uses Paystack's account resolution API to verify account details.
+        /// </summary>
+        /// <param name="accountNumber">The 10-digit NUBAN account number</param>
+        /// <param name="bankCode">The bank's code from the banks list</param>
+        /// <returns>Account details including the account holder's name</returns>
+        [Authorize(Roles = "Admin, Producer, Writer")]
+        [HttpGet("resolve-account/{accountNumber}/{bankCode}")]
+        public async Task<IActionResult> ResolveAccount(string accountNumber, string bankCode)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(accountNumber) || accountNumber.Length != 10)
+                {
+                    return BadRequest(ResponseDetail<string>.Failed("Account number must be 10 digits", 400));
+                }
+
+                if (string.IsNullOrEmpty(bankCode))
+                {
+                    return BadRequest(ResponseDetail<string>.Failed("Bank code is required", 400));
+                }
+
+                var response = await paystackService.ResolveAccountNumber(accountNumber, bankCode);
+                
+                if (response.Status)
+                {
+                    return Ok(ResponseDetail<object>.Successful(new 
+                    { 
+                        accountName = response.Data.AccountName,
+                        accountNumber = response.Data.AccountNumber,
+                        bankId = response.Data.BankId
+                    }, "Account resolved successfully"));
+                }
+                else
+                {
+                    return BadRequest(ResponseDetail<string>.Failed(response.Message ?? "Unable to resolve account", 400));
+                }
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"Resolving account {accountNumber}");
+                return StatusCode(500, ResponseDetail<string>.Failed("An error occurred while resolving account", 500, "Internal server error"));
+            }
+        }
+
         [Authorize(Roles = "Admin")]
         [HttpPost("admin/backups/run")]
         public IActionResult RunBackup()

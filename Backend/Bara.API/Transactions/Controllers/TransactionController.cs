@@ -122,5 +122,77 @@ namespace Bara.API.Transactions.Controllers
                 return StatusCode(500, ResponseDetail<string>.Failed("Your request failed", 500, "Internal server error"));
             }
         }
+
+        /// <summary>
+        /// Initiates a withdrawal request. Sends a 6-digit verification token to the user's email.
+        /// </summary>
+        /// <param name="payload">The withdrawal request details including amount and bank account ID</param>
+        /// <param name="userId">The ID of the user initiating the withdrawal</param>
+        /// <returns>Success message indicating token was sent</returns>
+        [Authorize(Roles = "Admin, Producer, Writer")]
+        [HttpPost("withdraw/initiate/{userId}")]
+        public async Task<IActionResult> InitiateWithdrawal([FromBody] InitiateWithdrawalDTO payload, Guid userId)
+        {
+            try
+            {
+                var response = await transactionService.InitiateWithdrawalProcess(userId, payload);
+                if (response.IsSuccess)
+                {
+                    return Ok(response);
+                }
+                else if (response.StatusCode == 500)
+                {
+                    logger.LogError("Withdrawal initiation failed with status code 500: {Message}", response.Message);
+                    return StatusCode(500, response);
+                }
+                else
+                {
+                    logger.LogWarning("Withdrawal initiation failed: {Message}", response.Message);
+                    return StatusCode(response.StatusCode, response);
+                }
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"Initiating withdrawal for user {userId}");
+                return StatusCode(500, ResponseDetail<string>.Failed("An error occurred", 500, "Internal server error"));
+            }
+        }
+
+        /// <summary>
+        /// Confirms a withdrawal request using the email verification token.
+        /// Verifies the token and initiates the Paystack transfer.
+        /// </summary>
+        /// <param name="payload">The withdrawal request details including amount and bank account ID</param>
+        /// <param name="userId">The ID of the user confirming the withdrawal</param>
+        /// <param name="token">The 6-digit verification token sent to user's email</param>
+        /// <returns>Success message if withdrawal was processed</returns>
+        [Authorize(Roles = "Admin, Producer, Writer")]
+        [HttpPost("withdraw/confirm/{userId}/{token}")]
+        public async Task<IActionResult> ConfirmWithdrawal([FromBody] InitiateWithdrawalDTO payload, Guid userId, string token)
+        {
+            try
+            {
+                var response = await transactionService.ContinueWithdrawalInitiation(userId, token, payload);
+                if (response.IsSuccess)
+                {
+                    return Ok(response);
+                }
+                else if (response.StatusCode == 500)
+                {
+                    logger.LogError("Withdrawal confirmation failed with status code 500: {Message}", response.Message);
+                    return StatusCode(500, response);
+                }
+                else
+                {
+                    logger.LogWarning("Withdrawal confirmation failed: {Message}", response.Message);
+                    return StatusCode(response.StatusCode, response);
+                }
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"Confirming withdrawal for user {userId}");
+                return StatusCode(500, ResponseDetail<string>.Failed("An error occurred", 500, "Internal server error"));
+            }
+        }
     }
 }

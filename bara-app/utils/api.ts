@@ -18,7 +18,7 @@ interface ApiResponse<T = any> {
 
 export async function apiRequest<T = any>(
   url: string,
-  options: ApiRequestOptions = {}
+  options: ApiRequestOptions = {},
 ): Promise<ApiResponse<T>> {
   const {
     skipNgrokWarning = true,
@@ -128,7 +128,7 @@ const API_ENDPOINTS = {
     `/api/scripts/genre/${encodeURIComponent(genre)}/${pageNumber}/${pageSize}`,
   SEARCH_SCRIPTS: (searchTerm: string, pageNumber: number, pageSize: number) =>
     `/api/scripts/search/${encodeURIComponent(
-      searchTerm
+      searchTerm,
     )}/${pageNumber}/${pageSize}`,
   PRODUCER_PROFILE: (producerId: string) =>
     `/api/producer/profile/${producerId}`,
@@ -142,7 +142,13 @@ const API_ENDPOINTS = {
   VERIFY_PAYMENT: (reference: string) =>
     `/api/transaction/verify-payment/${reference}`,
   BANK_DETAILS: (userId: string) => `/api/user/bank-details/${userId}`,
-  BANKS: "/api/utility/banks",
+  BANKS: "/api/utilities/banks",
+  RESOLVE_ACCOUNT: (accountNumber: string, bankCode: string) =>
+    `/api/utilities/resolve-account/${accountNumber}/${bankCode}`,
+  INITIATE_WITHDRAWAL: (userId: string) =>
+    `/api/transaction/withdraw/initiate/${userId}`,
+  CONFIRM_WITHDRAWAL: (userId: string, token: string) =>
+    `/api/transaction/withdraw/confirm/${userId}/${token}`,
   SCRIPT_BY_ID: (scriptId: string) => `/api/script/${scriptId}`,
   INITIATE_SCRIPT_TRANSACTION: () => `/api/script-transaction/initiate`,
   SCRIPTS_BY_WRITER: (writerId: string, pageNumber: number, pageSize: number) =>
@@ -167,13 +173,13 @@ const API_ENDPOINTS = {
   SCRIPTS_BY_PRODUCER: (
     producerId: string,
     pageNumber: number,
-    pageSize: number
+    pageSize: number,
   ) => `/api/scripts/producer/${producerId}/${pageNumber}/${pageSize}`,
   GET_PRODUCER_SCRIPTS_BY_TRANSACTION: (
     producerId: string,
     status: string,
     pageNumber: number,
-    pageSize: number
+    pageSize: number,
   ) =>
     `/api/scripts/producer/${producerId}/transactions/${status}/${pageNumber}/${pageSize}`,
   COMPLETE_SCRIPT_TRANSACTION: (scriptId: string, transactionId: string) =>
@@ -252,7 +258,7 @@ export const api = {
       `${BASE_URL}${API_ENDPOINTS.RESEND_VERIFICATION_TOKEN(email)}`,
       {
         method: "POST",
-      }
+      },
     );
   },
 
@@ -277,12 +283,12 @@ export const api = {
     const response = await apiRequest(
       `${BASE_URL}${API_ENDPOINTS.SCRIPTS(
         pageNumber,
-        pageSize
+        pageSize,
       )}?t=${Date.now()}`,
       {
         method: "GET",
         requireAuth: false,
-      }
+      },
     );
     return response;
   },
@@ -296,53 +302,53 @@ export const api = {
   getScriptsByGenre: async (
     genre: string,
     pageNumber: number,
-    pageSize: number
+    pageSize: number,
   ) => {
     return await apiRequest(
       `${BASE_URL}${API_ENDPOINTS.SCRIPTS_BY_GENRE(
         genre,
         pageNumber,
-        pageSize
+        pageSize,
       )}`,
       {
         method: "GET",
         requireAuth: true,
-      }
+      },
     );
   },
 
   searchScripts: async (
     searchTerm: string,
     pageNumber: number,
-    pageSize: number
+    pageSize: number,
   ) => {
     return await apiRequest(
       `${BASE_URL}${API_ENDPOINTS.SEARCH_SCRIPTS(
         searchTerm,
         pageNumber,
-        pageSize
+        pageSize,
       )}`,
       {
         method: "GET",
         requireAuth: true,
-      }
+      },
     );
   },
   getScriptsByWriterId: async (
     writerId: string,
     pageNumber: number,
-    pageSize: number
+    pageSize: number,
   ) => {
     return await apiRequest(
       `${BASE_URL}${API_ENDPOINTS.SCRIPTS_BY_WRITER(
         writerId,
         pageNumber,
-        pageSize
+        pageSize,
       )}`,
       {
         method: "GET",
         requireAuth: true,
-      }
+      },
     );
   },
 
@@ -352,7 +358,7 @@ export const api = {
       {
         method: "GET",
         requireAuth: true,
-      }
+      },
     );
   },
 
@@ -366,18 +372,18 @@ export const api = {
   getUserTransactions: async (
     userId: string,
     pageNumber: number = 1,
-    pageSize: number = 12
+    pageSize: number = 12,
   ) => {
     return apiRequest(
       `${BASE_URL}${API_ENDPOINTS.USER_TRANSACTIONS(
         userId,
         pageNumber,
-        pageSize
+        pageSize,
       )}`,
       {
         method: "GET",
         requireAuth: true,
-      }
+      },
     );
   },
 
@@ -403,7 +409,7 @@ export const api = {
         method: "POST",
         requireAuth: true,
         body: JSON.stringify({ amount }),
-      }
+      },
     );
   },
 
@@ -437,6 +443,57 @@ export const api = {
     });
   },
 
+  async resolveAccount(accountNumber: string, bankCode: string) {
+    return apiRequest(
+      `${BASE_URL}${API_ENDPOINTS.RESOLVE_ACCOUNT(accountNumber, bankCode)}`,
+      {
+        method: "GET",
+        requireAuth: true,
+      },
+    );
+  },
+
+  async initiateWithdrawal(
+    userId: string,
+    data: {
+      Amount: number;
+      BankAccountId: string;
+      Reason?: string;
+      Currency?: string;
+      Device?: string;
+    },
+  ) {
+    return apiRequest(
+      `${BASE_URL}${API_ENDPOINTS.INITIATE_WITHDRAWAL(userId)}`,
+      {
+        method: "POST",
+        requireAuth: true,
+        body: JSON.stringify(data),
+      },
+    );
+  },
+
+  async confirmWithdrawal(
+    userId: string,
+    token: string,
+    data: {
+      Amount: number;
+      BankAccountId: string;
+      Reason?: string;
+      Currency?: string;
+      Device?: string;
+    },
+  ) {
+    return apiRequest(
+      `${BASE_URL}${API_ENDPOINTS.CONFIRM_WITHDRAWAL(userId, token)}`,
+      {
+        method: "POST",
+        requireAuth: true,
+        body: JSON.stringify(data),
+      },
+    );
+  },
+
   async getScriptById(scriptId: string) {
     return apiRequest(`${BASE_URL}${API_ENDPOINTS.SCRIPT_BY_ID(scriptId)}`, {
       method: "GET",
@@ -448,7 +505,7 @@ export const api = {
   async initiateScriptTransaction(
     producerId: string,
     scriptId: string,
-    writerId: string
+    writerId: string,
   ) {
     return apiRequest(
       `${BASE_URL}${API_ENDPOINTS.INITIATE_SCRIPT_TRANSACTION()}`,
@@ -460,7 +517,7 @@ export const api = {
           writerId,
           idempotencyKey: `${producerId}-${scriptId}-${Date.now()}`,
         }),
-      }
+      },
     );
   },
 
@@ -471,7 +528,7 @@ export const api = {
       {
         method: "GET",
         requireAuth: true,
-      }
+      },
     );
   },
 
@@ -481,14 +538,14 @@ export const api = {
       {
         method: "GET",
         requireAuth: true,
-      }
+      },
     );
   },
 
   sendMessage: async (
     chatId: string,
     content: string,
-    attachmentUrl?: string
+    attachmentUrl?: string,
   ) => {
     return apiRequest(`${BASE_URL}/api/chat/${chatId}/messages`, {
       method: "POST",
@@ -534,14 +591,14 @@ export const api = {
         method: "PUT",
         requireAuth: true,
         body: JSON.stringify(scriptData),
-      }
+      },
     );
   },
 
   updateScriptStatus: async (
     scriptId: string,
     writerId: string,
-    status: string
+    status: string,
   ) => {
     return apiRequest(
       `${BASE_URL}${API_ENDPOINTS.UPDATE_SCRIPT_STATUS(scriptId, writerId)}`,
@@ -549,7 +606,7 @@ export const api = {
         method: "PUT",
         requireAuth: true,
         body: JSON.stringify({ status }),
-      }
+      },
     );
   },
 
@@ -559,7 +616,7 @@ export const api = {
       {
         method: "DELETE",
         requireAuth: true,
-      }
+      },
     );
   },
 
@@ -570,7 +627,7 @@ export const api = {
         method: "PUT",
         requireAuth: true,
         body: formData,
-      }
+      },
     );
   },
 
@@ -581,25 +638,25 @@ export const api = {
         method: "PUT",
         requireAuth: true,
         body: formData,
-      }
+      },
     );
   },
 
   getProducerScripts: async (
     producerId: string,
     pageNumber: number,
-    pageSize: number
+    pageSize: number,
   ) => {
     return apiRequest(
       `${BASE_URL}${API_ENDPOINTS.SCRIPTS_BY_PRODUCER(
         producerId,
         pageNumber,
-        pageSize
+        pageSize,
       )}`,
       {
         method: "GET",
         requireAuth: true,
-      }
+      },
     );
   },
 
@@ -607,60 +664,60 @@ export const api = {
     producerId: string,
     status: "initiated" | "completed" | "all",
     pageNumber: number,
-    pageSize: number
+    pageSize: number,
   ) => {
     return apiRequest(
       `${BASE_URL}${API_ENDPOINTS.GET_PRODUCER_SCRIPTS_BY_TRANSACTION(
         producerId,
         status,
         pageNumber,
-        pageSize
+        pageSize,
       )}`,
       {
         method: "GET",
         requireAuth: true,
-      }
+      },
     );
   },
 
   completeScriptTransaction: async (
     producerId: string,
     scriptId: string,
-    transactionId: string
+    transactionId: string,
   ) => {
     return apiRequest(
       `${BASE_URL}${API_ENDPOINTS.COMPLETE_SCRIPT_TRANSACTION(
         scriptId,
-        transactionId
+        transactionId,
       )}`,
       {
         method: "POST",
         requireAuth: true,
-      }
+      },
     );
   },
 
   cancelScriptTransaction: async (
     userId: string,
     scriptId: string,
-    transactionId: string
+    transactionId: string,
   ) => {
     return apiRequest(
       `${BASE_URL}${API_ENDPOINTS.CANCEL_SCRIPT_TRANSACTION(
         scriptId,
-        transactionId
+        transactionId,
       )}`,
       {
         method: "POST",
         requireAuth: true,
-      }
+      },
     );
   },
 
   updateScriptContent: async (
     scriptId: string,
     writerId: string,
-    file: File
+    file: File,
   ) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -670,7 +727,7 @@ export const api = {
         method: "PUT",
         body: formData,
         requireAuth: true,
-      }
+      },
     );
   },
 
@@ -680,7 +737,7 @@ export const api = {
       {
         method: "GET",
         requireAuth: true,
-      }
+      },
     );
   },
 
@@ -691,7 +748,7 @@ export const api = {
       {
         method: "GET",
         requireAuth: true,
-      }
+      },
     );
   },
 
@@ -705,16 +762,16 @@ export const api = {
   adminSearchUsers: async (
     query: string,
     pageNumber: number = 1,
-    pageSize: number = 25
+    pageSize: number = 25,
   ) => {
     return apiRequest(
       `${BASE_URL}${API_ENDPOINTS.ADMIN_SEARCH_USERS(
-        query
+        query,
       )}&pageNumber=${pageNumber}&pageSize=${pageSize}`,
       {
         method: "GET",
         requireAuth: true,
-      }
+      },
     );
   },
 
@@ -739,12 +796,12 @@ export const api = {
   blacklistUser: async (userId: string, reason: string) => {
     return apiRequest(
       `${BASE_URL}/api/user/blacklist/${userId}?reason=${encodeURIComponent(
-        reason
+        reason,
       )}`,
       {
         method: "POST",
         requireAuth: true,
-      }
+      },
     );
   },
   removeBlacklist: async (userId: string) => {
@@ -755,14 +812,14 @@ export const api = {
   },
   getBlacklistedUsers: async (
     pageNumber: number = 1,
-    pageSize: number = 50
+    pageSize: number = 50,
   ) => {
     return apiRequest(
       `${BASE_URL}/api/user/blacklisted?pageNumber=${pageNumber}&pageSize=${pageSize}`,
       {
         method: "GET",
         requireAuth: true,
-      }
+      },
     );
   },
   getPlatformStats: async () => {
@@ -786,7 +843,7 @@ export const api = {
 
   updateProfileImage: async (
     userId: string,
-    data: { profileImageUrl: string; profileImagePublicId: string }
+    data: { profileImageUrl: string; profileImagePublicId: string },
   ) => {
     return apiRequest(`${BASE_URL}/api/user/update-image/${userId}`, {
       method: "PUT",
