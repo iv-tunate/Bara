@@ -11,8 +11,11 @@ using Bara.API.Services.SignalR;
 using Bara.API.Services.YouVerifyIntegration;
 using Bara.API.Transactions.Interfaces;
 using Bara.API.Transactions.Repositories;
+using Bara.API.Transactions.Repositories;
 using Bara.API.Users.Interfaces.UserInterfaces;
 using Bara.API.Users.Repositories;
+using Bara.API.Support.Interfaces;
+using Bara.API.Support.Repositories;
 using Bara.API.Utilities.Interfaces;
 using Bara.API.Utilities.Repositories;
 using Bara.API.Utilities.Settings;
@@ -128,6 +131,9 @@ builder.Services.AddTransient<IChatRepository, ChatRepository>();
 builder.Services.AddTransient<ITransactionService, TransactionRepository>();
 builder.Services.AddTransient<IExchangeRateService, ExchangeRateService>();
 builder.Services.AddScoped(typeof(LogHelper<>));
+
+builder.Services.AddTransient<ISupportChatService, SupportChatService>();
+builder.Services.AddTransient<ISupportChatRepository, SupportChatRepository>();
 
 builder.Services.AddSignalR();
 builder.Services.AddHealthChecks();

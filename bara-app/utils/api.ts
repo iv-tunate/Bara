@@ -197,6 +197,19 @@ const API_ENDPOINTS = {
   ADMIN_RETRY_KYC: "/api/user/retry-kyc",
   ADMIN_GET_BACKUPS: "/api/utilities/admin/backups",
   ADMIN_TRIGGER_BACKUP: "/api/utilities/admin/backups/run",
+
+  SUPPORT_SEND_MESSAGE: "/api/support/message",
+  SUPPORT_HISTORY: (page: number, pageSize: number) =>
+    `/api/support/history?page=${page}&pageSize=${pageSize}`,
+  SUPPORT_MARK_READ: "/api/support/read",
+
+  ADMIN_SUPPORT_MESSAGE: "/api/support/admin/message",
+  ADMIN_SUPPORT_USERS: (page: number, pageSize: number, search?: string) =>
+    `/api/support/admin/users?page=${page}&pageSize=${pageSize}${search ? `&search=${encodeURIComponent(search)}` : ""}`,
+  ADMIN_SUPPORT_HISTORY: (userId: string, page: number, pageSize: number) =>
+    `/api/support/admin/history/${userId}?page=${page}&pageSize=${pageSize}`,
+  ADMIN_SUPPORT_BLOCK: (userId: string) => `/api/support/admin/block/${userId}`,
+  ADMIN_SUPPORT_READ: (userId: string) => `/api/support/admin/read/${userId}`,
 };
 
 export const api = {
@@ -804,12 +817,88 @@ export const api = {
       },
     );
   },
+
   removeBlacklist: async (userId: string) => {
     return apiRequest(`${BASE_URL}/api/user/remove-blacklist/${userId}`, {
       method: "POST",
       requireAuth: true,
     });
   },
+
+  // Support Chat Methods
+  sendSupportMessage: async (content: string) => {
+    return apiRequest(`${BASE_URL}${API_ENDPOINTS.SUPPORT_SEND_MESSAGE}`, {
+      method: "POST",
+      requireAuth: true,
+      body: JSON.stringify({ content }),
+    });
+  },
+
+  getSupportHistory: async (page = 1, pageSize = 20) => {
+    return apiRequest(
+      `${BASE_URL}${API_ENDPOINTS.SUPPORT_HISTORY(page, pageSize)}`,
+      {
+        method: "GET",
+        requireAuth: true,
+      },
+    );
+  },
+
+  markSupportRead: async () => {
+    return apiRequest(`${BASE_URL}${API_ENDPOINTS.SUPPORT_MARK_READ}`, {
+      method: "PATCH",
+      requireAuth: true,
+    });
+  },
+
+  adminSendSupportMessage: async (targetUserId: string, content: string) => {
+    return apiRequest(`${BASE_URL}${API_ENDPOINTS.ADMIN_SUPPORT_MESSAGE}`, {
+      method: "POST",
+      requireAuth: true,
+      body: JSON.stringify({ targetUserId, content }),
+    });
+  },
+
+  adminGetSupportUsers: async (page = 1, pageSize = 20, search = "") => {
+    return apiRequest(
+      `${BASE_URL}${API_ENDPOINTS.ADMIN_SUPPORT_USERS(page, pageSize, search)}`,
+      {
+        method: "GET",
+        requireAuth: true,
+      },
+    );
+  },
+
+  adminGetSupportHistory: async (userId: string, page = 1, pageSize = 20) => {
+    return apiRequest(
+      `${BASE_URL}${API_ENDPOINTS.ADMIN_SUPPORT_HISTORY(userId, page, pageSize)}`,
+      {
+        method: "GET",
+        requireAuth: true,
+      },
+    );
+  },
+
+  adminToggleSupportBlock: async (userId: string) => {
+    return apiRequest(
+      `${BASE_URL}${API_ENDPOINTS.ADMIN_SUPPORT_BLOCK(userId)}`,
+      {
+        method: "PATCH",
+        requireAuth: true,
+      },
+    );
+  },
+
+  adminMarkSupportRead: async (userId: string) => {
+    return apiRequest(
+      `${BASE_URL}${API_ENDPOINTS.ADMIN_SUPPORT_READ(userId)}`,
+      {
+        method: "PATCH",
+        requireAuth: true,
+      },
+    );
+  },
+
   getBlacklistedUsers: async (
     pageNumber: number = 1,
     pageSize: number = 50,

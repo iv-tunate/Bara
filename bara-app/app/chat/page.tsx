@@ -11,6 +11,7 @@ import { api } from "@/utils/api";
 import { getUserSession } from "@/utils/tokenManager";
 import { useSignalR } from "@/context/SignalRContext";
 import toast from "react-hot-toast";
+import SupportChatWindow from "@/components/SupportChatWindow";
 
 interface ChatSession {
   id: string; // this is the chat ID...
@@ -71,11 +72,10 @@ function ChatContent() {
               scriptId: item.scriptId,
               otherUserId: item.otherUserId,
               isClosed: item.isClosed,
-            })
+            }),
           );
 
           setChats(mappedChats);
-          // ...
 
           if (initialChatId) {
             setSelectedChatId(initialChatId);
@@ -111,7 +111,7 @@ function ChatContent() {
                 minute: "2-digit",
               }),
               sender: m.senderId === currentUserId ? "me" : "other",
-            })
+            }),
           );
 
           setChats((prev) => {
@@ -134,10 +134,9 @@ function ChatContent() {
             return prev;
           });
 
-          setMessages(mappedMessages); // Don't reverse, server returns Oldest -> Newest
+          setMessages(mappedMessages);
 
-          // Update chat with real avatar if available
-          setChats((prev) =>
+             setChats((prev) =>
             prev.map((c) =>
               c.id === selectedChatId
                 ? {
@@ -145,8 +144,8 @@ function ChatContent() {
                     unreadCount: 0,
                     avatar: selectedChat?.avatar || c.avatar,
                   }
-                : c
-            )
+                : c,
+            ),
           );
         }
       } catch (err) {
@@ -233,8 +232,8 @@ function ChatContent() {
       } else {
         setChats((prev) =>
           prev.map((c) =>
-            c.id === selectedChatId ? { ...c, lastMessage: text } : c
-          )
+            c.id === selectedChatId ? { ...c, lastMessage: text } : c,
+          ),
         );
       }
     } catch (err) {
@@ -256,7 +255,9 @@ function ChatContent() {
 
       {/* MAIN CHAT AREA */}
       <main className="flex-1 flex flex-col bg-white">
-        {selectedChat ? (
+        {selectedChatId === "ADMIN_SUPPORT" ? (
+          <SupportChatWindow currentUserId={currentUserId} />
+        ) : selectedChat ? (
           <>
             <ChatHeader chat={selectedChat} />
 

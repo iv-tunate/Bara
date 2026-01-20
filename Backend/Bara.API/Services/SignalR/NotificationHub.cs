@@ -6,9 +6,20 @@ namespace Bara.API.Services.SignalR
     {
         public override async Task OnConnectedAsync()
         {
-            //var userId = Context.User?.FindFirst("UserId")?.Value;
             var userId = Context.User?.Identity?.Name;
-            Console.WriteLine($"Client connected: {Context.ConnectionId}");
+            var role = Context.User?.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+            if (role == "Admin")
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, "Admins");
+            }
+            
+            if (userId != null)
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, userId);
+            }
+
+            Console.WriteLine($"Client connected: {Context.ConnectionId}, User: {userId}, Role: {role}");
             await base.OnConnectedAsync();
         }
 

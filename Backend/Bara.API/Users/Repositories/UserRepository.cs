@@ -591,6 +591,7 @@ namespace Bara.API.Users.Repositories
                             Amount = t.Amount,
                             Currency = t.Currency.ToString(),
                             Type = t.TransactionType.ToString(),
+                            Reference = t.ReferenceId,
                             Status = t.Status.ToString(),
                             CreatedAt = t.CreatedAt
                         }).ToListAsync(),

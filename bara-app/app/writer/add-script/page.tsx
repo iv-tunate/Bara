@@ -79,6 +79,19 @@ export default function AddScriptPage() {
 
   const scriptInputRef = useRef<HTMLInputElement | null>(null);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
+  const genreRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: any) {
+      if (genreRef.current && !genreRef.current.contains(event.target)) {
+        setGenreOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [genreRef]);
 
   usePageGuard();
   useEffect(() => {
@@ -100,7 +113,7 @@ export default function AddScriptPage() {
     useMinPrice(
       currency,
       200000,
-      typeof price === "number" ? price : undefined
+      typeof price === "number" ? price : undefined,
     );
 
   useEffect(() => {
@@ -149,10 +162,10 @@ export default function AddScriptPage() {
   const handleScriptChange = (e: any) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    // if (file.size > 100 * 1024) {
-    //   toast.error("Image too large. Maximum allowed size is 100KB.");
-    //   return;
-    // }
+    if (file.size > 5000 * 1024) {
+      toast.error("Image too large. Maximum allowed size is 5MB.");
+      return;
+    }
     const ext = file.name.split(".").pop()?.toLowerCase();
     if (!["pdf", "doc", "docx"].includes(ext)) {
       toast.error("Only PDF, DOC, DOCX allowed");
@@ -190,8 +203,8 @@ export default function AddScriptPage() {
       prev.some((x) => x.id === g.id)
         ? prev.filter((x) => x.id !== g.id)
         : prev.length < 5
-        ? [...prev, g]
-        : (toast.error("Max 5 genres"), prev)
+          ? [...prev, g]
+          : (toast.error("Max 5 genres"), prev),
     );
   };
 
@@ -334,24 +347,38 @@ export default function AddScriptPage() {
 
         {/* Genre + Ownership */}
         <div className="grid md:grid-cols-2 gap-4 mb-4">
-          <div className="relative">
+          <div className="relative" ref={genreRef}>
             <label className="block text-sm font-medium mb-1">Genre</label>
 
-            <button
-              type="button"
-              onClick={() => setGenreOpen((x) => !x)}
-              className="w-full"
+            <div
+              onClick={() => setGenreOpen(!genreOpen)}
+              className="w-full border border-[#ABADB2] rounded-md px-3 py-2 text-sm bg-white cursor-pointer flex flex-wrap gap-2 items-center min-h-[42px]"
             >
-              <input
-                readOnly
-                value={selectedGenres.map((g) => g.name).join(", ")}
-                placeholder="Select up to 5 genres"
-                className="w-full border border-[#ABADB2] rounded-md px-3 py-2 text-sm bg-white cursor-pointer"
-              />
-              <div className="absolute right-3 top-[70%] -translate-y-1/2 text-xs text-[#858990] pointer-events-none">
+              {selectedGenres.length === 0 ? (
+                <span className="text-gray-400">Select up to 5 genres</span>
+              ) : (
+                selectedGenres.map((g) => (
+                  <span
+                    key={g.id}
+                    className="bg-gray-100 text-gray-800 text-xs font-semibold px-2 py-0.5 rounded flex items-center gap-1"
+                  >
+                    {g.name}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleSelectGenre(g);
+                      }}
+                      className="hover:text-red-600 font-bold"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))
+              )}
+              <div className="ml-auto text-xs text-[#858990] pointer-events-none">
                 {selectedGenres.length}/5
               </div>
-            </button>
+            </div>
 
             {genreOpen && (
               <div className="absolute left-0 top-full mt-1 w-full bg-white border border-[#ABADB2] rounded-md shadow-lg max-h-48 overflow-auto z-50">
@@ -362,36 +389,18 @@ export default function AddScriptPage() {
                       key={g.id}
                       onClick={() => toggleSelectGenre(g)}
                       className={`px-4 py-2 text-sm cursor-pointer hover:bg-[#F5F5F5] ${
-                        active ? "bg-[#F5F5F5] font-medium" : ""
+                        active
+                          ? "bg-[#F5F5F5] font-medium text-[#810306]"
+                          : "text-gray-700"
                       }`}
                     >
-                      {g.name}
+                      <div className="flex items-center justify-between">
+                        {g.name}
+                        {active && <span>✓</span>}
+                      </div>
                     </div>
                   );
                 })}
-              </div>
-            )}
-
-            {selectedGenres.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-2">
-                {selectedGenres.map((g) => (
-                  <div
-                    key={g.id}
-                    className="inline-flex items-center gap-1.5 bg-[#F5F5F5] px-2.5 py-1 rounded text-sm"
-                  >
-                    <span>{g.name}</span>
-                    <button
-                      onClick={() =>
-                        setSelectedGenres((prev) =>
-                          prev.filter((x) => x.id !== g.id)
-                        )
-                      }
-                      className="text-[#800000] hover:text-black font-bold text-base"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
               </div>
             )}
           </div>

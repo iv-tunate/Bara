@@ -106,6 +106,29 @@ export default function UserDetailPage({
     }
   };
 
+  const handleVerifyPayment = async (reference: string) => {
+    if (!reference) return;
+
+    // confirm action
+    if (!confirm("Are you sure you want to verify this transaction manually?"))
+      return;
+
+    const toastId = toast.loading("Verifying transaction...");
+    try {
+      const response = await api.verifyPayment(reference);
+      if (response.success) {
+        toast.success("Transaction verified successfully", { id: toastId });
+        const refreshResponse = await api.adminUserDetail(userId);
+        if (refreshResponse.success) setUser(refreshResponse.data.data);
+      } else {
+        toast.error(response.message || "Verification failed", { id: toastId });
+      }
+    } catch (error) {
+      console.error("Verify payment error:", error);
+      toast.error("An unexpected error occurred", { id: toastId });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
@@ -202,7 +225,7 @@ export default function UserDetailPage({
               <div className="flex gap-3 mb-2">
                 <Link
                   href={`/admin/kyc?userId=${user.id}&name=${encodeURIComponent(
-                    user.name
+                    user.name,
                   )}`}
                   className="inline-flex items-center gap-2 px-4 py-2 bg-[#810306] text-white rounded-lg text-sm font-semibold hover:bg-red-900 transition-colors shadow-sm"
                 >
@@ -282,8 +305,8 @@ export default function UserDetailPage({
                         user.verificationStatus === "Approved"
                           ? "bg-green-100 text-green-700"
                           : user.verificationStatus === "Pending"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-red-100 text-red-700"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-red-100 text-red-700"
                       }`}
                     >
                       {user.verificationStatus}
@@ -461,6 +484,16 @@ export default function UserDetailPage({
                           <span className="text-[10px] uppercase font-bold text-gray-400">
                             {t.status}
                           </span>
+
+                          {(t.status === "Pending" || t.status === "Failed") &&
+                            t.reference && (
+                              <button
+                                onClick={() => handleVerifyPayment(t.reference)}
+                                className="block ml-auto mt-2 text-[10px] bg-blue-50 text-blue-600 px-3 py-1.5 rounded-md border border-blue-100 font-bold hover:bg-blue-100 transition-colors"
+                              >
+                                Verify Payment
+                              </button>
+                            )}
                         </div>
                       </div>
                     ))}

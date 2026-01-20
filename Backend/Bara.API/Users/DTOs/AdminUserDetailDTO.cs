@@ -41,6 +41,7 @@ namespace Bara.API.Users.DTOs
         public decimal Amount { get; set; }
         public string Currency { get; set; }
         public string Type { get; set; }
+        public string Reference { get; set; }
         public string Status { get; set; }
         public DateTimeOffset CreatedAt { get; set; }
     }

@@ -1,5 +1,6 @@
 ﻿using Bara.API.Scripts.Models;
 using Bara.API.Scripts.Models.ScriptRelatedChats;
+using Bara.API.Support.Models;
 using Bara.API.Transactions.Models;
 using Bara.API.Users.Models;
 using Bara.API.Utilities.Models;
@@ -53,6 +54,9 @@ namespace Bara.API.DataContext
         public DbSet<Chat> Chats { get; set; }
         public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
         public DbSet<DatabaseBackup> DatabaseBackups { get; set; }
+        
+        public DbSet<SupportChat> SupportChats { get; set; }
+        public DbSet<SupportChatMessage> SupportChatMessages { get; set; }
 
         //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         //{
