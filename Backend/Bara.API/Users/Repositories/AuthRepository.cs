@@ -461,46 +461,82 @@ namespace Bara.API.Users.Repositories
             }
         }
 
-        public async Task<ResponseDetail<bool>> ResetPassword(ResetPasswordDTO request)
+        public async Task<ResponseDetail<LoginResponseDTO>> ResetPassword(ResetPasswordDTO request)
         {
             try
             {
-                var user = await dbContext.AuthProfiles.FirstOrDefaultAsync(x => x.Email == request.Email);
-                if (user is null)
+                var normalizedEmail = request.Email.Trim().ToLowerInvariant();
+                var userProfile = await dbContext.Users
+                    .Include(u => u.AuthProfile)
+                    .Where(u => u.Email == normalizedEmail)
+                    .Select(x => new { x.AuthProfile, x.VerificationStatus, x.Email, x.ProfileImageUrl, x.IsBlacklisted })
+                    .FirstOrDefaultAsync();
+
+                if (userProfile is null)
                 {
                     logger.LogInformation($"Password reset attempted for non-existent email: {request.Email}");
-                    return ResponseDetail<bool>.Failed("Invalid reset request", 400);
+                    return ResponseDetail<LoginResponseDTO>.Failed("Invalid reset request", 400);
                 }
 
-                var cacheKey = $"User_Password_Reset_Token_{request.Email}";
+                var user = userProfile.AuthProfile;
+                var cacheKey = $"User_Password_Reset_Token_{normalizedEmail}";
                 cache.TryGetValue(cacheKey, out string cachedToken);
+                
                 if (cachedToken == null || cachedToken != request.Token)
                 {
                     logger.LogInformation($"Invalid reset token provided for user with email {request.Email}.");
-                    return ResponseDetail<bool>.Failed("Invalid or expired reset token", 400);
+                    return ResponseDetail<LoginResponseDTO>.Failed("Invalid or expired reset token", 400);
                 }
 
-                if (string.IsNullOrWhiteSpace(request.NewPassword) || request.NewPassword.Length < 6)
+                if (string.IsNullOrWhiteSpace(request.NewPassword) || request.NewPassword.Length < 8)
                 {
-                    return ResponseDetail<bool>.Failed("Password must be at least 6 characters long", 400);
+                    return ResponseDetail<LoginResponseDTO>.Failed("Password must be at least 8 characters long", 400);
+                }
+
+                if (!RegexValidations.IsAcceptablePasswordFormat(request.NewPassword))
+                {
+                    return ResponseDetail<LoginResponseDTO>.Failed("Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.", 400);
                 }
 
                 var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
-
                 user.Password = hashedPassword;
                 user.ModifiedAt = DateTimeOffset.UtcNow;
                 cache.Remove(cacheKey);
 
+                // Perform Auto-Login Logic
+                var (Ip, Country) = await externalService.GetIpAndCountryAsync(secrets.IpInfoKey);
+                var accessToken = GenerateJwtToken(user.Role, user.IsVerified ? "Verified" : "Unverified", user.UserId, user.Email);
+
+                user.LoginAttempts = 0;
+                user.LastLoginAt = DateTimeOffset.UtcNow;
+                user.LastLoginIPAddress = Ip;
+                // Since this is a reset, we might not have a device in the request unless we add it to the DTO.
+                // ResetPasswordDTO currently doesn't have Device. I'll stick to updating IP and Time.
+                
                 dbContext.AuthProfiles.Update(user);
                 await dbContext.SaveChangesAsync();
 
-                logger.LogInformation($"Password reset successfully for user with email {request.Email}.");
-                return ResponseDetail<bool>.Successful(true, "Password reset successfully");
+                var response = new LoginResponseDTO
+                {
+                    Email = user.Email,
+                    Name = user.FullName,
+                    UserId = user.UserId,
+                    IsProfileSetupComplete = user.IsProfileSetupComplete,
+                    Role = user.Role,
+                    IsVerified = user.IsVerified,
+                    VerificationStatus = userProfile.VerificationStatus.ToString(),
+                    ProfileImage = userProfile.ProfileImageUrl,
+                    AccessToken = accessToken,
+                    WrongLoginAttempts = 0
+                };
+
+                logger.LogInformation($"Password reset and auto-login successfully for user with email {request.Email}.");
+                return ResponseDetail<LoginResponseDTO>.Successful(response, "Password reset successfully. You have been logged in.");
             }
             catch (Exception ex)
             {
-                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"while resetting password for {request.Email}");
-                return ResponseDetail<bool>.Failed("An error occurred while resetting your password", 500, ex.Message);
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"while resetting password and auto-logging for {request.Email}");
+                return ResponseDetail<LoginResponseDTO>.Failed("An error occurred while resetting your password", 500, ex.Message);
             }
         }
     }

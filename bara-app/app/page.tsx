@@ -272,35 +272,35 @@ export default function HomePage() {
             alt="Gallery Image"
             width={150}
             height={60}
-            className="flex-shrink-0"
+            className="shrink-0"
           />
           <Image
             src="/Testimonial-2.png"
             alt="Gallery Image"
             width={150}
             height={60}
-            className="flex-shrink-0"
+            className="shrink-0"
           />
           <Image
             src="/Testimonial-3.png"
             alt="Gallery Image"
             width={150}
             height={60}
-            className="flex-shrink-0"
+            className="shrink-0"
           />
           <Image
             src="/Testimonial-4.png"
             alt="Gallery Image"
             width={150}
             height={60}
-            className="flex-shrink-0"
+            className="shrink-0"
           />
           <Image
             src="/Testimonial-5.png"
             alt="Gallery Image"
             width={150}
             height={60}
-            className="flex-shrink-0"
+            className="shrink-0"
           />
         </div>
 

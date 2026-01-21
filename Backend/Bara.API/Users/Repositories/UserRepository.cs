@@ -685,6 +685,45 @@ namespace Bara.API.Users.Repositories
                 return ResponseDetail<List<AdminUserListDTO>>.Failed("An error occurred during user search", 500);
             }
         }
+        public async Task<ResponseDetail<bool>> ForgotPassword(Guid userId, string email)
+        {
+            try
+            {
+                var normalizedEmail = email.Trim().ToLowerInvariant();
+                var user = await dbContext.AuthProfiles
+                    .Where(x => x.UserId == userId && x.Email == normalizedEmail)
+                    .Select(x => new { x.Email, x.FullName })
+                    .FirstOrDefaultAsync();
+
+                if (user == null)
+                {
+                    logger.LogWarning($"Password reset verification failed for User ID {userId} and Email {email}");
+                    return ResponseDetail<bool>.Failed(false, "Invalid user ID or email", 400);
+                }
+
+                var resetToken = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
+                var cacheKey = $"User_Password_Reset_Token_{normalizedEmail}";
+                cache.Set(cacheKey, resetToken, absoluteExpiration: DateTimeOffset.UtcNow.AddMinutes(30));
+                
+                logger.LogInformation($"Verification Token for {normalizedEmail}: {resetToken}");
+
+                var resetMail = MailNotifications.PasswordResetMailNotification(normalizedEmail, user.FullName, resetToken);
+                var mailRes = await mailer.SendMail(resetMail);
+                
+                if (!mailRes.IsSuccess)
+                {
+                    return ResponseDetail<bool>.Failed(false, "An error occurred while sending the reset email", 500);
+                }
+
+                return ResponseDetail<bool>.Successful(true, "Reset token sent successfully");
+            }
+            catch (Exception ex)
+            {
+                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"processing forgot password via IUserService for {email}");
+                return ResponseDetail<bool>.Failed(false, "An error occurred while processing your request", 500);
+            }
+        }
+
         public async Task<ResponseDetail<bool>> UpdateProfileImage(Guid userId, UpdateProfileImageDTO imageInfo)
         {
             try

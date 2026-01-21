@@ -237,7 +237,7 @@ namespace Bara.API.Users.Controllers
             {
                 if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Token) || string.IsNullOrWhiteSpace(request.NewPassword))
                 {
-                    return BadRequest(ResponseDetail<bool>.Failed("Email, token, and new password are required", 400));
+                    return BadRequest(ResponseDetail<LoginResponseDTO>.Failed("Email, token, and new password are required", 400));
                 }
 
                 var response = await authService.ResetPassword(request);
@@ -258,7 +258,7 @@ namespace Bara.API.Users.Controllers
             catch (Exception ex)
             {
                 logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"Resetting password for {request.Email}");
-                return StatusCode(500, ResponseDetail<bool>.Failed("Your request failed", 500, "Internal server error"));
+                return StatusCode(500, ResponseDetail<LoginResponseDTO>.Failed("Your request failed", 500, "Internal server error"));
             }
         }
     }

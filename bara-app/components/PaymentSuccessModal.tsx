@@ -61,7 +61,7 @@ export default function PaymentSuccessModal({
             <h2 className="text-2xl font-semibold text-[#22242A]">
               Payment successful!!
             </h2>
-            <p className="text-sm text-[#333740] max-w-xl mx-auto break-words px-30">
+            <p className="text-sm text-[#333740] max-w-xl mx-auto wrap-break-word px-30">
               You’ve successfully secured this script. The writer has been
               notified and you now have 14 days to review the script and
               collaborate.

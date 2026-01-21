@@ -60,7 +60,7 @@ namespace Bara.API.Users.Controllers
         /// </summary>
         /// <param name="payload"></param>
         /// <returns></returns>
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         [HttpPost("admin")]
         public async Task<IActionResult> RegisterAdmin([FromBody] RegisterDTO payload)
         {

@@ -71,8 +71,8 @@ namespace Bara.API.Users.Interfaces.UserInterfaces
         /// Resets a user's password using the provided reset token and new password.
         /// </summary>
         /// <param name="request">The reset password request containing email, token, and new password.</param>
-        /// <returns>A response indicating whether the password was reset successfully.</returns>
-        Task<ResponseDetail<bool>> ResetPassword(ResetPasswordDTO request);
+        /// <returns>A response indicating whether the password was reset successfully, along with login data if successful.</returns>
+        Task<ResponseDetail<LoginResponseDTO>> ResetPassword(ResetPasswordDTO request);
         /// <summary>
         /// Generates a JWT token for the specified user with given role and verification status.
         /// </summary>

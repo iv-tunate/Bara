@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import EyeToggle from "@/components/EyeToggle";
+import { api } from "@/utils/api";
+import { setUserSession } from "@/utils/tokenManager";
 import { Suspense } from "react";
 
 function ResetPasswordPageContent() {
@@ -12,29 +14,94 @@ function ResetPasswordPageContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [email, setEmail] = useState("");
 
   const router = useRouter();
 
-  const isValidPassword = newPassword.length >= 8;
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      const emailParam = searchParams.get("email");
+      if (emailParam) {
+        setEmail(emailParam);
+      }
+    }
+  }, []);
+
+  const isValidPassword =
+    newPassword.length >= 8 &&
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(
+      newPassword,
+    );
   const doPasswordsMatch =
     newPassword === confirmPassword && confirmPassword !== "";
-  const canSubmit = isValidPassword && doPasswordsMatch;
+  const canSubmit = isValidPassword && doPasswordsMatch && !isLoading;
 
-  // 👉 Show success automatically when valid + match
-  useEffect(() => {
-    if (canSubmit) {
-      setShowSuccess(true);
-    } else {
-      setShowSuccess(false);
-    }
-  }, [canSubmit]);
-
-  const handleContinue = (e: React.FormEvent) => {
+  const handleContinue = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
 
-   
-    router.push("/auth/login");
+    setIsLoading(true);
+    setError("");
+
+    try {
+      if (typeof window === "undefined") return;
+
+      const searchParams = new URLSearchParams(window.location.search);
+      const token = searchParams.get("token") || "";
+
+      if (!token) {
+        setError("Invalid reset link. Token is missing.");
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await api.resetPassword({
+        Email: email,
+        Token: token,
+        NewPassword: newPassword,
+      });
+
+      if (response.success && response.data?.data) {
+        const userData = response.data.data;
+        setShowSuccess(true);
+
+        setUserSession({
+          userId: userData.userId,
+          email: userData.email,
+          name: userData.name ?? "Friend",
+          userType: userData.role,
+          accessToken: userData.accessToken,
+          wrongLoginAttempts: 0,
+          profileComplete: userData.isProfileSetupComplete,
+          createdAt: Date.now(),
+          isVerified: userData.isVerified,
+          VerificationStatus: userData.verificationStatus,
+          profileImageUrl: userData.profileImage,
+        });
+
+          setTimeout(() => {
+          if (userData.role === "Admin") {
+            router.push("/admin");
+          } else if (!userData.isProfileSetupComplete) {
+            router.push(`/profile/setup/${userData.role.toLowerCase()}`);
+          } else {
+            router.push("/dashboard");
+          }
+        }, 2000);
+      } else {
+        setError(
+          response.message || "Failed to reset password. Please try again.",
+        );
+      }
+    } catch (err) {
+      console.error("Reset password error:", err);
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -55,6 +122,13 @@ function ResetPasswordPageContent() {
           </p>
 
           <form onSubmit={handleContinue}>
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
+
             {/* New Password */}
             <label className="block text-sm font-medium text-[#22242A] mb-2">
               New password
@@ -67,7 +141,6 @@ function ResetPasswordPageContent() {
                 onChange={(e) => setNewPassword(e.target.value)}
                 className="w-full border border-[#ABADB2] rounded-md px-3 py-3 pr-10 bg-white focus:outline-none focus:ring-1 focus:ring-[#800000] focus:border-[#800000]"
                 required
-                minLength={8}
               />
               <EyeToggle
                 isVisible={showPassword}
@@ -85,7 +158,7 @@ function ResetPasswordPageContent() {
                   isValidPassword ? "text-[#0DA500]" : "text-[#333740]"
                 }`}
               >
-                Use 8 characters or more
+                Use 8+ chars (upper, lower, digit, special)
               </p>
             </div>
 
@@ -118,19 +191,19 @@ function ResetPasswordPageContent() {
             {/* Button */}
             <button
               type="submit"
-              disabled={!canSubmit}
+              disabled={!canSubmit || isLoading}
               className={`w-full font-medium py-3 rounded-md flex items-center justify-center transition-colors ${
-                canSubmit
+                canSubmit && !isLoading
                   ? "bg-[#800000] text-white hover:bg-[#1a0000]"
                   : "bg-[#F5F5F5] text-[#858990] cursor-not-allowed"
               }`}
             >
-              Continue
+              {isLoading ? "Resetting..." : "Continue"}
             </button>
 
             {/* ✅ Success Message */}
             {showSuccess && (
-              <div className="mx-auto mt-6 w-72 flex items-center justify-center border border-[#0DA500] rounded-md px-2 py-2 text-[#0DA500] bg-[#C3E8BF] text-sm font-medium gap-2">
+              <div className="mx-auto mt-6 w-full flex items-center justify-center border border-[#0DA500] rounded-md px-2 py-2 text-[#0DA500] bg-[#C3E8BF] text-sm font-medium gap-2">
                 <Image
                   src="/Check_ring.png"
                   alt="Success Icon"
@@ -138,7 +211,7 @@ function ResetPasswordPageContent() {
                   height={16}
                   className="object-contain"
                 />
-                Password successfully reset!
+                Password reset successfully! Redirecting...
               </div>
             )}
           </form>

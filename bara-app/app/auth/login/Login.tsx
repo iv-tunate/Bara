@@ -23,6 +23,7 @@ export default function LoginPage() {
   const [resendCooldown, setResendCooldown] = useState(0);
   const [loginVerificationState, setLoginVerificationState] =
     useState<boolean>(true);
+  const [showRoleModal, setShowRoleModal] = useState(false);
 
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
   const resendVerificationTokenUrl =
@@ -55,7 +56,7 @@ export default function LoginPage() {
         if (!response.accessToken) {
           setNeedsVerification(true);
           toast.success(
-            "Please verify your login. A code has been sent to your email."
+            "Please verify your login. A code has been sent to your email.",
           );
           return;
         }
@@ -175,14 +176,14 @@ export default function LoginPage() {
           headers: {
             "ngrok-skip-browser-warning": "true",
           },
-        }
+        },
       );
 
       const res = await response.json();
 
       if (response.ok) {
         toast.success(
-          "Verification token has been resent successfully! Please check your mail box."
+          "Verification token has been resent successfully! Please check your mail box.",
         );
         setResendCooldown(60);
         const timer = setInterval(() => {
@@ -332,8 +333,8 @@ export default function LoginPage() {
                     {isResending
                       ? "Sending..."
                       : resendCooldown > 0
-                      ? `Resend in ${resendCooldown}s`
-                      : "Resend Code"}
+                        ? `Resend in ${resendCooldown}s`
+                        : "Resend Code"}
                   </button>
                 </div>
               </>
@@ -433,18 +434,97 @@ export default function LoginPage() {
 
                 <p className="text-sm text-center mt-6 text-[#333740] font-medium text-medium">
                   Don’t have an account?{" "}
-                  <a
-                    href="/auth/register"
-                    className="text-[#810306] underline font-medium text-medium"
+                  <button
+                    type="button"
+                    onClick={() => setShowRoleModal(true)}
+                    className="text-[#810306] underline font-medium text-medium hover:text-[#1a0000] transition-colors"
                   >
                     Create account
-                  </a>
+                  </button>
                 </p>
               </>
             )}
           </div>
         </div>
       </div>
+
+      {/* Role Selection Modal */}
+      {showRoleModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm px-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 relative animate-in fade-in zoom-in duration-300">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowRoleModal(false)}
+              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold text-[#22242A] mb-2">
+                Join Bara
+              </h2>
+              <p className="text-[#333740]">
+                Choose how you want to use the platform
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Writer Option */}
+              <button
+                onClick={() => router.push("/auth/register?role=Writer")}
+                className="group flex flex-col items-center p-6 border-2 border-gray-100 rounded-xl hover:border-[#800000] hover:bg-[#fff9f9] transition-all duration-300"
+              >
+                <div className="w-16 h-16 bg-[#fff0f0] rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <span className="text-3xl">✍️</span>
+                </div>
+                <h3 className="text-lg font-semibold text-[#22242A] mb-1">
+                  Writer
+                </h3>
+                <p className="text-sm text-gray-500 text-center leading-relaxed">
+                  Share your scripts and connect with producers
+                </p>
+              </button>
+
+              {/* Producer Option */}
+              <button
+                onClick={() => router.push("/auth/register?role=Producer")}
+                className="group flex flex-col items-center p-6 border-2 border-gray-100 rounded-xl hover:border-[#800000] hover:bg-[#fff9f9] transition-all duration-300"
+              >
+                <div className="w-16 h-16 bg-[#fff0f0] rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <span className="text-3xl">🎥</span>
+                </div>
+                <h3 className="text-lg font-semibold text-[#22242A] mb-1">
+                  Producer
+                </h3>
+                <p className="text-sm text-gray-500 text-center leading-relaxed">
+                  Discover great scripts and collaborate with writers
+                </p>
+              </button>
+            </div>
+
+            <div className="mt-8 text-center">
+              <p className="text-xs text-gray-400">
+                By signing up, you agree to our Terms of Service and Privacy
+                Policy.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

@@ -113,6 +113,11 @@ namespace Bara.API.Users.Interfaces.UserInterfaces
         Task<ResponseDetail<PlatformStatsDTO>> GetPlatformStats();
 
         /// <summary>
+        /// Initiates a password reset for a user by verifying their ID and email.
+        /// </summary>
+        Task<ResponseDetail<bool>> ForgotPassword(Guid userId, string email);
+
+        /// <summary>
         /// Updates only the profile image metadata for a user.
         /// </summary>
         Task<ResponseDetail<bool>> UpdateProfileImage(Guid userId, UpdateProfileImageDTO imageInfo);
