@@ -747,7 +747,7 @@ namespace Bara.API.Users.Repositories
             }
             catch (Exception ex)
             {
-                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, $"updating profile image for {userId}");
+                logger.LogCritical($"An exception: {ex}:: was thrown while updating profile image for {userId}");
                 return ResponseDetail<bool>.Failed(false, "An error occurred while updating profile image", 500);
             }
         }
