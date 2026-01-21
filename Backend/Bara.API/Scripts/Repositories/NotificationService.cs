@@ -22,7 +22,7 @@ namespace Bara.API.Scripts.Repositories
         {
             try
             {
-                await notificationHub.Clients.User(domainEvent.RecipientId.ToString())
+                await notificationHub.Clients.Group(domainEvent.RecipientId.ToString())
                     .SendAsync("MessageReceived", new
                     {
                         ChatId = domainEvent.ChatId,
@@ -46,7 +46,7 @@ namespace Bara.API.Scripts.Repositories
         {
             try
             {
-                await notificationHub.Clients.User(domainEvent.OtherUserId.ToString())
+                await notificationHub.Clients.Group(domainEvent.OtherUserId.ToString())
                     .SendAsync("MessagesRead", new
                     {
                         ChatId = domainEvent.ChatId,
@@ -77,10 +77,10 @@ namespace Bara.API.Scripts.Repositories
                     ClosedAt = DateTimeOffset.UtcNow
                 };
 
-                await notificationHub.Clients.User(domainEvent.ProducerId.ToString())
+                await notificationHub.Clients.Group(domainEvent.ProducerId.ToString())
                     .SendAsync("ChatClosed", closureInfo);
 
-                await notificationHub.Clients.User(domainEvent.WriterId.ToString())
+                await notificationHub.Clients.Group(domainEvent.WriterId.ToString())
                     .SendAsync("ChatClosed", closureInfo);
 
                 logger.LogInformation(

@@ -118,7 +118,7 @@ export default function ScriptEditModal({
         GenreId: selectedGenres.map((g) => g.id),
       };
 
-      debugger;
+      // debugger;
       const response = await api.updateScript(
         script.id,
         script.writerId || "",

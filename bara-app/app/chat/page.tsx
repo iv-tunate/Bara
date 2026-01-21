@@ -58,7 +58,7 @@ function ChatContent() {
 
     const loadChats = async () => {
       try {
-        debugger;
+        // debugger;
         const response = await api.getChats(session.userId);
         if (response.success && response.data) {
           const mappedChats: ChatSession[] = response.data.data.map(
@@ -97,7 +97,7 @@ function ChatContent() {
   useEffect(() => {
     if (!selectedChatId || !currentUserId) return;
 
-    debugger;
+    // debugger;
     const fetchMessages = async () => {
       try {
         const response = await api.getChatHistory(selectedChatId);
@@ -223,7 +223,7 @@ function ChatContent() {
     };
     setMessages((prev) => [...prev, optimisticAuth]);
 
-    debugger;
+    // debugger;
     try {
       const response = await api.sendMessage(selectedChatId, text);
       if (!response.success) {

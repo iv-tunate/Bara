@@ -108,7 +108,7 @@ export default function AddScriptPage() {
     })();
   }, []);
 
-  debugger;
+  // debugger;
   const { minAllowed, resError, validatePrice, fetchError, loading } =
     useMinPrice(
       currency,
@@ -275,7 +275,7 @@ export default function AddScriptPage() {
       //  for (let pair of fd.entries()) {
       //    console.log(pair[0], pair[1]);
       //  }
-      debugger;
+      // debugger;
       const res = await api.addScript(fd, userId ?? "");
       console.log("Add script response:", res);
 

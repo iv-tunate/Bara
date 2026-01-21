@@ -26,6 +26,7 @@ export function setUserSession(session: UserSession): void {
     localStorage.setItem("VerificationStatus", session.VerificationStatus);
     //  const sessionDetails = sessionStorage.getItem(TOKEN_KEY);
     // console.log("User Session Details", sessionDetails);
+    window.dispatchEvent(new Event("auth-change"));
   } catch (error) {
     console.error("Failed to store user session:", error);
   }
@@ -95,6 +96,7 @@ export function clearUserSession(): void {
     sessionStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_ID_KEY);
     localStorage.removeItem(USER_TYPE_KEY);
+    window.dispatchEvent(new Event("auth-change"));
   } catch (error) {
     console.error("Failed to clear user session:", error);
   }
@@ -118,7 +120,7 @@ export function isTokenExpired(token: string): boolean {
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
     const padded = base64.padEnd(
       base64.length + ((4 - (base64.length % 4)) % 4),
-      "="
+      "=",
     );
 
     const payload = JSON.parse(atob(padded));

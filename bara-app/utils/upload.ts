@@ -17,7 +17,7 @@ export async function uploadImage(
   imageType: "profile-picture" | "script-cover" = "profile-picture",
 ): Promise<UploadResult> {
   if (!file) throw new Error("No file provided");
-  debugger;
+  //debugger;
   const provider = process.env.NEXT_PUBLIC_UPLOAD_PROVIDER || "cloudinary";
   const nameParts = user.name.split(" ").join("_").toUpperCase();
   const folder = `bara/${userType}_${nameParts}-${user.id}`;

@@ -218,7 +218,7 @@ export default function ScriptDetailPage() {
     setError("");
 
     try {
-      debugger;
+      // debugger;
       if (!isHighInsufficient) {
         const response = await api.initiateScriptTransaction(
           session.userId,

@@ -78,7 +78,7 @@ namespace Bara.API.Support.Repositories
 
                 if (isAdmin)
                 {
-                    await hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveSupportMessage", responseDTO);
+                    await hubContext.Clients.Group(userId.ToString()).SendAsync("ReceiveSupportMessage", responseDTO);
                 }
                 else
                 {

@@ -276,7 +276,7 @@ export const api = {
   },
 
   createProducer: async (formData: FormData, userId: string) => {
-    debugger;
+    // debugger;
     return apiRequest(`${BASE_URL}${API_ENDPOINTS.CREATE_PRODUCER(userId)}`, {
       method: "POST",
       body: formData,
@@ -597,7 +597,7 @@ export const api = {
   },
 
   updateScript: async (scriptId: string, writerId: string, scriptData: any) => {
-    debugger;
+    // debugger;
     return apiRequest(
       `${BASE_URL}${API_ENDPOINTS.UPDATE_SCRIPT(scriptId, writerId)}`,
       {

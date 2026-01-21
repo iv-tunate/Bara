@@ -39,7 +39,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const session = getUserSession();
-    debugger;
+    // debugger;
     //  console.log("Session Details", session);
     if (session && !session.profileComplete) {
       setUserName(session.name);
