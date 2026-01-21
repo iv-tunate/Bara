@@ -29,7 +29,7 @@ export const SignalRProvider = ({
   const [isConnected, setIsConnected] = useState(false);
 
   const [authToken, setAuthToken] = useState<string | null>(null);
- useEffect(() => {
+  useEffect(() => {
     const checkSession = () => {
       const session = getUserSession();
       setAuthToken(session?.accessToken || null);
@@ -86,6 +86,16 @@ export const SignalRProvider = ({
 
     const startConnection = async () => {
       try {
+        if (connection.state === signalR.HubConnectionState.Connected) {
+          setIsConnected(true);
+          console.log("SignalR Already Connected");
+          return;
+        }
+
+        if (connection.state !== signalR.HubConnectionState.Disconnected) {
+          return;
+        }
+
         await connection.start();
         setIsConnected(true);
         console.log("SignalR Connected");

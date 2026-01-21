@@ -1,5 +1,6 @@
 ﻿using Bara.API.Utilities.Interfaces;
 using Ganss.Xss;
+using System.Net;
 
 namespace Bara.API.Utilities.Repositories
 {
@@ -24,12 +25,12 @@ namespace Bara.API.Utilities.Repositories
             try
             {
                 var sanitized = sanitizer.Sanitize(input);
-                return System.Net.WebUtility.HtmlEncode(sanitized);
+                return sanitized;
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error sanitizing HTML content");
-                return System.Net.WebUtility.HtmlEncode(input);
+                return WebUtility.HtmlEncode(input);
             }
         }
 

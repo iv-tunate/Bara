@@ -53,6 +53,7 @@ export default function AdminSupportPage() {
       if (data.senderId === selectedUserId || data.userId === selectedUserId) {
         if (data.content) {
           setMessages((prev) => [...prev, data]);
+          if (selectedUserId) api.adminMarkSupportRead(selectedUserId);
         }
       }
     };
@@ -82,6 +83,10 @@ export default function AdminSupportPage() {
       const res = await api.adminGetSupportHistory(userId);
       if (res.success && res.data) {
         setMessages(res.data.data);
+        // Mark as read immediately when opening
+        await api.adminMarkSupportRead(userId);
+        // Update user list to reflect read status
+        loadUsers();
       }
     } catch (e) {
       console.error(e);
