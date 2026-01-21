@@ -8,6 +8,7 @@ import { api } from "@/utils/api";
 import { generateDeviceFingerprint } from "@/utils/deviceDetection";
 import { setUserSession } from "@/utils/tokenManager";
 import toast from "react-hot-toast";
+import Link from "next/link";
 import BackButton from "@/components/BackButton";
 import Logo from "@/components/Logo";
 export default function LoginPage() {
@@ -450,7 +451,7 @@ export default function LoginPage() {
 
       {/* Role Selection Modal */}
       {showRoleModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm px-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md px-4 py-6 overflow-y-auto">
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 relative animate-in fade-in zoom-in duration-300">
             {/* Close Button */}
             <button
@@ -516,10 +517,23 @@ export default function LoginPage() {
               </button>
             </div>
 
-            <div className="mt-8 text-center">
-              <p className="text-xs text-gray-400">
-                By signing up, you agree to our Terms of Service and Privacy
-                Policy.
+            <div className="mt-8 text-center px-4">
+              <p className="text-xs text-gray-500 leading-relaxed">
+                By signing up, you agree to our{" "}
+                <Link
+                  href="/terms"
+                  className="text-[#810306] font-semibold hover:underline"
+                >
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link
+                  href="/terms"
+                  className="text-[#810306] font-semibold hover:underline"
+                >
+                  Privacy Policy
+                </Link>
+                .
               </p>
             </div>
           </div>

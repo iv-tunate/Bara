@@ -159,6 +159,25 @@ These fees are non-negotiable and are automatically applied by the platform.`,
 These terms are governed by the applicable laws of Bara's operating jurisdiction.
 Continued use implies acceptance of updated terms.`,
   },
+  {
+    title: "14. Support Communication & Abuse Policy",
+    content: `Bara provides support channels (in-platform chat and help forms) for legitimate assistance.
+Users must:
+- Be respectful to support staff.
+- Provide clear and concise information regarding their issue.
+- Avoid sending multiple consecutive messages (spamming).
+
+Abuse of support channels, including:
+- Harassment or threats.
+- Repeated spamming.
+- Submitting false reports.
+
+Will result in:
+- Temporary or permanent block from the support chat system.
+- Account suspension for repeated offenses.
+
+Bara aims to respond to all inquiries within 24–48 business hours.`,
+  },
 ];
 
 const faqs = [
@@ -171,6 +190,21 @@ const faqs = [
     question: "When do I get paid?",
     answer:
       "Funds are released to your wallet immediately after the buyer confirms the transaction, or automatically if the 14-day window closes without a dispute (subject to review).",
+  },
+  {
+    question: "How can I contact admin for support?",
+    answer:
+      "You can contact admin directly through the in-platform support chat. Go to the 'Chats' or 'Support' section in your dashboard to start a conversation with our team.",
+  },
+  {
+    question: "How long does it take to get a response?",
+    answer:
+      "Our team typically responds within 24–48 hours. Please avoid sending multiple consecutive messages as it may delay your request processing.",
+  },
+  {
+    question: "What happens if I send consecutive messages to support?",
+    answer:
+      "We maintain a zero-tolerance policy for abuse. Harassing staff or sending excessive consecutive messages will result in being blocked from the chat system or account suspension.",
   },
   {
     question: "Can I communicate outside of Bara?",
@@ -297,7 +331,7 @@ export default function Terms() {
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-4 items-start">
             {faqs.map((faq, index) => (
               <div
                 key={index}
@@ -305,7 +339,7 @@ export default function Terms() {
               >
                 <button
                   onClick={() => toggleFaq(index)}
-                  className="w-full text-left px-5 py-4 flex justify-between items-start gap-4 focus:outline-none h-full"
+                  className="w-full text-left px-5 py-4 flex justify-between items-start gap-4 focus:outline-none"
                 >
                   <span className="font-semibold text-gray-800 text-[15px]">
                     {faq.question}
@@ -321,8 +355,8 @@ export default function Terms() {
                 <div
                   className={`px-5 text-sm text-gray-600 leading-relaxed bg-gray-50/50 transition-all duration-300 ease-in-out border-t border-gray-100 ${
                     openFaq === index
-                      ? "max-h-40 opacity-100 py-4"
-                      : "max-h-0 opacity-0 overflow-hidden"
+                      ? "max-h-96 opacity-100 py-4"
+                      : "max-h-0 opacity-0 overflow-hidden px-0 py-0"
                   }`}
                 >
                   {faq.answer}
