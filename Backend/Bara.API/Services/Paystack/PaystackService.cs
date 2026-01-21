@@ -5,6 +5,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using PayStack.Net;
+using System.Text.Json;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Bara.API.Services.Paystack
@@ -269,7 +270,7 @@ namespace Bara.API.Services.Paystack
                     return [];
                 }
                 var responseContent = await response.Content.ReadAsStringAsync();
-                var bankResponse = JsonSerializer.Deserialize<BankInfoResponse>(responseContent);
+                var bankResponse = JsonSerializer.Deserialize<BankInfoResponse>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true});
 
                 cachedBanks = bankResponse?.Data ?? [];
                 return cachedBanks;
@@ -285,22 +286,23 @@ namespace Bara.API.Services.Paystack
             try
             {
                 var response = await _httpClient.GetAsync($"{_baseUrl}/bank/resolve?account_number={accountNumber}&bank_code={bankCode}");
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var accountResolveResponse = JsonConvert.DeserializeObject<AccountResolveResponse>(responseContent);
                 if (!response.IsSuccessStatusCode)
                 {
-                    logger.LogError("Failed to resolve account number with Paystack: {}", response.StatusCode.ToString());
+                    logger.LogError($"There was an error with trying to resolve account number {accountNumber} with paystack");
+                    logger.LogInformation($"{accountResolveResponse.Message}");
                     return new AccountResolveResponse
                     {
                         Status = false,
                         Message = "Failed to resolve account number."
                     };
                 }
-                var responseContent = await response.Content.ReadAsStringAsync();
-                var accountResolveResponse = JsonConvert.DeserializeObject<AccountResolveResponse>(responseContent);
                 return accountResolveResponse;
             }
             catch (Exception ex)
             {
-                logHelper.LogExceptionError(ex.GetType().Name, ex.GetBaseException().GetType().Name, "Resolving account number with Paystack");
+                logger.LogCritical("An exception was thrown while resolving account number with Paystack");
                 return new AccountResolveResponse
                 {
                     Status = false,

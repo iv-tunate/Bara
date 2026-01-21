@@ -223,7 +223,7 @@ namespace Bara.API.Users.Repositories
                 {
                     AccountNumber = bankDetailData.AccountNumber,
                     BankCode = bankDetailData.BankCode,
-                    Name = resolveAccountRes.Data.AccountName,
+                    Name = resolveAccountRes.Data.AccountName
                 };
                 var paymentRecipient = await paystack.CreateRecipientAsync(receipientData);
                 if (paymentRecipient.RecipientCode is null)
