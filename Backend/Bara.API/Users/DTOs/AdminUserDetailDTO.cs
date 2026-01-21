@@ -32,6 +32,8 @@ namespace Bara.API.Users.DTOs
         public Guid Id { get; set; }
         public string Title { get; set; }
         public string Status { get; set; }
+        public string Price { get; set; }
+        public string CurrencySymbol { get; set; }
         public DateTimeOffset CreatedAt { get; set; }
     }
 

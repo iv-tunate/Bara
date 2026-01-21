@@ -74,57 +74,6 @@ export default function ScriptNavbar({ title }: { title?: string }) {
 
         <Divider />
 
-        {/* Tools */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setTool("highlight")}
-            className={toolButtonClasses(tool === "highlight")}
-          >
-            <span>Highlight</span>
-            <Image
-              src={
-                tool === "highlight" ? "/highlightred.png" : "/highlight.png"
-              }
-              alt="Highlight"
-              width={16}
-              height={16}
-              className="object-contain"
-            />
-          </button>
-
-          <button
-            onClick={() => setTool("underline")}
-            className={toolButtonClasses(tool === "underline")}
-          >
-            <span>Underline</span>
-            <Image
-              src={
-                tool === "underline" ? "/underlinered.png" : "/underline.png"
-              }
-              alt="Underline"
-              width={16}
-              height={16}
-              className="object-contain"
-            />
-          </button>
-
-          <button
-            onClick={() => setTool("comment")}
-            className={toolButtonClasses(tool === "comment")}
-          >
-            <span>Add comment</span>
-            <Image
-              src={tool === "comment" ? "/commentred.png" : "/Comment.png"}
-              alt="Comment"
-              width={16}
-              height={16}
-              className="object-contain"
-            />
-          </button>
-        </div>
-
-        <Divider />
-
         {/* Page + Zoom */}
         <div className="flex items-center gap-2 text-sm">
           <span className="text-[#333740] font-semibold">Page</span>

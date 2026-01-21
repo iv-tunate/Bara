@@ -135,7 +135,7 @@ export default function SupportChatWindow({
         <p className="text-xs text-blue-800 leading-relaxed">
           Welcome to Bara Support. Please allow up to 24 hours for a response.
           <br />
-          <strong>Note:</strong> Abusive language will result in an immediate
+          <strong>Note:</strong> Abuse/overuse of support services will result in an immediate
           ban from support services.
         </p>
       </div>

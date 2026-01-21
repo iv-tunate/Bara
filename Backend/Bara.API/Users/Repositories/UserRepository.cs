@@ -580,7 +580,9 @@ namespace Bara.API.Users.Repositories
                             Id = s.Id,
                             Title = s.Title,
                             Status = s.Status.ToString(),
-                            CreatedAt = s.CreatedAt
+                            CreatedAt = s.CreatedAt,
+                            Price = s.Price.ToString(),
+                            CurrencySymbol = s.CurrencySymbol
                         }).ToListAsync(),
                     Transactions = await dbContext.Transactions
                         .AsNoTracking()

@@ -92,7 +92,6 @@ export default function UserDetailPage({
       const response = await api.removeBlacklist(userId);
       if (response.success) {
         toast.success("User removed from blacklist successfully");
-        // Refresh user data
         const refreshResponse = await api.adminUserDetail(userId);
         if (refreshResponse.success) setUser(refreshResponse.data.data);
       } else {
@@ -109,9 +108,8 @@ export default function UserDetailPage({
   const handleVerifyPayment = async (reference: string) => {
     if (!reference) return;
 
-    // confirm action
-    if (!confirm("Are you sure you want to verify this transaction manually?"))
-      return;
+    // if (!confirm("Are you sure you want to verify this transaction manually?"))
+    //   return;
 
     const toastId = toast.loading("Verifying transaction...");
     try {
@@ -436,13 +434,17 @@ export default function UserDetailPage({
                         <span className="text-xs px-2 py-0.5 bg-white border border-gray-200 rounded text-gray-600 uppercase font-medium">
                           {script.status}
                         </span>
-                        <Link
-                          href={`/script/${script.id}`}
+                        <div>
+                          <span>{script.currencySymbol}</span>
+                          <span>{script.price}</span>
+                        </div>
+                        {/* <Link
+                          href={`/dashboard/scripts/${script.id}`}
                           target="_blank"
                           className="text-gray-400 hover:text-[#810306]"
                         >
                           <ExternalLink size={18} />
-                        </Link>
+                        </Link> */}
                       </div>
                     </div>
                   ))
