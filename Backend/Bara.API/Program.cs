@@ -1,3 +1,5 @@
+using System.Text;
+using System.Text.Json.Serialization;
 using AspNetCoreRateLimit;
 using Bara.API.DataContext;
 using Bara.API.Scripts.Interfaces;
@@ -9,13 +11,12 @@ using Bara.API.Services.MailingService;
 using Bara.API.Services.Paystack;
 using Bara.API.Services.SignalR;
 using Bara.API.Services.YouVerifyIntegration;
+using Bara.API.Support.Interfaces;
+using Bara.API.Support.Repositories;
 using Bara.API.Transactions.Interfaces;
-using Bara.API.Transactions.Repositories;
 using Bara.API.Transactions.Repositories;
 using Bara.API.Users.Interfaces.UserInterfaces;
 using Bara.API.Users.Repositories;
-using Bara.API.Support.Interfaces;
-using Bara.API.Support.Repositories;
 using Bara.API.Utilities.Interfaces;
 using Bara.API.Utilities.Repositories;
 using Bara.API.Utilities.Settings;
@@ -24,6 +25,7 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -32,8 +34,6 @@ using Services.ExternalAPI_Integration;
 using Services.FileStorageServices.CloudinaryStorage;
 using Services.FileStorageServices.Interfaces;
 using Services.MailingService;
-using System.Text;
-using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -83,6 +83,7 @@ builder.Services.AddDataProtection()
     .PersistKeysToDbContext<BaraContext>()
     .SetApplicationName("Bara");
 
+#region Hangfire
 builder.Services.AddHangfire(config =>
 {
     config.UsePostgreSqlStorage(options =>
@@ -100,7 +101,9 @@ GlobalJobFilters.Filters.Add(new AutomaticRetryAttribute
 });
 
 builder.Services.AddScoped<HangfireJobs>();
+#endregion
 
+#region Serilog
 var logDir = Path.Combine(AppContext.BaseDirectory, "Logs");
 Directory.CreateDirectory(logDir);
 
@@ -110,8 +113,8 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 builder.Host.UseSerilog((context, config) => config.ReadFrom.Configuration(context.Configuration));
+#endregion
 
-builder.Services.AddMemoryCache();
 
 builder.Services.AddScoped<IYouVerifyService, YouVerifyService>();
 builder.Services.AddTransient<ExternalApiIntegrationService>();
@@ -154,6 +157,7 @@ builder.Services.AddHealthChecks();
 //})
 //.AddPolicyHandler(retryPolicy);
 
+#region CORS
 var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins:Origins").Get<string[]>() ?? ["*"];
 builder.Services.AddCors(options =>
 {
@@ -163,11 +167,22 @@ builder.Services.AddCors(options =>
                 .AllowAnyMethod()
                 .SetPreflightMaxAge(TimeSpan.FromMinutes(10)));
 });
-
+#endregion
+#region Rate Limiting
+builder.Services.AddHttpContextAccessor();
 builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
 builder.Services.Configure<IpRateLimitPolicies>(builder.Configuration.GetSection("IpRateLimitPolicies"));
 builder.Services.AddInMemoryRateLimiting();
 builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+#endregion 
 
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IChatValidator, ChatValidator>();
@@ -190,6 +205,8 @@ builder.Services.AddHttpClient("ExchangeRate", client =>
 {
     client.BaseAddress = new Uri("https://v6.exchangerate-api.com/v6/");
 });
+
+#region Authentication and Authorization
 var secretsConfig = builder.Configuration.GetSection("Secrets").Get<Secrets>();
 builder.Services.AddAuthentication(options =>
 {
@@ -229,6 +246,7 @@ builder.Services.AddAuthorizationBuilder()
     policy.RequireClaim("VerificationStatus", "Verified");
 });
 
+#endregion
 //builder.Services.AddAuthorizationBuilder()
 //    .AddPolicy("SwaggerAccess", policy =>
 //        policy.RequireRole("Admin"));
@@ -311,6 +329,8 @@ app.UseHttpsRedirection();
 
 
 app.UseCors("AllowRegisteredOrigins");
+app.UseForwardedHeaders();
+app.UseIpRateLimiting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

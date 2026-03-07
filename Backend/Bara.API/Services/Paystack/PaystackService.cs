@@ -5,6 +5,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using PayStack.Net;
+using System.Net.Http.Headers;
 using System.Text.Json;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
@@ -29,7 +30,7 @@ namespace Bara.API.Services.Paystack
             _httpClient = httpClient;
             _secretKey = secrets.PaystackTestSecret;
             _httpClient.DefaultRequestHeaders.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", secrets.PaystackTestSecret);
+                new AuthenticationHeaderValue("Bearer", secrets.PaystackTestSecret);
             cache = memoryCache;
         }
 
