@@ -1,0 +1,9 @@
+[build]
+  # The directory where Netlify will look for your package.json and run the build command
+  base = "bara-app"
+  
+  # The command to build your Next.js application
+  command = "npm run build"
+  
+  # The directory containing the build output for Next.js
+  publish = ".next"
