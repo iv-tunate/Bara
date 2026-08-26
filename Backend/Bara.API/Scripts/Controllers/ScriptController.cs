@@ -1,4 +1,4 @@
-﻿using Bara.API.Scripts.DTOs;
+using Bara.API.Scripts.DTOs;
 using Bara.API.Scripts.Interfaces;
 using Bara.API.Utilities.ToolKit;
 using Microsoft.AspNetCore.Authorization;
@@ -238,6 +238,37 @@ namespace Bara.API.Scripts.Controllers
             catch (Exception ex)
             {
                 logger.LogError($"An exception: {ex.GetType().Name} was thrown at {ex.Source} while downloading a script...\nBase Exception: {ex.GetBaseException().GetType().Name}", $"Exception Code: {ex.HResult}");
+                return StatusCode(500, ResponseDetail<string>.Failed("Your request failed...", 500, "Error"));
+            }
+        }
+
+        /// <summary>
+        /// Previews the first 5 pages of a script file as a binary stream.
+        /// </summary>
+        /// <param name="scriptId">
+        /// The unique identifier of the script to preview.
+        /// </param>
+        /// <returns>
+        /// Returns a file stream containing the first 5 pages of the script PDF if successful (200 OK),
+        /// or a 400/500 response if the script does not exist or an error occurs.
+        /// </returns>
+        [HttpGet("script/preview/{scriptId}")]
+        public async Task<IActionResult> Preview(Guid scriptId)
+        {
+            try
+            {
+                var result = await scriptService.PreviewScript(scriptId);
+
+                if (!result.IsSuccess || result.Data == null)
+                {
+                    return StatusCode(result.StatusCode, result);
+                }
+
+                return File(result.Data.File, result.Data.ContentType, "preview.pdf");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"An exception: {ex.GetType().Name} was thrown at {ex.Source} while previewing a script...\nBase Exception: {ex.GetBaseException().GetType().Name}", $"Exception Code: {ex.HResult}");
                 return StatusCode(500, ResponseDetail<string>.Failed("Your request failed...", 500, "Error"));
             }
         }

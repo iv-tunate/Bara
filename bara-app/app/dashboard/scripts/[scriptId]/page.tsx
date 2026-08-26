@@ -6,7 +6,7 @@ import { useRouter, useParams } from "next/navigation";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import WriterProfileCard from "@/components/WriterProfileCard";
 import PaymentSuccessModal from "@/components/PaymentSuccessModal";
-import { getUserSession } from "@/utils/tokenManager";
+import { getUserSession, getAccessToken } from "@/utils/tokenManager";
 import { api } from "@/utils/api";
 import { Script, ownershipLabels } from "@/models/script";
 import { usePageGuard } from "@/app/hooks/usepageguard";
@@ -14,6 +14,16 @@ import { useScriptContext } from "@/context/ScriptContext";
 import { convertToNaira } from "@/app/hooks/priceconverter";
 import { toast } from "react-hot-toast";
 import { useWallet } from "@/context/WalletContext";
+import dynamic from "next/dynamic";
+
+const ScriptPDFViewer = dynamic(() => import("@/components/ScriptPDFViewer"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-48">
+      <p className="text-gray-500">Loading Preview...</p>
+    </div>
+  ),
+});
 
 export default function ScriptDetailPage() {
   const router = useRouter();
@@ -32,6 +42,10 @@ export default function ScriptDetailPage() {
   const [downloading, setDownloading] = useState(false);
   const [chatLoading, setChatLoading] = useState(false);
   const [error, setError] = useState("");
+  const [previewPdfUrl, setPreviewPdfUrl] = useState<string>("");
+  const [numPages, setNumPages] = useState<number>(0);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   const session = getUserSession();
   usePageGuard();
@@ -143,6 +157,43 @@ export default function ScriptDetailPage() {
     script &&
     (script.activeNegotiatorId === session.userId ||
       script.writerId === session.userId);
+
+  useEffect(() => {
+    const loadPreviewPDF = async () => {
+      if (!scriptIdParam || isAuthorized) return;
+      
+      setPreviewLoading(true);
+      try {
+        const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+        const token = getAccessToken();
+        const response = await fetch(
+          `${BASE_URL}/api/script/preview/${scriptIdParam}`,
+          {
+            headers: {
+              "ngrok-skip-browser-warning": "true",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to download PDF preview");
+        }
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        setPreviewPdfUrl(url);
+      } catch (error) {
+        console.error("Failed to load PDF preview:", error);
+      } finally {
+        setPreviewLoading(false);
+      }
+    };
+    
+    if (script && !isAuthorized) {
+        loadPreviewPDF();
+    }
+  }, [scriptIdParam, isAuthorized, script]);
 
   const handleContact = async () => {
     if (chatLoading || !session || !script) return;
@@ -374,16 +425,59 @@ export default function ScriptDetailPage() {
               {script.logline}
             </p>
 
-            <div className="flex gap-2">
-              <button className="flex-1 py-3 bg-[#F5F5F5] rounded-md text-sm font-medium text-[#858990] flex items-center justify-center gap-2 border border-[#E5E7EB]">
-                <Image src="/lock.png" alt="Synopsis" width={16} height={16} />
-                Synopsis
-              </button>
-              <button className="flex-1 py-3 bg-[#F5F5F5] rounded-md text-sm font-medium text-[#858990] flex items-center justify-center gap-2 border border-[#E5E7EB]">
-                <Image src="/lock.png" alt="Script" width={16} height={16} />
-                Script
-              </button>
+            <div className="bg-gray-50 border border-[#E5E7EB] rounded-md p-4">
+              <h3 className="font-semibold text-sm mb-2">Synopsis</h3>
+              <p className="text-sm text-[#333740] leading-relaxed whitespace-pre-wrap">
+                {script.synopsis}
+              </p>
             </div>
+
+            {!isAuthorized && (
+              <div className="border border-[#E5E7EB] rounded-md overflow-hidden bg-gray-50">
+                <div className="bg-gray-100 p-3 border-b border-[#E5E7EB] flex justify-between items-center">
+                  <h3 className="font-semibold text-sm">Script Preview (First 5 pages)</h3>
+                </div>
+                {previewLoading ? (
+                  <div className="flex items-center justify-center h-48">
+                    <p className="text-gray-500 text-sm">Loading Preview...</p>
+                  </div>
+                ) : previewPdfUrl ? (
+                  <div className="flex flex-col items-center p-4">
+                    <ScriptPDFViewer
+                      url={previewPdfUrl}
+                      pageNumber={currentPage}
+                      onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+                    />
+                    
+                    {numPages > 1 && (
+                      <div className="flex items-center justify-center gap-4 mt-4 w-full">
+                        <button
+                          onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                          disabled={currentPage === 1}
+                          className="px-3 py-1.5 bg-[#810306] text-white rounded text-xs disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-red-800"
+                        >
+                          Previous
+                        </button>
+                        <span className="text-xs text-gray-700 font-medium">
+                          Page {currentPage} of {numPages}
+                        </span>
+                        <button
+                          onClick={() => setCurrentPage(Math.min(numPages, currentPage + 1))}
+                          disabled={currentPage === numPages}
+                          className="px-3 py-1.5 bg-[#810306] text-white rounded text-xs disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-red-800"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-48">
+                    <p className="text-gray-500 text-sm">Preview not available</p>
+                  </div>
+                )}
+              </div>
+            )}
 
             <hr className="border-t border-[#E5E7EB]" />
 

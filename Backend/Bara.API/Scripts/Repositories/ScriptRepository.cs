@@ -1,4 +1,4 @@
-﻿using Bara.API.DataContext;
+using Bara.API.DataContext;
 using Bara.API.Scripts.DTOs;
 using Bara.API.Scripts.DTOs.ChatDTOs;
 using Bara.API.Scripts.Enums;
@@ -18,7 +18,8 @@ using Microsoft.Extensions.Options;
 using Bara.API.Utilities.Interfaces;
 using Services.FileStorageServices.Interfaces;
 using Services.MailingService;
-
+using PdfSharpCore.Pdf;
+using PdfSharpCore.Pdf.IO;
 namespace Bara.API.Scripts.Repositories
 {
     public class ScriptRepository : IScriptService
@@ -557,6 +558,55 @@ namespace Bara.API.Scripts.Repositories
             }
         }
 
+        public async Task<ResponseDetail<GetScriptDTO>> PreviewScript(Guid scriptId)
+        {
+            try
+            {
+                logger.LogWarning($"[PreviewScript] Request for Script: {scriptId}");
+
+                var script = await dbContext.Scripts.FindAsync(scriptId);
+                if (script == null)
+                {
+                    logger.LogWarning("[PreviewScript] Script not found.");
+                    return ResponseDetail<GetScriptDTO>.Failed($"Script with id {scriptId} doesn't exist", 404, "Not Found");
+                }
+
+                var (stream, contentType) = await cloudinary.DownloadAsync(script.Path);
+                
+                if (stream == null)
+                {
+                    logger.LogError($"[PreviewScript] Cloudinary download failed for PublicId: {script.Path}");
+                    return ResponseDetail<GetScriptDTO>.Failed("Failed to download script file from storage", 500, "Storage Error");
+                }
+
+                // Process PDF to extract first 5 pages
+                using var originalPdf = PdfReader.Open(stream, PdfDocumentOpenMode.Import);
+                using var previewPdf = new PdfDocument();
+                
+                int pagesToExtract = Math.Min(5, originalPdf.PageCount);
+                for (int i = 0; i < pagesToExtract; i++)
+                {
+                    previewPdf.AddPage(originalPdf.Pages[i]);
+                }
+
+                using var outputStream = new MemoryStream();
+                previewPdf.Save(outputStream, false);
+                var fileBytes = outputStream.ToArray();
+
+                return ResponseDetail<GetScriptDTO>.Successful(new GetScriptDTO
+                {
+                    ContentType = contentType,
+                    File = fileBytes,
+                    Name = $"{script.Title} - Preview"
+                });
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"An exception {ex.GetType().Name} was thrown while previewing script with ID: {scriptId}... Base Exception {ex.GetBaseException().GetType().Name}", ex.Message);
+                return ResponseDetail<GetScriptDTO>.Failed("Your request cannot be completed at this time... Please try again later", 500, "Unexpected error");
+            }
+        }
+
         public async Task<ResponseDetail<Script>> UpdateScript(UpdateScriptDTO scriptDetails, Guid writerId, Guid scriptId)
         {
             try
@@ -807,7 +857,6 @@ namespace Bara.API.Scripts.Repositories
                     return ResponseDetail<ScriptTransactionResponse>.Failed("Script is not available for purchase", 400);
                 }
 
-                // Fetch generic User (Producer or Writer acting as buyer)
                 var buyer = await dbContext.Users
                     .Include(u => u.Wallet)
                     .FirstOrDefaultAsync(u => u.Id == producerId);

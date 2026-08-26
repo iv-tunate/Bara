@@ -1,4 +1,4 @@
-﻿using Bara.API.Scripts.DTOs;
+using Bara.API.Scripts.DTOs;
 using Bara.API.Scripts.Enums;
 using Bara.API.Scripts.Models;
 using Bara.API.Utilities.ToolKit;
@@ -34,6 +34,7 @@ namespace Bara.API.Scripts.Interfaces
         /// <param name="scriptId">The ID of the script to be retrieved</param>
         /// <returns>A script file</returns>
         Task<ResponseDetail<GetScriptDTO>> DownloadScript(Guid scriptId, Guid userId);
+        Task<ResponseDetail<GetScriptDTO>> PreviewScript(Guid scriptId);
 
         /// <summary>
         /// Adds a new script.
