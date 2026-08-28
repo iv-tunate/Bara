@@ -1,4 +1,4 @@
-﻿namespace Bara.API.Utilities.Settings
+namespace Bara.API.Utilities.Settings
 {
     public class Secrets
     {
@@ -17,8 +17,6 @@
         public int RabbitMqPort { get; set; }
         public string RabbitMqUsername { get; set; }
         public string RabbitMqPassword { get; set; }
-        public string SendGridApiKey { get; set; }
-        public string MailTrapApiKey { get; set; }
         public string PaystackSecret { get; set; }
         public string PaystackTestSecret { get; set; }
         public string PaystackPublic { get; set; }
@@ -27,5 +25,8 @@
         public string R2BucketName { get; set; }
         public string R2SecretAccessKey { get; set; }
         public string R2AccessKeyId { get; set; }
+        public string BrevoAPIKey { get; set; }
+        public string BrevoSenderEmail { get; set; }
+        public string BrevoSenderName { get; set; }
     }
 }
