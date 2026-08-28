@@ -54,7 +54,7 @@ namespace Bara.API.Users.Repositories
                                                 .FirstOrDefaultAsync();
                 if (userProfile == null)
                 {
-                    return ResponseDetail<LoginResponseDTO>.Failed("Login unsuccessful...Email or password is invalid");
+                    return ResponseDetail<LoginResponseDTO>.Failed("Incorrect Email or password");
                 }
                 var user = userProfile.AuthProfile;
                 var response = new LoginResponseDTO
@@ -76,7 +76,7 @@ namespace Bara.API.Users.Repositories
                     response.WrongLoginAttempts = user.LoginAttempts;
                     dbContext.AuthProfiles.Update(user);
                     await dbContext.SaveChangesAsync();
-                    return ResponseDetail<LoginResponseDTO>.Failed(response, "Login unsuccessful...Email or password is invalid");
+                    return ResponseDetail<LoginResponseDTO>.Failed(response, "Incorrect Email or password");
                 }
                 else if (user.IsLocked || user.LoginAttempts > 5)
                 {
@@ -316,7 +316,7 @@ namespace Bara.API.Users.Repositories
                 var userProfile = await dbContext.Users.Where(u => u.Email == email).Select(x => new { x.AuthProfile, x.ProfileImageUrl,x.VerificationStatus, x.Email }).FirstOrDefaultAsync();
                 if (userProfile == null)
                 {
-                    return ResponseDetail<LoginResponseDTO>.Failed("Login unsuccessful...Email or password is invalid");
+                    return ResponseDetail<LoginResponseDTO>.Failed("Incorrect Email or password");
                 }
                 var user = userProfile.AuthProfile;
 

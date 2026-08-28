@@ -1021,7 +1021,7 @@ const result = await response.json();
 ```json
 {
   "isSuccess": false,
-  "message": "Login unsuccessful...Email or password is invalid",
+  "message": "Incorrect Email or password",
   "data": null,
   "statusCode": 400
 }
