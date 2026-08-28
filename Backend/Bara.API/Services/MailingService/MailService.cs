@@ -28,7 +28,7 @@ namespace Bara.API.Services.MailingService
             {
                 var http = httpClientFactory.CreateClient();
                 http.DefaultRequestHeaders.Authorization =
-                    new AuthenticationHeaderValue("Bearer", secrets.BrevoAPIKey);
+                    new AuthenticationHeaderValue("api-key", secrets.BrevoAPIKey);
 
                 var payload = new
                 {
