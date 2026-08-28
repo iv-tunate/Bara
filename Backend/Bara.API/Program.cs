@@ -165,6 +165,7 @@ builder.Services.AddCors(options =>
         builder => builder.WithOrigins(allowedOrigins)
                 .AllowAnyHeader()
                 .AllowAnyMethod()
+                .AllowCredentials()
                 .SetPreflightMaxAge(TimeSpan.FromMinutes(10)));
 });
 #endregion

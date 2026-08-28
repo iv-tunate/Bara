@@ -1,4 +1,4 @@
-﻿using Amazon.S3;
+using Amazon.S3;
 using Amazon.S3.Model;
 using Bara.API.Utilities.Settings;
 using Microsoft.Extensions.Options;
@@ -81,7 +81,7 @@ namespace Bara.API.Services.FileStorageServices.CloudfareStorage
                 };
 
                 using var response = await _s3Client.GetObjectAsync(getRequest);
-                using var memoryStream = new MemoryStream();
+                var memoryStream = new MemoryStream();
                 await response.ResponseStream.CopyToAsync(memoryStream);
                 memoryStream.Position = 0;
 

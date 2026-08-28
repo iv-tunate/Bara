@@ -1,4 +1,4 @@
-﻿using Bara.API.Utilities.Settings;
+using Bara.API.Utilities.Settings;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Http;
@@ -91,8 +91,9 @@ namespace Services.FileStorageServices.CloudinaryStorage
                 {
                     contentType = "application/octet-stream";
                 }
-                using var memoryStream = new MemoryStream();
+                var memoryStream = new MemoryStream();
                 await stream.CopyToAsync(memoryStream);
+                memoryStream.Seek(0, SeekOrigin.Begin);
                 return (memoryStream, contentType);
             }
             catch (Exception ex)

@@ -46,6 +46,7 @@ export default function ScriptDetailPage() {
   const [numPages, setNumPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   const session = getUserSession();
   usePageGuard();
@@ -435,45 +436,83 @@ export default function ScriptDetailPage() {
             {!isAuthorized && (
               <div className="border border-[#E5E7EB] rounded-md overflow-hidden bg-gray-50">
                 <div className="bg-gray-100 p-3 border-b border-[#E5E7EB] flex justify-between items-center">
-                  <h3 className="font-semibold text-sm">Script Preview (First 5 pages)</h3>
-                </div>
-                {previewLoading ? (
-                  <div className="flex items-center justify-center h-48">
-                    <p className="text-gray-500 text-sm">Loading Preview...</p>
+                  <div>
+                    <h3 className="font-semibold text-sm text-[#22242A]">Script Preview</h3>
+                    <p className="text-xs text-gray-500 mt-0.5">First 5 pages</p>
                   </div>
-                ) : previewPdfUrl ? (
-                  <div className="flex flex-col items-center p-4">
+                  <button
+                    onClick={() => {
+                      if (!previewPdfUrl && !previewLoading) {
+                        toast.error("Preview not available yet");
+                        return;
+                      }
+                      setCurrentPage(1);
+                      setShowPreviewModal(true);
+                    }}
+                    disabled={previewLoading || !previewPdfUrl}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#810306] text-white text-xs font-medium rounded hover:bg-red-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  >
+                    {previewLoading ? "Loading..." : "Preview Script"}
+                  </button>
+                </div>
+                <div className="flex items-center justify-center h-16 px-4">
+                  <p className="text-xs text-gray-400 text-center">
+                    {previewLoading
+                      ? "Preparing preview..."
+                      : previewPdfUrl
+                      ? "Preview ready — click the button to read"
+                      : "Preview not available"}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Preview Modal */}
+            {showPreviewModal && (
+              <div className="fixed inset-0 z-50 flex flex-col bg-black/80" onClick={() => setShowPreviewModal(false)}>
+                <div className="flex items-center justify-between px-4 sm:px-6 py-3 bg-white border-b shrink-0" onClick={(e) => e.stopPropagation()}>
+                  <div>
+                    <h2 className="font-bold text-sm sm:text-base text-[#22242A]">{script?.title} — Preview</h2>
+                    <p className="text-xs text-gray-500">First 5 pages only</p>
+                  </div>
+                  <button
+                    onClick={() => setShowPreviewModal(false)}
+                    className="text-gray-500 hover:text-gray-900 text-2xl leading-none font-light px-2"
+                    aria-label="Close preview"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto bg-gray-100" onClick={(e) => e.stopPropagation()}>
+                  <div className="max-w-4xl mx-auto py-6 px-4">
                     <ScriptPDFViewer
                       url={previewPdfUrl}
                       pageNumber={currentPage}
                       onLoadSuccess={({ numPages }) => setNumPages(numPages)}
                     />
-                    
-                    {numPages > 1 && (
-                      <div className="flex items-center justify-center gap-4 mt-4 w-full">
-                        <button
-                          onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                          disabled={currentPage === 1}
-                          className="px-3 py-1.5 bg-[#810306] text-white rounded text-xs disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-red-800"
-                        >
-                          Previous
-                        </button>
-                        <span className="text-xs text-gray-700 font-medium">
-                          Page {currentPage} of {numPages}
-                        </span>
-                        <button
-                          onClick={() => setCurrentPage(Math.min(numPages, currentPage + 1))}
-                          disabled={currentPage === numPages}
-                          className="px-3 py-1.5 bg-[#810306] text-white rounded text-xs disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-red-800"
-                        >
-                          Next
-                        </button>
-                      </div>
-                    )}
                   </div>
-                ) : (
-                  <div className="flex items-center justify-center h-48">
-                    <p className="text-gray-500 text-sm">Preview not available</p>
+                </div>
+
+                {numPages > 1 && (
+                  <div className="flex items-center justify-center gap-4 sm:gap-6 px-4 py-3 bg-white border-t shrink-0" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      disabled={currentPage === 1}
+                      className="px-4 py-2 bg-[#810306] text-white rounded-md text-sm font-medium disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-red-800 transition-colors"
+                    >
+                      Previous
+                    </button>
+                    <span className="text-sm text-gray-700 font-medium">
+                      Page {currentPage} of {numPages}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(Math.min(numPages, currentPage + 1))}
+                      disabled={currentPage === numPages}
+                      className="px-4 py-2 bg-[#810306] text-white rounded-md text-sm font-medium disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-red-800 transition-colors"
+                    >
+                      Next
+                    </button>
                   </div>
                 )}
               </div>
