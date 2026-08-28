@@ -27,46 +27,48 @@ namespace Bara.API.Services.MailingService
             try
             {
                 var http = httpClientFactory.CreateClient();
-                http.DefaultRequestHeaders.Authorization =
-                    new AuthenticationHeaderValue("api-key", secrets.BrevoAPIKey);
-
-                var payload = new
+                var attachmentPayloads = new List<object>();
+                if (mail.Attachments != null)
                 {
-                    from = new { email = secrets.BrevoSenderEmail, name = secrets.BrevoSenderName },
-                    to = new[] { new { email = mail.Receiver, name = mail.ReceiverName } },
-                    subject = mail.Subject,
-                    text = Regex.Replace(mail.Body, "<.*?>", string.Empty),
-                    html = mail.Body,
-                    attachments = mail.Attachments?.Select(a =>
+                    foreach (var a in mail.Attachments)
                     {
                         using var ms = new MemoryStream();
-                        a.CopyTo(ms);
-                        return new
+                        await a.CopyToAsync(ms); 
+                        
+                        attachmentPayloads.Add(new
                         {
                             content = Convert.ToBase64String(ms.ToArray()),
                             filename = a.FileName,
-                            type = a.ContentType,
-                            disposition = "attachment"
-                        };
-                    }).ToList()
+                            name = a.FileName 
+                        });
+                    }
+                }
+
+                var payload = new
+                {
+                    sender = new { email = secrets.BrevoSenderEmail, name = secrets.BrevoSenderName }, 
+                    to = new[] { new { email = mail.Receiver, name = mail.ReceiverName } },
+                    subject = mail.Subject,
+                    textContent = Regex.Replace(mail.Body, "<.*?>", string.Empty), 
+                    htmlContent = mail.Body, 
+                    attachment = attachmentPayloads.Any() ? attachmentPayloads : null 
                 };
 
-                var response = await http.PostAsJsonAsync(
-                    "https://api.brevo.com/v3/smtp/email",
-                    payload
-                );
+                using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.brevo.com/v3/smtp/email");
+                request.Headers.Add("api-key", secrets.BrevoAPIKey); 
+                request.Content = JsonContent.Create(payload);
+
+                var response = await http.SendAsync(request);
 
                 if (response.IsSuccessStatusCode)
                 {
                     logger.LogInformation($"Mail to {mail.Receiver} was successfully sent");
                     return ResponseDetail<bool>.Successful(true);
                 }
-                else
-                {
-                    var errorBody = await response.Content.ReadAsStringAsync();
-                    logger.LogError($"Failed to send mail to {mail.Receiver}: {errorBody}");
-                    return ResponseDetail<bool>.Failed(errorBody, (int)response.StatusCode, "Brevo Error");
-                }
+                
+                var errorBody = await response.Content.ReadAsStringAsync();
+                logger.LogError($"Failed to send mail to {mail.Receiver}: {errorBody}");
+                return ResponseDetail<bool>.Failed(errorBody, (int)response.StatusCode, "Brevo Error");
             }
             catch (Exception ex)
             {
@@ -74,5 +76,6 @@ namespace Bara.API.Services.MailingService
                 return ResponseDetail<bool>.Failed(ex.Message, ex.HResult, "Caught Exception");
             }
         }
+
     }
 }
