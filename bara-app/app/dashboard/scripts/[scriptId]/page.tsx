@@ -438,7 +438,6 @@ export default function ScriptDetailPage() {
                 <div className="bg-gray-100 p-3 border-b border-[#E5E7EB] flex justify-between items-center">
                   <div>
                     <h3 className="font-semibold text-sm text-[#22242A]">Script Preview</h3>
-                    <p className="text-xs text-gray-500 mt-0.5">First 5 pages</p>
                   </div>
                   <button
                     onClick={() => {
@@ -473,8 +472,7 @@ export default function ScriptDetailPage() {
                 <div className="flex items-center justify-between px-4 sm:px-6 py-3 bg-white border-b shrink-0" onClick={(e) => e.stopPropagation()}>
                   <div>
                     <h2 className="font-bold text-sm sm:text-base text-[#22242A]">{script?.title} — Preview</h2>
-                    <p className="text-xs text-gray-500">First 5 pages only</p>
-                  </div>
+                   </div>
                   <button
                     onClick={() => setShowPreviewModal(false)}
                     className="text-gray-500 hover:text-gray-900 text-2xl leading-none font-light px-2"
